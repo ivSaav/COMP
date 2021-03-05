@@ -1,6 +1,8 @@
 /bin/
-.gradle/
-.idea/
+/.gradle/
+/.idea/
 /build/
 /generated/
+gradlew.bat
+gradlew
 comp2021-*.jar
