@@ -1,5 +1,6 @@
 /bin/
 .gradle/
+.idea/
 /build/
 /generated/
 comp2021-*.jar
