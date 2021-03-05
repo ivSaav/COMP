@@ -24,52 +24,35 @@ PARSER_END(Parser)
 
 SKIP :
 {
-	" " | "\r" | "\t"
+	" " | "\r" | "\t" | "//"
 }
 
 TOKEN:
 {
     	< INTEGER: (["0"-"9"])+ >
 	|   < LF: "\n" >
+	|   < PVIRG: ";" >
+    |   < IMPORT: "import" >
+    |   < IDENTIFIER: ["A"-"Z", "a"-"z"](["0"-"9", "A"-"Z", "a"-"z"])* >
 }
 
 SimpleNode Expression(): {}
 {
-   Expr1() <LF>  {return jjtThis;} // Java code inside brackets
+   Expr() {return jjtThis;} // Java code inside brackets
 }
 
-void Expr1() #void: {}
+void Expr() #void : {}
 {
-   Expr2(1) [
-   	("+" Expr2(1) #Add(2)
-   	| "-" Expr2(1) #Sub(2)
-   	)
-   	
-   ]
+    (
+        ImportDeclaration()
+    )*
 }
 
-void Expr2(int sign) #void: {} // 1: positive; -1: negative, because of the ‘-‘ unitary operator
+void ImportDeclaration() #Imp: {}
 {
-   Expr3(sign)  [
-   ("*" Expr3(1) #Mul(2) 
-   | "/" Expr3(1) #Div(2)
-   )
-   
-   ]
-/*
-   Expr3(sign) [
-   ("*" #Mul(2)
-   | "/" #Div(2)
-   )
-   Expr3(1)
-   ]
-   */
-   
+    <IMPORT> Identifier() <PVIRG> <LF>
 }
-
-void Expr3(int sign) #void: {Token t;}
+void Identifier() #Ident: {}
 {
-    t=<INTEGER> {  jjtThis.val = sign *Integer.parseInt(t.image); } #Term
-    | "-" Expr3(-1)
-    | "(" Expr1() ")"
+   <IDENTIFIER> ["." Identifier()]
 }
