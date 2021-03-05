@@ -14,8 +14,8 @@ public class Main implements JmmParser {
 	public JmmParserResult parse(String jmmCode) {
 		
 		try {
-		    Calculator myCalc = new Calculator(new StringReader(jmmCode));
-    		SimpleNode root = myCalc.Expression(); // returns reference to root node
+		    Parser parser = new Parser(new StringReader(jmmCode));
+    		SimpleNode root = parser.Expression(); // returns reference to root node
             	
     		root.dump(""); // prints the tree on the screen
     	
@@ -26,17 +26,14 @@ public class Main implements JmmParser {
 	}
 
     public static void main(String[] args) {
-        System.out.println("Executing with args: " + Arrays.toString(args));
+
         /*if (args[0].contains("fail")) {
             throw new RuntimeException("It's supposed to fail");
         }
 
          */
 		var fileContents = SpecsIo.read("./test.txt");
+		System.out.println("Executing with args: " + fileContents);
 		new Main().parse(fileContents);
     }
-
-
-
-
 }

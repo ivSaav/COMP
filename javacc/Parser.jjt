@@ -3,15 +3,15 @@ options
     LOOKAHEAD=1;
 }
 
-PARSER_BEGIN(Calculator)
+PARSER_BEGIN(Parser)
 
 
-public class Calculator
+public class Parser
 {
     public static void main(String args[]) throws ParseException {
       	System.out.println("Write an arithmetic expression:");
-		Calculator myCalc = new Calculator(System.in);
-		SimpleNode root = myCalc.Expression(); // returns reference to root node
+		Parser parser = new Parser(System.in);
+		SimpleNode root = parser.Expression(); // returns reference to root node
         	
 		root.dump(""); // prints the tree on the screen
 
@@ -20,7 +20,7 @@ public class Calculator
 	
 }
 
-PARSER_END(Calculator)
+PARSER_END(Parser)
 
 SKIP :
 {
