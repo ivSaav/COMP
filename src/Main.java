@@ -2,6 +2,7 @@
 import pt.up.fe.comp.jmm.JmmParser;
 import pt.up.fe.comp.jmm.JmmParserResult;
 import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.specs.util.SpecsIo;
 
 import java.util.Arrays;
 import java.util.ArrayList;
@@ -26,10 +27,16 @@ public class Main implements JmmParser {
 
     public static void main(String[] args) {
         System.out.println("Executing with args: " + Arrays.toString(args));
-        if (args[0].contains("fail")) {
+        /*if (args[0].contains("fail")) {
             throw new RuntimeException("It's supposed to fail");
         }
+
+         */
+		var fileContents = SpecsIo.read("./test.txt");
+		new Main().parse(fileContents);
     }
+
+
 
 
 }
