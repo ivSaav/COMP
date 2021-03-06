@@ -31,9 +31,18 @@ TOKEN:
 {
     	< INTEGER: (["0"-"9"])+ >
 	|   < LF: "\n" >
+	|   < COMMA: "," >
+	|   < LPAR: "(" > |   < RPAR: ")" >
+	|   < LBRACE: "{" > | <RBRACE: "}">
+	|   < LSBRACE: "[" > | <RSBRACE: "]" >
 	|   < PVIRG: ";" >
     |   < IMPORT: "import" >
-    |   < IDENTIFIER: ["A"-"Z", "a"-"z"](["0"-"9", "A"-"Z", "a"-"z"])* >
+    |   < STATIC: "static" >
+    |   < MAIN: "main" >
+    |   < PUBLIC: "public" > | < PRIVATE : "private" > | < PROTECTED : "protected" >
+    |   < STRING: "String"> | < BOOLEAN: "boolean" > | < INT : "int" >
+    |   < VOID: "void" >
+    |   < IDENTIFIER: ["A"-"Z", "a"-"z"](["0"-"9", "A"-"Z", "a"-"z", "_"])* >
 }
 
 SimpleNode Expression(): {}
@@ -45,14 +54,51 @@ void Expr() #void : {}
 {
     (
         ImportDeclaration()
+       | MethodDeclaration() //TODO restrict main to be only one per class
     )*
+
 }
 
 void ImportDeclaration() #Imp: {}
 {
-    <IMPORT> Identifier() <PVIRG> <LF>
+    <IMPORT> Module() <PVIRG> <LF>
 }
-void Identifier() #Ident: {}
+void Module() #Module: {}
 {
-   <IDENTIFIER> ["." Identifier()]
+   <IDENTIFIER> ["." Module()]
+}
+
+/*METHOD DECLRATIONS */
+void MethodDeclaration() #MethodDecl : {}
+{
+    <PUBLIC> (ClassMethod() | MainDeclaration())
+}
+void ClassMethod() #ClassMethod : {}
+{
+    Type() <IDENTIFIER> <LPAR> MethodArgs() <RPAR>
+    <LBRACE>
+        //TODO method body here
+    <RBRACE>
+}
+void MainDeclaration() #MainDecl : {}
+{
+   <STATIC> <VOID> <MAIN> <LPAR> <STRING>Array() <IDENTIFIER><RPAR>
+   <LBRACE >
+          //TODO main body here
+   <RBRACE>
+
+}
+void MethodArgs() #void : {}
+{
+    Type() <IDENTIFIER> #MethodArg [<COMMA> MethodArgs()]
+}
+
+void Type() #Type : {}
+{
+    (<INT> | <STRING> | <BOOLEAN> | <IDENTIFIER>)[Array()]//standard java var or object
+}
+
+void Array() #Array : {}
+{
+    <LSBRACE> <RSBRACE>
 }
