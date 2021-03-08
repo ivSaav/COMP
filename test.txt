@@ -1,2 +1,3 @@
-ola = teste;
-
+import isla;
+class isla extends isla{int i;
+}

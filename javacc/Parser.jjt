@@ -53,8 +53,10 @@ TOKEN:
     |   < LENGTH: "length">
     |   < STATIC: "static" >
     |   < MAIN: "main" >
+    |   < CLASS : "class">
+    |   < EXTENDS : "extends" >
     |   < PUBLIC: "public" > | < PRIVATE : "private" > | < PROTECTED : "protected" >
-    |   < STRING: "String"> | < BOOLEAN: "boolean" > | < INT : "int" >
+    |   < STRING: "String">
     |   < VOID: "void" >
     |   < IDENTIFIER: ["A"-"Z", "a"-"z"](["0"-"9", "A"-"Z", "a"-"z", "_"])* >
 
@@ -67,11 +69,10 @@ SimpleNode Expression(): {}
 
 void Main() #void : {}
 {
-    (
-        ImportDeclaration()
-       | Statement()
-       | MethodDeclaration() //TODO restrict main to be only one per class
-    )*
+
+        (ImportDeclaration())+ ClassDeclaration()
+       //TODO restrict main to be only one per class
+
 
 }
 
@@ -106,10 +107,10 @@ void ExpressionDeclaration() #void: {}
     |   <EXCLM> ExpressionDeclaration()
     |   <LPAR> ExpressionDeclaration() <RPAR> )
 
-/*
+
         [<OPERATOR> #Operator ExpressionDeclaration()
     |   <LSBRACE>  ExpressionDeclaration() <RSBRACE>
-    | <FSTOP> (<LENGTH>| <IDENTIFIER> <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration() )*] <RPAR>)]*/
+    | <FSTOP> (<LENGTH>| <IDENTIFIER> <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration() )*] <RPAR>)]
 
 
 /*RAZÃO CHOISE CONFLICT NAS DUAS PRIMEIRAS PRODUÇÕES??*/
@@ -136,14 +137,14 @@ void ClassMethod() #ClassMethod : {}
 {
     Type() <IDENTIFIER> <LPAR> MethodArgs() <RPAR>
     <LBRACE>
-        //TODO method body here
+        ExpressionDeclaration()
     <RBRACE>
 }
 void MainDeclaration() #MainDecl : {}
 {
    <STATIC> <VOID> <MAIN> <LPAR> <STRING>Array() <IDENTIFIER><RPAR>
    <LBRACE >
-          //TODO main body here
+          ExpressionDeclaration()
    <RBRACE>
 
 }
@@ -151,13 +152,20 @@ void MethodArgs() #void : {}
 {
     Type() <IDENTIFIER> #MethodArg [<COMMA> MethodArgs()]
 }
-
+/*
 void Type() #Type : {}
 {
     (<INT> | <STRING> | <BOOLEAN> | <IDENTIFIER>)[Array()]//standard java var or object
 }
+ */
 
 /*VAR DECLARATIONS*/
+
+void Identifier() #Ident: {}
+{
+   <IDENTIFIER> ["." Identifier()]
+}
+
 void Array() #Array : {}
 {
     <LSBRACE> <RSBRACE>
@@ -166,7 +174,7 @@ void Array() #Array : {}
 
 void VarDeclaration(): {}
 {
-     (Type() Identifier() <PVIRG> <LF>)+
+     Type() Identifier() <PVIRG> <LF>
 }
 
 void Type(): {}
@@ -176,3 +184,19 @@ void Type(): {}
     | Identifier()
 }
 
+
+/*CLASS DECLARATION*/
+
+
+void ClassDeclaration() #ClassDec : {}{
+    <CLASS> <IDENTIFIER> [ExtendsDec()] <LBRACE> [<LF>]  ClassContents() <RBRACE> <LF>
+}
+
+void ExtendsDec() #Extends :{}{
+    <EXTENDS> <IDENTIFIER>
+}
+
+void ClassContents() :{}{
+
+    (VarDeclaration())*(MethodDeclaration())*
+}
