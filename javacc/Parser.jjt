@@ -32,21 +32,83 @@ TOKEN:
     	< INTEGER: (["0"-"9"])+ >
 	|   < LF: "\n" >
 	|   < PVIRG: ";" >
+	|   < FSTOP: ".">
+	|   < OSBRACK: "[">
+	|   < CSBRACK: "]">
+	|   < ORBRACK:"(">
+	|   < CRBRACK:")">
+	|   < EQUAL:"=">
+	|   < OPERATOR:("&&"|"<"|"+"|"-"|"*"|"/")>
+	|   < IF:"if">
+	|   < ELSE: "else">
+	|   < INT:"int">
+	|   < NEW:"new">
+	|   < THIS:"this">
+	|   < TRUE:"true">
+    |   <WHILE:"while">
+	|   < FALSE: "false">
     |   < IMPORT: "import" >
+    |   < LENGTH: "length">
     |   < IDENTIFIER: ["A"-"Z", "a"-"z"](["0"-"9", "A"-"Z", "a"-"z"])* >
 }
 
 SimpleNode Expression(): {}
 {
-   Expr() {return jjtThis;} // Java code inside brackets
+   Main() {return jjtThis;} // Java code inside brackets
 }
 
-void Expr() #void : {}
+void Main() #void : {}
 {
-    (
-        ImportDeclaration()
-    )*
+    Statement() <LF>
+    /*(
+        ImportDeclaration()|
+        ExpressionDeclaration()
+    )*/
+
 }
+
+
+void Statement() #Statement: {}
+{
+    "{" (Statement())* "}"
+    | <IF> "(" ExpressionDeclaration() ")" Statement() <ELSE> Statement()
+    | <WHILE>  "(" ExpressionDeclaration() ")" Statement()
+    |  IdentifierExpression()
+}
+
+void IdentifierExpression() #void:{}
+{
+    <IDENTIFIER> (<PVIRG> | Attribution())
+}
+
+void Attribution() #void:{}
+{
+   ["[" ExpressionDeclaration() "]"] <EQUAL> ExpressionDeclaration() <PVIRG>
+}
+
+
+void ExpressionDeclaration() #void: {}
+{
+        (<INTEGER> #Integer
+    |   <TRUE> #True
+    |   <FALSE> #False
+    |   <IDENTIFIER> #Ident
+    |   <THIS> #This
+    |   <NEW> (<INT> "[" ExpressionDeclaration() "]" | <IDENTIFIER> "(" ")")
+    |   "!" ExpressionDeclaration()
+    |   "(" ExpressionDeclaration() ")")
+
+/*
+        [<OPERATOR> #Operator ExpressionDeclaration()
+    |   "["  ExpressionDeclaration() "]"
+    | "." (<LENGTH>| <IDENTIFIER> "(" [ExpressionDeclaration() ("," ExpressionDeclaration() )*] ")")]*/
+
+
+/*RAZÃO CHOISE CONFLICT NAS DUAS PRIMEIRAS PRODUÇÕES??*/
+
+
+}
+
 
 void ImportDeclaration() #Imp: {}
 {
