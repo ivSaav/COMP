@@ -1,6 +1,7 @@
 options
 {
     LOOKAHEAD=1;
+    DEBUG_PARSER = true;
 }
 
 PARSER_BEGIN(Parser)
@@ -25,6 +26,8 @@ PARSER_END(Parser)
 SKIP :
 {
 	" " | "\r" | "\t" | "//" | "\n"
+	| <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n") >
+	| <"/*"(~["/"])*  "*""/" > //multiline comments
 }
 
 TOKEN:
@@ -69,11 +72,7 @@ SimpleNode Expression(): {}
 
 void Main() #void : {}
 {
-
-        (ImportDeclaration())* ClassDeclaration()
-       //TODO restrict main to be only one per class
-
-
+    (ImportDeclaration())* ClassDeclaration()
 }
 
 void Statement() #Statement: {}
@@ -81,8 +80,7 @@ void Statement() #Statement: {}
     <LBRACE> (Statement())* <RBRACE>
     | IfStatement()
     | WhileStatement()
-    | ExpressionDeclaration()
-    | AttribExpr()
+    | ExpressionDeclaration() [Attribution()]
 }
 
 void IfStatement() #If : {}
@@ -99,21 +97,16 @@ void WhileStatement() #While : {}
         Statement()
 }
 
-void IdentifierExpression() #void:{}
+void Attribution() #void:{}
 {
-    <IDENTIFIER> (<PVIRG> | AttribExpr())
-}
-
-void AttribExpr() #void:{}
-{
-   [<LSBRACE> ExpressionDeclaration() <RSBRACE> ] <EQUAL> ExpressionDeclaration() <PVIRG>
+   <EQUAL> ExpressionDeclaration() <PVIRG>
 }
 
 
 void ExpressionDeclaration() #void: {}
 {
         (
-            <INTEGER> #Int
+            <INTEGER> #Int //TODO Integer Literal??
             | <TRUE> #True
             | <FALSE> #False
             | <IDENTIFIER> #Ident
@@ -172,9 +165,9 @@ void MethodArgs() #void : {}
 }
 void MethodBody() #methodBody : {}
 {
-    (LOOKAHEAD(2) VarDeclaration() | Statement())*
+    (LOOKAHEAD(2)  Statement() | VarDeclaration())*
 
-    <RET> #ret ExpressionDeclaration() <PVIRG>
+    [<RET> #ret ExpressionDeclaration() <PVIRG>]
 }
 /*
 void Type() #Type : {}
@@ -203,7 +196,7 @@ void VarDeclaration(): {}
 
 void Type(): {}
 {
-    LOOKAHEAD(2) <INT> ["[" "]"] #Int
+    <INT> [Array() ] #Int
     | <BOOLEAN> #Boolean
     | Identifier()
 }
