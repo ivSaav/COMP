@@ -48,6 +48,8 @@ TOKEN:
     |   < WHILE:"while">
 	|   < FALSE: "false">
     |   < IMPORT: "import" >
+    |   < INT: "int" >
+    |   < BOOLEAN: "boolean" >
     |   < LENGTH: "length">
     |   < STATIC: "static" >
     |   < MAIN: "main" >
@@ -155,8 +157,22 @@ void Type() #Type : {}
     (<INT> | <STRING> | <BOOLEAN> | <IDENTIFIER>)[Array()]//standard java var or object
 }
 
+/*VAR DECLARATIONS*/
 void Array() #Array : {}
 {
     <LSBRACE> <RSBRACE>
+}
+
+
+void VarDeclaration(): {}
+{
+     (Type() Identifier() <PVIRG> <LF>)+
+}
+
+void Type(): {}
+{
+    LOOKAHEAD(2) <INT> ["[" "]"] #Int
+    | <BOOLEAN> #Boolean
+    | Identifier()
 }
 
