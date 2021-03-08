@@ -36,28 +36,85 @@ TOKEN:
 	|   < LBRACE: "{" > | <RBRACE: "}">
 	|   < LSBRACE: "[" > | <RSBRACE: "]" >
 	|   < PVIRG: ";" >
+	|   < FSTOP: ".">
+	|   < EXCLM: "!">
+	|   < EQUAL:"=">
+	|   < OPERATOR:("&&"|"<"|"+"|"-"|"*"|"/")>
+	|   < IF:"if">
+	|   < ELSE: "else">
+	|   < NEW:"new">
+	|   < THIS:"this">
+	|   < TRUE:"true">
+    |   < WHILE:"while">
+	|   < FALSE: "false">
     |   < IMPORT: "import" >
+    |   < LENGTH: "length">
     |   < STATIC: "static" >
     |   < MAIN: "main" >
     |   < PUBLIC: "public" > | < PRIVATE : "private" > | < PROTECTED : "protected" >
     |   < STRING: "String"> | < BOOLEAN: "boolean" > | < INT : "int" >
     |   < VOID: "void" >
     |   < IDENTIFIER: ["A"-"Z", "a"-"z"](["0"-"9", "A"-"Z", "a"-"z", "_"])* >
+
 }
 
 SimpleNode Expression(): {}
 {
-   Expr() {return jjtThis;} // Java code inside brackets
+   Main() {return jjtThis;} // Java code inside brackets
 }
 
-void Expr() #void : {}
+void Main() #void : {}
 {
     (
         ImportDeclaration()
+       | Statement()
        | MethodDeclaration() //TODO restrict main to be only one per class
     )*
 
 }
+
+
+void Statement() #Statement: {}
+{
+    <LBRACE> (Statement())* <RBRACE>
+    | <IF> <LPAR> ExpressionDeclaration() <RPAR> Statement() <ELSE> Statement()
+    | <WHILE>  <LPAR> ExpressionDeclaration() <RPAR> Statement()
+    |  IdentifierExpression()
+}
+
+void IdentifierExpression() #void:{}
+{
+    <IDENTIFIER> (<PVIRG> | Attribution())
+}
+
+void Attribution() #void:{}
+{
+   [<LSBRACE> ExpressionDeclaration() <RSBRACE> ] <EQUAL> ExpressionDeclaration() <PVIRG>
+}
+
+
+void ExpressionDeclaration() #void: {}
+{
+        (<INTEGER> #Integer
+    |   <TRUE> #True
+    |   <FALSE> #False
+    |   <IDENTIFIER> #Ident
+    |   <THIS> #This
+    |   <NEW> (<INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> | <IDENTIFIER> <LPAR> <RPAR> )
+    |   <EXCLM> ExpressionDeclaration()
+    |   <LPAR> ExpressionDeclaration() <RPAR> )
+
+/*
+        [<OPERATOR> #Operator ExpressionDeclaration()
+    |   <LSBRACE>  ExpressionDeclaration() <RSBRACE>
+    | <FSTOP> (<LENGTH>| <IDENTIFIER> <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration() )*] <RPAR>)]*/
+
+
+/*RAZÃO CHOISE CONFLICT NAS DUAS PRIMEIRAS PRODUÇÕES??*/
+
+
+}
+
 
 void ImportDeclaration() #Imp: {}
 {
@@ -65,7 +122,7 @@ void ImportDeclaration() #Imp: {}
 }
 void Module() #Module: {}
 {
-   <IDENTIFIER> ["." Module()]
+   <IDENTIFIER> [<FSTOP> Module()]
 }
 
 /*METHOD DECLRATIONS */
@@ -102,3 +159,4 @@ void Array() #Array : {}
 {
     <LSBRACE> <RSBRACE>
 }
+
