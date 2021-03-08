@@ -53,6 +53,7 @@ TOKEN:
     |   < LENGTH: "length">
     |   < STATIC: "static" >
     |   < MAIN: "main" >
+    |   < RET: "return" >
     |   < CLASS : "class">
     |   < EXTENDS : "extends" >
     |   < PUBLIC: "public" > | < PRIVATE : "private" > | < PROTECTED : "protected" >
@@ -70,27 +71,41 @@ SimpleNode Expression(): {}
 void Main() #void : {}
 {
 
-        (ImportDeclaration())+ ClassDeclaration()
+        (ImportDeclaration())* ClassDeclaration()
        //TODO restrict main to be only one per class
 
 
 }
 
-
 void Statement() #Statement: {}
 {
     <LBRACE> (Statement())* <RBRACE>
-    | <IF> <LPAR> ExpressionDeclaration() <RPAR> Statement() <ELSE> Statement()
-    | <WHILE>  <LPAR> ExpressionDeclaration() <RPAR> Statement()
-    |  IdentifierExpression()
+    | IfStatement()
+    | WhileStatement()
+    | ExpressionDeclaration()
+    | AttribExpr()
+}
+
+void IfStatement() #If : {}
+{
+    <IF> <LPAR> ExpressionDeclaration() <RPAR>
+        Statement()
+    <ELSE>
+        Statement()
+}
+
+void WhileStatement() #While : {}
+{
+    <WHILE>  <LPAR> ExpressionDeclaration() <RPAR>
+        Statement()
 }
 
 void IdentifierExpression() #void:{}
 {
-    <IDENTIFIER> (<PVIRG> | Attribution())
+    <IDENTIFIER> (<PVIRG> | AttribExpr())
 }
 
-void Attribution() #void:{}
+void AttribExpr() #void:{}
 {
    [<LSBRACE> ExpressionDeclaration() <RSBRACE> ] <EQUAL> ExpressionDeclaration() <PVIRG>
 }
@@ -106,16 +121,12 @@ void ExpressionDeclaration() #void: {}
     |   <NEW> (<INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> | <IDENTIFIER> <LPAR> <RPAR> )
     |   <EXCLM> ExpressionDeclaration()
     |   <LPAR> ExpressionDeclaration() <RPAR> )
-
-
-        [<OPERATOR> #Operator ExpressionDeclaration()
-    |   <LSBRACE>  ExpressionDeclaration() <RSBRACE>
-    | <FSTOP> (<LENGTH>| <IDENTIFIER> <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration() )*] <RPAR>)]
+//        [<OPERATOR> #Operator ExpressionDeclaration()
+//    |   <LSBRACE>  ExpressionDeclaration() <RSBRACE>
+//    | <FSTOP> (<LENGTH>| <IDENTIFIER> <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration() )*] <RPAR>)]
 
 
 /*RAZÃO CHOISE CONFLICT NAS DUAS PRIMEIRAS PRODUÇÕES??*/
-
-
 }
 
 
@@ -131,26 +142,35 @@ void Module() #Module: {}
 /*METHOD DECLRATIONS */
 void MethodDeclaration() #MethodDecl : {}
 {
-    <PUBLIC> (ClassMethod() | MainDeclaration())
+    <PUBLIC> (ClassMethod() | MainDeclaration()) [<LF>]
 }
 void ClassMethod() #ClassMethod : {}
 {
-    Type() <IDENTIFIER> <LPAR> MethodArgs() <RPAR>
-    <LBRACE>
-        ExpressionDeclaration()
-    <RBRACE>
+    Type() <IDENTIFIER> <LPAR> MethodArgs() <RPAR> [<LF>]
+    <LBRACE> [<LF>]
+        MethodBody()
+    <RBRACE> <LF>
 }
 void MainDeclaration() #MainDecl : {}
 {
-   <STATIC> <VOID> <MAIN> <LPAR> <STRING>Array() <IDENTIFIER><RPAR>
-   <LBRACE >
-          ExpressionDeclaration()
-   <RBRACE>
+   <STATIC> <VOID> <MAIN> <LPAR> <STRING>Array() <IDENTIFIER><RPAR> [<LF>]
+   <LBRACE > [<LF>]
+          MethodBody()
+   <RBRACE> <LF>
 
 }
 void MethodArgs() #void : {}
 {
     Type() <IDENTIFIER> #MethodArg [<COMMA> MethodArgs()]
+}
+void MethodBody() #methodBody : {}
+{
+    (
+        VarDeclaration()
+        | Statement()
+    )*
+
+    <RET> #ret ExpressionDeclaration() <PVIRG> <LF>
 }
 /*
 void Type() #Type : {}
@@ -189,7 +209,10 @@ void Type(): {}
 
 
 void ClassDeclaration() #ClassDec : {}{
-    <CLASS> <IDENTIFIER> [ExtendsDec()] <LBRACE> [<LF>]  ClassContents() <RBRACE> <LF>
+    <CLASS> <IDENTIFIER> [ExtendsDec()] [<LF>]
+    <LBRACE> [<LF>]
+        ClassContents()
+    <RBRACE> <LF>
 }
 
 void ExtendsDec() #Extends :{}{
