@@ -33,25 +33,28 @@ TOKEN:
 	|   < LF: "\n" >
 	|   < PVIRG: ";" >
     |   < IMPORT: "import" >
+    |   < INT: "int" >
+    |   < BOOLEAN: "boolean" >
     |   < IDENTIFIER: ["A"-"Z", "a"-"z"](["0"-"9", "A"-"Z", "a"-"z"])* >
 }
 
 SimpleNode Expression(): {}
 {
-   Expr() {return jjtThis;} // Java code inside brackets
+   VarDeclaration() {return jjtThis;} // Java code inside brackets
 }
 
-void Expr() #void : {}
+void VarDeclaration(): {}
 {
-    (
-        ImportDeclaration()
-    )*
+     (Type() Identifier() <PVIRG> <LF>)+
 }
 
-void ImportDeclaration() #Imp: {}
+void Type(): {}
 {
-    <IMPORT> Identifier() <PVIRG> <LF>
+    LOOKAHEAD(2) <INT> ["[" "]"] #Int
+    | <BOOLEAN> #Boolean
+    | Identifier()
 }
+
 void Identifier() #Ident: {}
 {
    <IDENTIFIER> ["." Identifier()]
