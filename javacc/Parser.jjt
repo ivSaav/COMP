@@ -24,13 +24,12 @@ PARSER_END(Parser)
 
 SKIP :
 {
-	" " | "\r" | "\t" | "//"
+	" " | "\r" | "\t" | "//" | "\n"
 }
 
 TOKEN:
 {
     	< INTEGER: (["0"-"9"])+ >
-	|   < LF: "\n" >
 	|   < COMMA: "," >
 	|   < LPAR: "(" > |   < RPAR: ")" >
 	|   < LBRACE: "{" > | <RBRACE: "}">
@@ -113,26 +112,34 @@ void AttribExpr() #void:{}
 
 void ExpressionDeclaration() #void: {}
 {
-        (<INTEGER> #Integer
-    |   <TRUE> #True
-    |   <FALSE> #False
-    |   <IDENTIFIER> #Ident
-    |   <THIS> #This
-    |   <NEW> (<INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> | <IDENTIFIER> <LPAR> <RPAR> )
-    |   <EXCLM> ExpressionDeclaration()
-    |   <LPAR> ExpressionDeclaration() <RPAR> )
-//        [<OPERATOR> #Operator ExpressionDeclaration()
-//    |   <LSBRACE>  ExpressionDeclaration() <RSBRACE>
-//    | <FSTOP> (<LENGTH>| <IDENTIFIER> <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration() )*] <RPAR>)]
+        (
+            <INTEGER> #Int
+            | <TRUE> #True
+            | <FALSE> #False
+            | <IDENTIFIER> #Ident
+            | <THIS> #This
+            |   <NEW> (<INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> | <IDENTIFIER> <LPAR> <RPAR> )
+            |   <EXCLM> ExpressionDeclaration()
+            |   <LPAR> ExpressionDeclaration() <RPAR>
+        )
+        ExpressionAux()
+}
 
-
-/*RAZÃO CHOISE CONFLICT NAS DUAS PRIMEIRAS PRODUÇÕES??*/
+void ExpressionAux() #void : {}
+{
+   [LOOKAHEAD(2)
+       ( <OPERATOR>  #Operator ExpressionDeclaration()
+         | <LSBRACE>  ExpressionDeclaration() <RSBRACE>
+         | <FSTOP> (<LENGTH>| <IDENTIFIER> <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] <RPAR>)
+       )
+       ExpressionAux()
+    ]
 }
 
 
 void ImportDeclaration() #Imp: {}
 {
-    <IMPORT> Module() <PVIRG> <LF>
+    <IMPORT> Module() <PVIRG>
 }
 void Module() #Module: {}
 {
@@ -142,21 +149,21 @@ void Module() #Module: {}
 /*METHOD DECLRATIONS */
 void MethodDeclaration() #MethodDecl : {}
 {
-    <PUBLIC> (ClassMethod() | MainDeclaration()) [<LF>]
+    <PUBLIC> (ClassMethod() | MainDeclaration())
 }
 void ClassMethod() #ClassMethod : {}
 {
-    Type() <IDENTIFIER> <LPAR> MethodArgs() <RPAR> [<LF>]
-    <LBRACE> [<LF>]
+    Type() <IDENTIFIER> <LPAR> MethodArgs() <RPAR>
+    <LBRACE>
         MethodBody()
-    <RBRACE> <LF>
+    <RBRACE>
 }
 void MainDeclaration() #MainDecl : {}
 {
-   <STATIC> <VOID> <MAIN> <LPAR> <STRING>Array() <IDENTIFIER><RPAR> [<LF>]
-   <LBRACE > [<LF>]
+   <STATIC> <VOID> <MAIN> <LPAR> <STRING>Array() <IDENTIFIER><RPAR>
+   <LBRACE >
           MethodBody()
-   <RBRACE> <LF>
+   <RBRACE>
 
 }
 void MethodArgs() #void : {}
@@ -165,12 +172,9 @@ void MethodArgs() #void : {}
 }
 void MethodBody() #methodBody : {}
 {
-    (
-        VarDeclaration()
-        | Statement()
-    )*
+    (LOOKAHEAD(2) VarDeclaration() | Statement())*
 
-    <RET> #ret ExpressionDeclaration() <PVIRG> <LF>
+    <RET> #ret ExpressionDeclaration() <PVIRG>
 }
 /*
 void Type() #Type : {}
@@ -194,7 +198,7 @@ void Array() #Array : {}
 
 void VarDeclaration(): {}
 {
-     Type() Identifier() <PVIRG> <LF>
+     Type() Identifier() <PVIRG>
 }
 
 void Type(): {}
@@ -209,10 +213,10 @@ void Type(): {}
 
 
 void ClassDeclaration() #ClassDec : {}{
-    <CLASS> <IDENTIFIER> [ExtendsDec()] [<LF>]
-    <LBRACE> [<LF>]
+    <CLASS> <IDENTIFIER> [ExtendsDec()]
+    <LBRACE>
         ClassContents()
-    <RBRACE> <LF>
+    <RBRACE>
 }
 
 void ExtendsDec() #Extends :{}{

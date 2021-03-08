@@ -3,6 +3,7 @@ class isla extends isla
 {
     int i;
     public static void main(String[] args) {
+
         int i;
         return i;
     }
