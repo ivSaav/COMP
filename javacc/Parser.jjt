@@ -1,7 +1,7 @@
 options
 {
     LOOKAHEAD=1;
-    DEBUG_PARSER = true;
+    DEBUG_PARSER = false;
 }
 
 PARSER_BEGIN(Parser)
@@ -80,7 +80,7 @@ void Statement() #Statement: {}
     <LBRACE> (Statement())* <RBRACE>
     | IfStatement()
     | WhileStatement()
-    | ExpressionDeclaration() [Attribution()]
+    | ExpressionDeclaration() [Attribution()] <PVIRG>
 }
 
 void IfStatement() #If : {}
@@ -99,14 +99,14 @@ void WhileStatement() #While : {}
 
 void Attribution() #void:{}
 {
-   <EQUAL> ExpressionDeclaration() <PVIRG>
+   <EQUAL> ExpressionDeclaration()
 }
 
 
 void ExpressionDeclaration() #void: {}
 {
         (
-            <INTEGER> #Int //TODO Integer Literal??
+            <INTEGER> #Int
             | <TRUE> #True
             | <FALSE> #False
             | <IDENTIFIER> #Ident
@@ -216,7 +216,7 @@ void ExtendsDec() #Extends :{}{
     <EXTENDS> <IDENTIFIER>
 }
 
-void ClassContents() :{}{
+void ClassContents() #void :{}{
 
     (VarDeclaration())*(MethodDeclaration())*
 }
