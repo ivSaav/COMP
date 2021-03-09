@@ -73,7 +73,7 @@ TOKEN:
 
 SimpleNode Expression(): {}
 {
-   ExpressionDeclaration() {return jjtThis;} // Java code inside brackets
+   Main() {return jjtThis;} // Java code inside brackets
 }
 
 void Main() #void : {}
@@ -132,11 +132,27 @@ void AritmeticExpression() #void : {}
     )*
 }
 
+
 void MultiplicativeExpression() #void : {}
 {
-     Terminals()
+     NegationExpression()
     (
-        (<MULT> Terminals() #Mult(2) | <DIV> Terminals() #Div(2))
+        (<MULT> NegationExpression() #Mult(2) | <DIV> NegationExpression() #Div(2))
+    )*
+}
+
+void NegationExpression() #void : {}
+{
+   <EXCLM> AccessExpressions() #Negation(1) | AccessExpressions()
+}
+
+void AccessExpressions() #void : {}
+{
+    Terminals()
+    (
+        <LSBRACE>  Terminals() <RSBRACE>
+        |
+         <FSTOP> (<LENGTH>| <IDENTIFIER> <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] <RPAR>)
     )*
 }
 
@@ -148,10 +164,15 @@ void Terminals() #void : {}
     | <FALSE> #False
     | <IDENTIFIER> [<LPAR> <RPAR>]#Ident
     | <THIS> #This
-    |   <NEW> <INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> #New
-    |   <EXCLM> Terminals() #Negation(1)
+    |   NewDeclaration() #New
     |   <LPAR> ExpressionDeclaration() <RPAR>
 
+}
+
+void NewDeclaration() #void : {}
+{
+    <NEW>
+    (<INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> | <IDENTIFIER> <LPAR> <RPAR>)
 }
 
 void ImportDeclaration() #Imp: {}
