@@ -1,7 +1,7 @@
 options
 {
     LOOKAHEAD=1;
-    DEBUG_PARSER = false;
+    DEBUG_PARSER = true;
 }
 
 PARSER_BEGIN(Parser)
@@ -41,7 +41,13 @@ TOKEN:
 	|   < FSTOP: ".">
 	|   < EXCLM: "!">
 	|   < EQUAL:"=">
-	|   < OPERATOR:("&&"|"<"|"+"|"-"|"*"|"/")>
+	|   < AND: "&&" >
+	|   < PLUS : "+">
+	|   < MINUS: "-">
+	|   < GREATER :">" >
+	|   < SMALLER :"<" >
+	|   < MULT: "*" >
+	|   < DIV: "/" >
 	|   < IF:"if">
 	|   < ELSE: "else">
 	|   < NEW:"new">
@@ -67,7 +73,7 @@ TOKEN:
 
 SimpleNode Expression(): {}
 {
-   Main() {return jjtThis;} // Java code inside brackets
+   ExpressionDeclaration() {return jjtThis;} // Java code inside brackets
 }
 
 void Main() #void : {}
@@ -103,32 +109,50 @@ void Attribution() #void:{}
 }
 
 
-void ExpressionDeclaration() #void: {}
+void ExpressionDeclaration() #void : {}
 {
-        (
-            <INTEGER> #Int
-            | <TRUE> #True
-            | <FALSE> #False
-            | <IDENTIFIER> #Ident
-            | <THIS> #This
-            |   <NEW> (<INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> | <IDENTIFIER> <LPAR> <RPAR> )
-            |   <EXCLM> ExpressionDeclaration()
-            |   <LPAR> ExpressionDeclaration() <RPAR>
-        )
-        ExpressionAux()
+    ComparisonExpression() (<AND> ComparisonExpression()  #And(2))*
+
+
 }
 
-void ExpressionAux() #void : {}
+void ComparisonExpression() #void : {}
 {
-   [LOOKAHEAD(2)
-       ( <OPERATOR>  #Operator ExpressionDeclaration()
-         | <LSBRACE>  ExpressionDeclaration() <RSBRACE>
-         | <FSTOP> (<LENGTH>| <IDENTIFIER> <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] <RPAR>)
-       )
-       ExpressionAux()
-    ]
+    AritmeticExpression()
+    (
+        <GREATER> AritmeticExpression() #Greater(2) | <SMALLER> AritmeticExpression() #Smaller(2)
+    )*
 }
 
+void AritmeticExpression() #void : {}
+{
+     MultiplicativeExpression()
+    (
+        <PLUS> MultiplicativeExpression() #Plus(2) | <MINUS> MultiplicativeExpression() #Minus(2)
+    )*
+}
+
+void MultiplicativeExpression() #void : {}
+{
+     Terminals()
+    (
+        (<MULT> Terminals() #Mult(2) | <DIV> Terminals() #Div(2))
+    )*
+}
+
+void Terminals() #void : {}
+{
+
+    <INTEGER> #Int
+    | <TRUE> #True
+    | <FALSE> #False
+    | <IDENTIFIER> [<LPAR> <RPAR>]#Ident
+    | <THIS> #This
+    |   <NEW> <INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> #New
+    |   <EXCLM> Terminals() #Negation(1)
+    |   <LPAR> ExpressionDeclaration() <RPAR>
+
+}
 
 void ImportDeclaration() #Imp: {}
 {
