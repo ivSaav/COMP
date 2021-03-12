@@ -1,17 +1,24 @@
 import io.bla;
 class Fac {
-public int ComputeFac(int num){
-int num_aux ;
+    public int ComputeFac(int num){
+        int num_aux ;
 
-if (num < 1)
-    num_aux = 1;
-else
-num_aux = num * (this.ComputeFac(num-1));
-return num_aux;
-}
-public static void main(String[]args){
-io.println(new Fac().ComputeFac(10));//assuming the existence
-// of the classfile io.class
-}
-}
+        if (num < 1)
+            num_aux = 1;
+        else
+        num_aux = num * (this.ComputeFac(num-1));
+
+        while(i < aasdaas++--) {
+                if(max < a[i]) {
+                    max = a[i];
+                }
+                else
+                    i=i+1;
+        }
+        return num_aux;
+    }
+    public static void main(String[]args){
+        io.println(new Fac().ComputeFac(10));//assuming the existence
+        // of the classfile io.class
+    }
 }

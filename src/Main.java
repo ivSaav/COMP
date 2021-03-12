@@ -18,6 +18,9 @@ public class Main implements JmmParser {
     		SimpleNode root = parser.Expression(); // returns reference to root node
             	
     		root.dump(""); // prints the tree on the screen
+
+			for (Report report : parser.getReports())
+				System.out.println(report);
     	
     		return new JmmParserResult(root, new ArrayList<Report>());
 		} catch(ParseException e) {

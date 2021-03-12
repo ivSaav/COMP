@@ -1,27 +1,34 @@
 options
 {
     LOOKAHEAD=1;
-    DEBUG_PARSER = true;
+    DEBUG_PARSER = false;
 }
 
 PARSER_BEGIN(Parser)
 
+import java.util.ArrayList;import java.util.List;
+import pt.up.fe.comp.jmm.report.*;
 
 public class Parser
 {
+    private int errorCnt = 0;
+    private ArrayList<Report> reports = new ArrayList<Report>();
+
     public static void main(String args[]) throws ParseException {
-      	System.out.println("Write an arithmetic expression:");
+
 		Parser parser = new Parser(System.in);
 		SimpleNode root = parser.Expression(); // returns reference to root node
-        	
-		root.dump(""); // prints the tree on the screen
 
-		//System.out.println("Expression value: "+myCalc.eval(root));
+		root.dump(""); // prints the tree on the screen
     }
-	
+
+    public int getErrorCnt() {return this.errorCnt;}
+    public ArrayList<Report> getReports() { return this.reports; }
 }
 
 PARSER_END(Parser)
+
+
 
 SKIP :
 {
@@ -78,7 +85,7 @@ SimpleNode Expression(): {}
 
 void Main() #void : {}
 {
-    (ImportDeclaration())* ClassDeclaration()
+    (ImportDeclaration())* ClassDeclaration() <EOF>
 }
 
 void Statement() #Statement: {}
@@ -99,7 +106,31 @@ void IfStatement() #If : {}
 
 void WhileStatement() #While : {}
 {
-    <WHILE>  <LPAR> ExpressionDeclaration() <RPAR>
+    <WHILE>  <LPAR>
+    try {
+        ExpressionDeclaration() <RPAR>
+    }
+    catch (ParseException e) {
+
+        if (this.getErrorCnt() >= 10) {
+            System.out.println("Too many errors");
+            throw e;
+        }
+        Token t;
+
+        // consume tokens all the way up to a token of "kind" - use a do-while loop
+        // rather than a while because the current token is the one immediately before
+        // the erroneous token (in our case the token immediately before what should
+        // have been "if"/"while".
+        do {
+            t = getNextToken();
+        }
+        while (t.kind != RPAR);
+
+
+        this.reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, t.beginLine, e.toString()));
+        this.errorCnt++;
+    }
         Statement()
 }
 
