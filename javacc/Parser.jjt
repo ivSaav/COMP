@@ -6,7 +6,9 @@ options
 
 PARSER_BEGIN(Parser)
 
-import java.util.ArrayList;import java.util.List;
+
+import java.util.ArrayList;
+import java.util.List;
 import pt.up.fe.comp.jmm.report.*;
 
 public class Parser
@@ -14,17 +16,14 @@ public class Parser
     private int errorCnt = 0;
     private ArrayList<Report> reports = new ArrayList<Report>();
 
-    public static void main(String args[]) throws ParseException {
+    public static void main(String args[]) {
 
-		Parser parser = new Parser(System.in);
-		SimpleNode root = parser.Expression(); // returns reference to root node
-
-		root.dump(""); // prints the tree on the screen
     }
 
     public int getErrorCnt() {return this.errorCnt;}
     public ArrayList<Report> getReports() { return this.reports; }
 }
+
 
 PARSER_END(Parser)
 
@@ -78,7 +77,7 @@ TOKEN:
 
 }
 
-SimpleNode Expression(): {}
+SimpleNode Start(): {}
 {
    Main() {return jjtThis;} // Java code inside brackets
 }
@@ -111,12 +110,15 @@ void WhileStatement() #While : {}
         ExpressionDeclaration() <RPAR>
     }
     catch (ParseException e) {
+        Token t = getToken(0);
+
+        this.reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, t.beginLine, e.toString()));
 
         if (this.getErrorCnt() >= 10) {
             System.out.println("Too many errors");
             throw e;
         }
-        Token t;
+
 
         // consume tokens all the way up to a token of "kind" - use a do-while loop
         // rather than a while because the current token is the one immediately before
@@ -128,7 +130,7 @@ void WhileStatement() #While : {}
         while (t.kind != RPAR);
 
 
-        this.reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, t.beginLine, e.toString()));
+
         this.errorCnt++;
     }
         Statement()
@@ -143,8 +145,6 @@ void Attribution() #void:{}
 void ExpressionDeclaration() #void : {}
 {
     ComparisonExpression() (<AND> ComparisonExpression()  #And(2))*
-
-
 }
 
 void ComparisonExpression() #void : {}
@@ -187,13 +187,13 @@ void AccessExpressions() #void : {}
     )*
 }
 
-void Terminals() #void : {}
+void Terminals() #void : {Token t;}
 {
 
-    <INTEGER> #Int
-    | <TRUE> #True
+    <INTEGER> #Int  // literal -> type: int; value = token.image
+    | <TRUE> #True  //literal_boolean
     | <FALSE> #False
-    | <IDENTIFIER> [<LPAR> <RPAR>]#Ident
+    | t = <IDENTIFIER> [<LPAR> <RPAR>] {jjtThis.put("name", t.image);}#Ident
     | <THIS> #This
     |   NewDeclaration() #New
     |   <LPAR> ExpressionDeclaration() <RPAR>

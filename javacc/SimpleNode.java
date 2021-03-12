@@ -3,14 +3,12 @@
 import pt.up.fe.comp.jmm.JmmNode;
 
 import java.lang.RuntimeException;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 
 public
 class SimpleNode implements Node, JmmNode {
-
+    Map<String, String> attributes = new HashMap<>();
   protected Node parent;
   protected Node[] children;
   protected int id;
@@ -36,19 +34,26 @@ class SimpleNode implements Node, JmmNode {
   }
   
   public List<String> getAttributes() {
-	throw new RuntimeException("Not implemented yet");
+	return new ArrayList<>(attributes.keySet());
   }
 
   public void put(String attribute, String value) {
-	throw new RuntimeException("Not implemented yet");	  
+	this.attributes.put(attribute, value);
   }
 
   public String get(String attribute) {
-	throw new RuntimeException("Not implemented yet");
+	return this.attributes.get(attribute);
   }
   
   public List<JmmNode> getChildren() {
-    return (children == null) ? new ArrayList<>() : Arrays.asList((JmmNode[])children);
+//    return (children == null) ? new ArrayList<>() : Arrays.asList((JmmNode[])children);
+
+    List a = new ArrayList<>();
+    for (int i = 0; i < getNumChildren(); i++) {
+      a.add((JmmNode) jjtGetChild(i));
+    }
+
+    return a;
   }
   
   public int getNumChildren() {
@@ -57,6 +62,7 @@ class SimpleNode implements Node, JmmNode {
   
   public void add(JmmNode child, int index) {
     if(!(child instanceof Node)) {
+
   	throw new RuntimeException("Node not supported: " + child.getClass());  
     }
 	  
