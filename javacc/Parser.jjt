@@ -1,0 +1,291 @@
+options
+{
+    LOOKAHEAD=1;
+    DEBUG_PARSER = false;
+}
+
+PARSER_BEGIN(Parser)
+
+
+import java.util.ArrayList;
+import java.util.List;
+import pt.up.fe.comp.jmm.report.*;
+
+public class Parser
+{
+    private int errorCnt = 0;
+    private ArrayList<Report> reports = new ArrayList<Report>();
+
+    public static void main(String args[]) {
+
+    }
+
+    public int getErrorCnt() {return this.errorCnt;}
+    public ArrayList<Report> getReports() { return this.reports; }
+}
+
+
+PARSER_END(Parser)
+
+
+
+SKIP :
+{
+	" " | "\r" | "\t" | "//" | "\n"
+	| <"//" (~["\n","\r"])* ("\n"|"\r"|"\r\n") >
+	| <"/*"(~["/"])*  "*""/" > //multiline comments
+}
+
+TOKEN:
+{
+    	< INTEGER: (["0"-"9"])+ >
+	|   < COMMA: "," >
+	|   < LPAR: "(" > |   < RPAR: ")" >
+	|   < LBRACE: "{" > | <RBRACE: "}">
+	|   < LSBRACE: "[" > | <RSBRACE: "]" >
+	|   < PVIRG: ";" >
+	|   < FSTOP: ".">
+	|   < EXCLM: "!">
+	|   < EQUAL:"=">
+	|   < AND: "&&" >
+	|   < PLUS : "+">
+	|   < MINUS: "-">
+	|   < GREATER :">" >
+	|   < SMALLER :"<" >
+	|   < MULT: "*" >
+	|   < DIV: "/" >
+	|   < IF:"if">
+	|   < ELSE: "else">
+	|   < NEW:"new">
+	|   < THIS:"this">
+    |   < WHILE:"while">
+    |   < LITERALBOOL : "true" | "false">
+    |   < IMPORT: "import" >
+    |   < INT: "int" >
+    |   < BOOLEAN: "boolean" >
+    |   < LENGTH: "length">
+    |   < STATIC: "static" >
+    |   < MAIN: "main" >
+    |   < RET: "return" >
+    |   < CLASS : "class">
+    |   < EXTENDS : "extends" >
+    |   < PUBLIC: "public" > | < PRIVATE : "private" > | < PROTECTED : "protected" >
+    |   < STRING: "String">
+    |   < VOID: "void" >
+    |   < IDENTIFIER: ["A"-"Z", "a"-"z"](["0"-"9", "A"-"Z", "a"-"z", "_"])* >
+
+}
+
+SimpleNode Start() #Root :  {}
+{
+   Main() {return jjtThis;} // Java code inside brackets
+}
+
+void Main() #void : {}
+{
+    (ImportDeclaration())* ClassDeclaration() <EOF>
+}
+
+void Statement() #Statement: {}
+{
+    <LBRACE> (Statement())* <RBRACE>
+    | IfStatement()
+    | WhileStatement()
+    | ExpressionDeclaration() [Attribution()] <PVIRG>
+}
+
+void IfStatement() #If : {}
+{
+    <IF> <LPAR> ExpressionDeclaration() <RPAR>
+        Statement()
+    <ELSE>
+        Statement()
+}
+
+void WhileStatement() #While : {}
+{
+    <WHILE>  <LPAR>
+    try {
+        ExpressionDeclaration() <RPAR>
+    }
+    catch (ParseException e) {
+        Token t = getToken(0);
+
+        this.reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, t.beginLine, e.toString()));
+
+        if (this.getErrorCnt() >= 10) {
+            System.out.println("Too many errors");
+            throw e;
+        }
+
+
+        // consume tokens all the way up to a token of "kind" - use a do-while loop
+        // rather than a while because the current token is the one immediately before
+        // the erroneous token (in our case the token immediately before what should
+        // have been "if"/"while".
+        do {
+            t = getNextToken();
+        }
+        while (t.kind != RPAR);
+
+
+
+        this.errorCnt++;
+    }
+        Statement()
+}
+
+void Attribution() #void:{}
+{
+   <EQUAL> ExpressionDeclaration()
+}
+
+
+void ExpressionDeclaration() #void : {}
+{
+    ComparisonExpression() (<AND> ComparisonExpression()  #And(2))*
+}
+
+void ComparisonExpression() #void : {}
+{
+    AritmeticExpression()
+    (
+        <GREATER> AritmeticExpression() #Greater(2) | <SMALLER> AritmeticExpression() #Smaller(2)
+    )*
+}
+
+void AritmeticExpression() #void : {}
+{
+     MultiplicativeExpression()
+    (
+        <PLUS> MultiplicativeExpression() #Plus(2) | <MINUS> MultiplicativeExpression() #Minus(2)
+    )*
+}
+
+
+void MultiplicativeExpression() #void : {}
+{
+     NegationExpression()
+    (
+        (<MULT> NegationExpression() #Mult(2) | <DIV> NegationExpression() #Div(2))
+    )*
+}
+
+void NegationExpression() #void : {}
+{
+   <EXCLM> AccessExpressions() #Negation(1) | AccessExpressions()
+}
+
+void AccessExpressions() #void : {}
+{
+    Terminals()
+    (
+        <LSBRACE>  Terminals() <RSBRACE>
+        |
+         <FSTOP> (<LENGTH>| <IDENTIFIER> <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] <RPAR>)
+    )*
+}
+
+void Terminals() #void : {Token t;}
+{
+
+    t = <INTEGER> { jjtThis.put("int", t.image); }#Int  // literal -> type: int; value = token.image
+    | t = <LITERALBOOL> { jjtThis.put("boolean", t.image); } #LiteralBool  //literal_boolean
+    | t = <IDENTIFIER> [<LPAR> <RPAR>] {jjtThis.put("name", t.image);}#Ident
+    | <THIS> #This
+    |   NewDeclaration() #New
+    |   <LPAR> ExpressionDeclaration() <RPAR>
+
+}
+
+void NewDeclaration() #void : {}
+{
+    <NEW>
+    (<INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> | <IDENTIFIER> <LPAR> <RPAR>)
+}
+
+void ImportDeclaration() #Imp: {}
+{
+    <IMPORT> Module() <PVIRG>
+}
+void Module() #Module: {}
+{
+   <IDENTIFIER> [<FSTOP> Module()]
+}
+
+/*METHOD DECLRATIONS */
+void MethodDeclaration() #MethodDecl : {}
+{
+    <PUBLIC> (ClassMethod() | MainDeclaration())
+}
+void ClassMethod() #ClassMethod : {}
+{
+    Type() <IDENTIFIER> <LPAR> MethodArgs() <RPAR>
+    <LBRACE>
+        MethodBody()
+    <RBRACE>
+}
+void MainDeclaration() #MainDecl : {}
+{
+   <STATIC> <VOID> <MAIN> <LPAR> <STRING>Array() <IDENTIFIER><RPAR>
+   <LBRACE >
+          MethodBody()
+   <RBRACE>
+
+}
+void MethodArgs() #void : {}
+{
+    Type() <IDENTIFIER> #MethodArg [<COMMA> MethodArgs()]
+}
+void MethodBody() #methodBody : {}
+{
+    (LOOKAHEAD(2)  Statement() | VarDeclaration())*
+
+    [<RET> #ret ExpressionDeclaration() <PVIRG>]
+}
+
+
+/*VAR DECLARATIONS*/
+
+void Identifier() #Ident: {}
+{
+   <IDENTIFIER> ["." Identifier()]
+}
+
+void Array() #Array : {}
+{
+    <LSBRACE> <RSBRACE>
+}
+
+
+void VarDeclaration(): {}
+{
+     Type() Identifier() <PVIRG>
+}
+
+void Type(): {}
+{
+    <INT> [Array() ] #Int
+    | <BOOLEAN> #Boolean
+    | Identifier()
+}
+
+
+/*CLASS DECLARATION*/
+
+
+void ClassDeclaration() #ClassDec : {}{
+    <CLASS> <IDENTIFIER> [ExtendsDec()]
+    <LBRACE>
+        ClassContents()
+    <RBRACE>
+}
+
+void ExtendsDec() #Extends :{}{
+    <EXTENDS> <IDENTIFIER>
+}
+
+void ClassContents() #void :{}{
+
+    (VarDeclaration())*(MethodDeclaration())*
+}
