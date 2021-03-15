@@ -58,9 +58,8 @@ TOKEN:
 	|   < ELSE: "else">
 	|   < NEW:"new">
 	|   < THIS:"this">
-	|   < TRUE:"true">
     |   < WHILE:"while">
-	|   < FALSE: "false">
+    |   < LITERALBOOL : "true" | "false">
     |   < IMPORT: "import" >
     |   < INT: "int" >
     |   < BOOLEAN: "boolean" >
@@ -77,7 +76,7 @@ TOKEN:
 
 }
 
-SimpleNode Start(): {}
+SimpleNode Start() #Root :  {}
 {
    Main() {return jjtThis;} // Java code inside brackets
 }
@@ -190,9 +189,8 @@ void AccessExpressions() #void : {}
 void Terminals() #void : {Token t;}
 {
 
-    <INTEGER> #Int  // literal -> type: int; value = token.image
-    | <TRUE> #True  //literal_boolean
-    | <FALSE> #False
+    t = <INTEGER> { jjtThis.put("int", t.image); }#Int  // literal -> type: int; value = token.image
+    | t = <LITERALBOOL> { jjtThis.put("boolean", t.image); } #LiteralBool  //literal_boolean
     | t = <IDENTIFIER> [<LPAR> <RPAR>] {jjtThis.put("name", t.image);}#Ident
     | <THIS> #This
     |   NewDeclaration() #New
@@ -245,12 +243,7 @@ void MethodBody() #methodBody : {}
 
     [<RET> #ret ExpressionDeclaration() <PVIRG>]
 }
-/*
-void Type() #Type : {}
-{
-    (<INT> | <STRING> | <BOOLEAN> | <IDENTIFIER>)[Array()]//standard java var or object
-}
- */
+
 
 /*VAR DECLARATIONS*/
 

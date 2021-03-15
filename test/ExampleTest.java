@@ -13,7 +13,7 @@ public class ExampleTest {
 
     @Test
     public void testExpression() {		
-		assertEquals("Expression", TestUtils.parse("2+3\n").getRootNode().getKind());		
+		assertEquals("ExpressionDeclaration", TestUtils.parse("2+3\n").getRootNode().getKind());
 	}
 
 }

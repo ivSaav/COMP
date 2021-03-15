@@ -8,7 +8,7 @@ import java.util.*;
 
 public
 class SimpleNode implements Node, JmmNode {
-    Map<String, String> attributes = new HashMap<>();
+    Map<String, String> attributes = new HashMap<String, String>();
   protected Node parent;
   protected Node[] children;
   protected int id;
@@ -34,7 +34,7 @@ class SimpleNode implements Node, JmmNode {
   }
   
   public List<String> getAttributes() {
-	return new ArrayList<>(attributes.keySet());
+	return new ArrayList<String>(attributes.keySet());
   }
 
   public void put(String attribute, String value) {
@@ -48,7 +48,7 @@ class SimpleNode implements Node, JmmNode {
   public List<JmmNode> getChildren() {
 //    return (children == null) ? new ArrayList<>() : Arrays.asList((JmmNode[])children);
 
-    List a = new ArrayList<>();
+    List a = new ArrayList<JmmNode>();
     for (int i = 0; i < getNumChildren(); i++) {
       a.add((JmmNode) jjtGetChild(i));
     }

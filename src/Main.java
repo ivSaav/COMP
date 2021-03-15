@@ -26,7 +26,7 @@ public class Main implements JmmParser {
 			}
 		    catch(Exception e) {
 		    	parser.getReports().add(new Report(ReportType.ERROR, Stage.SEMANTIC,
-						0, e.toString()));
+						-1, e.toString()));
 			}
 
     		return new JmmParserResult(root, parser.getReports());
