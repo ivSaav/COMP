@@ -76,7 +76,7 @@ TOKEN:
 
 }
 
-SimpleNode Start() #Root :  {}
+SimpleNode Start() #Start :  {}
 {
    Main() {return jjtThis;} // Java code inside brackets
 }
@@ -115,7 +115,7 @@ void WhileStatement() #While : {}
 
         if (this.getErrorCnt() >= 10) {
             System.out.println("Too many errors");
-            throw e;
+            throw new Exception();
         }
 
 

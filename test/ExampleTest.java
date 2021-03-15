@@ -13,7 +13,12 @@ public class ExampleTest {
 
     @Test
     public void testExpression() {		
-		assertEquals("ExpressionDeclaration", TestUtils.parse("2+3\n").getRootNode().getKind());
+		assertEquals("Start", TestUtils.parse("class Fac {\n" +
+                "    public static void main(String[]args){\n" +
+                "        io.println(new Fac().ComputeFac(10));//assuming the existence\n" +
+                "        // of the classfile io.class\n" +
+                "    }\n" +
+                "}").getRootNode().getKind());
 	}
 
 }

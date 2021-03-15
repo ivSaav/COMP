@@ -29,6 +29,8 @@ public class Main implements JmmParser {
 						-1, e.toString()));
 			}
 
+
+//			System.out.println(root.getKind());
     		return new JmmParserResult(root, parser.getReports());
 		} catch(Exception e) {
 
