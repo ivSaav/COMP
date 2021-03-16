@@ -13,6 +13,7 @@ import pt.up.fe.comp.jmm.report.*;
 
 public class Parser
 {
+//    private static in
     private int errorCnt = 0;
     private ArrayList<Report> reports = new ArrayList<Report>();
 
@@ -126,7 +127,7 @@ void WhileStatement() #While : {}
         do {
             t = getNextToken();
         }
-        while (t.kind != RPAR);
+        while (t.kind != RPAR); //TODO open brace
 
 
 
@@ -150,7 +151,7 @@ void ComparisonExpression() #void : {}
 {
     AritmeticExpression()
     (
-        <GREATER> AritmeticExpression() #Greater(2) | <SMALLER> AritmeticExpression() #Smaller(2)
+       <SMALLER> AritmeticExpression() #Smaller(2)
     )*
 }
 
@@ -208,19 +209,19 @@ void ImportDeclaration() #Imp: {}
 {
     <IMPORT> Module() <PVIRG>
 }
-void Module() #Module: {}
+void Module() #Module: {Token t;}
 {
-   <IDENTIFIER> [<FSTOP> Module()]
+   t = <IDENTIFIER> {jjtThis.put("name", t.image);}[<FSTOP> Module()]
 }
 
 /*METHOD DECLRATIONS */
-void MethodDeclaration() #MethodDecl : {}
+void MethodDeclaration() #void : {}
 {
     <PUBLIC> (ClassMethod() | MainDeclaration())
 }
 void ClassMethod() #ClassMethod : {}
 {
-    Type() <IDENTIFIER> <LPAR> MethodArgs() <RPAR>
+    Type() <IDENTIFIER> <LPAR> MethodArgs() #MethodArg <RPAR>
     <LBRACE>
         MethodBody()
     <RBRACE>
@@ -235,9 +236,9 @@ void MainDeclaration() #MainDecl : {}
 }
 void MethodArgs() #void : {}
 {
-    Type() <IDENTIFIER> #MethodArg [<COMMA> MethodArgs()]
+    Type() <IDENTIFIER>  [<COMMA> MethodArgs()]
 }
-void MethodBody() #methodBody : {}
+void MethodBody() #void : {}
 {
     (LOOKAHEAD(2)  Statement() | VarDeclaration())*
 
@@ -263,7 +264,7 @@ void VarDeclaration(): {}
      Type() Identifier() <PVIRG>
 }
 
-void Type(): {}
+void Type() #void : {}
 {
     <INT> [Array() ] #Int
     | <BOOLEAN> #Boolean

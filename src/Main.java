@@ -20,8 +20,8 @@ public class Main implements JmmParser {
 			SimpleNode root = null;
 		    try {
 		    	root = parser.Start(); // returns reference to root node
-//				root.dump(""); // prints the tree on the screen
-				System.out.println(root.toJson());
+				root.dump(""); // prints the tree on the screen
+//				System.out.println(root.toJson());
 
 			}
 		    catch(Exception e) {
