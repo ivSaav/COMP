@@ -1,7 +1,7 @@
 options
 {
     LOOKAHEAD=1;
-    DEBUG_PARSER = false;
+    DEBUG_PARSER = true;
 }
 
 PARSER_BEGIN(Parser)
@@ -95,11 +95,12 @@ void Statement() #Statement: {}
     | ExpressionDeclaration() [Attribution()] <PVIRG>
 }
 
-void IfStatement() #If : {}
+
+void IfStatement() #void : {}
 {
-    <IF> <LPAR> ExpressionDeclaration() <RPAR>
+    <IF> #If <LPAR> ExpressionDeclaration() <RPAR>
         Statement()
-    <ELSE>
+    <ELSE> #Else
         Statement()
 }
 
@@ -138,7 +139,7 @@ void WhileStatement() #While : {}
 
 void Attribution() #void:{}
 {
-   <EQUAL> ExpressionDeclaration()
+   <EQUAL> #Equal ExpressionDeclaration()
 }
 
 
@@ -192,7 +193,7 @@ void Terminals() #void : {Token t;}
 
     t = <INTEGER> { jjtThis.put("int", t.image); }#Int  // literal -> type: int; value = token.image
     | t = <LITERALBOOL> { jjtThis.put("boolean", t.image); } #LiteralBool  //literal_boolean
-    | t = <IDENTIFIER> [<LPAR> <RPAR>] {jjtThis.put("name", t.image);}#Ident
+    | Identifier()
     | <THIS> #This
     |   NewDeclaration() #New
     |   <LPAR> ExpressionDeclaration() <RPAR>
@@ -205,30 +206,32 @@ void NewDeclaration() #void : {}
     (<INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> | <IDENTIFIER> <LPAR> <RPAR>)
 }
 
-void ImportDeclaration() #Imp: {}
+/*IMPORT DECLARATION*/
+void ImportDeclaration() #ImportDec: {}
 {
     <IMPORT> Module() <PVIRG>
 }
+
 void Module() #Module: {Token t;}
 {
-   t = <IDENTIFIER> {jjtThis.put("name", t.image);}[<FSTOP> Module()]
+   t = <IDENTIFIER> {jjtThis.put("name", t.image);} [<FSTOP> Module()]
 }
 
-/*METHOD DECLRATIONS */
-void MethodDeclaration() #void : {}
+/*METHOD DECLERATIONS */
+void MethodDeclaration() #void : {Token t;}
 {
     <PUBLIC> (ClassMethod() | MainDeclaration())
 }
 void ClassMethod() #ClassMethod : {}
 {
-    Type() <IDENTIFIER> <LPAR> MethodArgs() #MethodArg <RPAR>
+    Type() <LPAR> MethodArgs() #MethodArg <RPAR>
     <LBRACE>
         MethodBody()
     <RBRACE>
 }
 void MainDeclaration() #MainDecl : {}
 {
-   <STATIC> <VOID> <MAIN> <LPAR> <STRING>Array() <IDENTIFIER><RPAR>
+   <STATIC> <VOID> <MAIN> <LPAR> <STRING> Array() <IDENTIFIER> <RPAR>
    <LBRACE >
           MethodBody()
    <RBRACE>
@@ -236,9 +239,9 @@ void MainDeclaration() #MainDecl : {}
 }
 void MethodArgs() #void : {}
 {
-    Type() <IDENTIFIER>  [<COMMA> MethodArgs()]
+    Type() [<COMMA> MethodArgs()]
 }
-void MethodBody() #void : {}
+void MethodBody() #MethodBody : {}
 {
     (LOOKAHEAD(2)  Statement() | VarDeclaration())*
 
@@ -247,43 +250,41 @@ void MethodBody() #void : {}
 
 
 /*VAR DECLARATIONS*/
-
-void Identifier() #Ident: {}
-{
-   <IDENTIFIER> ["." Identifier()]
-}
-
 void Array() #Array : {}
 {
     <LSBRACE> <RSBRACE>
 }
 
-
 void VarDeclaration(): {}
 {
-     Type() Identifier() <PVIRG>
+     Type() <PVIRG>
 }
 
-void Type() #void : {}
+void Type() #Type : {Token t;}
 {
-    <INT> [Array() ] #Int
-    | <BOOLEAN> #Boolean
-    | Identifier()
+    ( t = <INT> [Array()] { jjtThis.put("type", t.image); }
+    | t = <BOOLEAN> { jjtThis.put("type", t.image); }
+    | <IDENTIFIER>)
+
+    Identifier()
 }
 
+void Identifier() #void: {Token t;}
+{
+   t = <IDENTIFIER> { jjtThis.put("name", t.image); } #Ident
+}
 
 /*CLASS DECLARATION*/
 
-
-void ClassDeclaration() #ClassDec : {}{
-    <CLASS> <IDENTIFIER> [ExtendsDec()]
+void ClassDeclaration() #Class : {}{
+    <CLASS> Identifier() [ExtendsDec()]
     <LBRACE>
         ClassContents()
     <RBRACE>
 }
 
 void ExtendsDec() #Extends :{}{
-    <EXTENDS> <IDENTIFIER>
+    <EXTENDS> Identifier()
 }
 
 void ClassContents() #void :{}{

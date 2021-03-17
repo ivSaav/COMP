@@ -117,11 +117,26 @@ class SimpleNode implements Node, JmmNode {
 
   public void dump(String prefix) {
 
+    String val = prefix;
 
-    String val = toString(prefix);
     switch (this.getKind()) {
+      case "Module":
+        val += this.get("name");
+        break;
+      case "Type":
+        val += this.get("type");
+        break;
+      case "Int":
+        val += this.get("int");
+        break;
+      case "Boolean":
+        val += this.get("boolean");
+        break;
       case "Ident":
-        val +=  "\t" + this.get("name");
+        val += this.get("name");
+        break;
+      default:
+        val +=  toString();
     }
 
     System.out.println(val);
