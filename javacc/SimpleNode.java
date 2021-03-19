@@ -135,6 +135,9 @@ class SimpleNode implements Node, JmmNode {
       case "Ident":
         val += this.get("name");
         break;
+      case "Class":
+        val+= "Class " + this.get("class");
+          break;
       default:
         val +=  toString();
     }

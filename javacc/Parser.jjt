@@ -96,12 +96,12 @@ void Statement() #Statement: {}
 }
 
 
-void IfStatement() #void : {}
+void IfStatement() #If: {}
 {
-    <IF> #If <LPAR> ExpressionDeclaration() <RPAR>
+    <IF> <LPAR> ExpressionDeclaration() <RPAR>
         Statement()
-    <ELSE> #Else
-        Statement()
+    <ELSE>
+        Statement() #Else
 }
 
 void WhileStatement() #While : {}
@@ -139,7 +139,7 @@ void WhileStatement() #While : {}
 
 void Attribution() #void:{}
 {
-   <EQUAL> #Equal ExpressionDeclaration()
+   <EQUAL> ExpressionDeclaration() #Equal(2)
 }
 
 
@@ -178,13 +178,15 @@ void NegationExpression() #void : {}
    <EXCLM> AccessExpressions() #Negation(1) | AccessExpressions()
 }
 
-void AccessExpressions() #void : {}
+void AccessExpressions() #void : {Token t;}
 {
     Terminals()
     (
         <LSBRACE>  Terminals() <RSBRACE>
         |
-         <FSTOP> (<LENGTH>| <IDENTIFIER> <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] <RPAR>)
+         <FSTOP> (<LENGTH>
+        |
+          t=<IDENTIFIER>{jjtThis.put("name", t.image);}  <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] <RPAR>) #Ident
     )*
 }
 
@@ -193,8 +195,8 @@ void Terminals() #void : {Token t;}
 
     t = <INTEGER> { jjtThis.put("int", t.image); }#Int  // literal -> type: int; value = token.image
     | t = <LITERALBOOL> { jjtThis.put("boolean", t.image); } #LiteralBool  //literal_boolean
-    | Identifier()
-    | <THIS> #This
+    | t=<IDENTIFIER>{jjtThis.put("name", t.image);} #Ident
+    | <THIS>
     |   NewDeclaration() #New
     |   <LPAR> ExpressionDeclaration() <RPAR>
 
@@ -218,11 +220,13 @@ void Module() #Module: {Token t;}
 }
 
 /*METHOD DECLERATIONS */
-void MethodDeclaration() #void : {Token t;}
+void MethodDeclaration() #Method : {}
 {
-    <PUBLIC> (ClassMethod() | MainDeclaration())
+    <PUBLIC> (ClassMethod() | MainDeclaration()) #Public
 }
-void ClassMethod() #ClassMethod : {}
+
+
+void ClassMethod() #void : {}
 {
     Type() <LPAR> MethodArgs() #MethodArg <RPAR>
     <LBRACE>
@@ -266,7 +270,7 @@ void Type() #Type : {Token t;}
     | t = <BOOLEAN> { jjtThis.put("type", t.image); }
     | <IDENTIFIER>)
 
-    Identifier()
+    t=<IDENTIFIER> {jjtThis.put("name", t.image);} #Ident
 }
 
 void Identifier() #void: {Token t;}
@@ -276,8 +280,8 @@ void Identifier() #void: {Token t;}
 
 /*CLASS DECLARATION*/
 
-void ClassDeclaration() #Class : {}{
-    <CLASS> Identifier() [ExtendsDec()]
+void ClassDeclaration() #Class: {Token t;}{
+    <CLASS> t=<IDENTIFIER> {jjtThis.put("class", t.image);}  [ExtendsDec()]
     <LBRACE>
         ClassContents()
     <RBRACE>
