@@ -1,14 +1,10 @@
 package pt.up.fe.comp;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.StringReader;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.util.Properties;
 import java.util.List;
+import java.util.Scanner;
 
 
 import pt.up.fe.comp.jmm.JmmParserResult;
@@ -45,8 +41,18 @@ public class TestUtils {
 
             // It is expected that the Parser class can be instantiated without arguments
 			JmmParser parser = (JmmParser) parserClass.getConstructor().newInstance();
+
+			File file = new File(code);
+			Scanner scanner = new Scanner(file);
+
+			StringBuilder contents = new StringBuilder();
+			while (scanner.hasNextLine()) {
+				contents.append(scanner.nextLine()).append("\n");
+
+			}
+
 			
-			return parser.parse(code);
+			return parser.parse(contents.toString());
 
         } catch (Exception e) {
 			throw new RuntimeException("Could not parse code", e);

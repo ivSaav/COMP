@@ -1,7 +1,7 @@
 options
 {
     LOOKAHEAD=1;
-    DEBUG_PARSER = true;
+    DEBUG_PARSER = false;
 }
 
 PARSER_BEGIN(Parser)
@@ -77,7 +77,7 @@ TOKEN:
 
 }
 
-SimpleNode Start() #Start :  {}
+SimpleNode Start() #Root :  {}
 {
    Main() {return jjtThis;} // Java code inside brackets
 }
