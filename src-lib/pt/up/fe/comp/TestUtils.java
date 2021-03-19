@@ -51,7 +51,6 @@ public class TestUtils {
 
 			}
 
-			
 			return parser.parse(contents.toString());
 
         } catch (Exception e) {

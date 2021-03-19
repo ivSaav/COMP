@@ -1,7 +1,7 @@
 options
 {
     LOOKAHEAD=1;
-    DEBUG_PARSER = false;
+    DEBUG_PARSER = true;
 }
 
 PARSER_BEGIN(Parser)
@@ -184,9 +184,11 @@ void AccessExpressions() #void : {Token t;}
     (
         <LSBRACE>  Terminals() <RSBRACE>
         |
-         <FSTOP> (<LENGTH>
-        |
-          t=<IDENTIFIER>{jjtThis.put("name", t.image);}  <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] <RPAR>) #Ident
+        (
+        <FSTOP> (<LENGTH>
+                |
+                t=<IDENTIFIER>{jjtThis.put("name", t.image);} #Ident <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] <RPAR> )
+        )
     )*
 }
 
@@ -197,15 +199,19 @@ void Terminals() #void : {Token t;}
     | t = <LITERALBOOL> { jjtThis.put("boolean", t.image); } #LiteralBool  //literal_boolean
     | t=<IDENTIFIER>{jjtThis.put("name", t.image);} #Ident
     | <THIS>
-    |   NewDeclaration() #New
+    |   NewDeclaration()
     |   <LPAR> ExpressionDeclaration() <RPAR>
 
 }
 
-void NewDeclaration() #void : {}
+void NewDeclaration() #New : {Token t;}
 {
     <NEW>
-    (<INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> | <IDENTIFIER> <LPAR> <RPAR>)
+    (
+        <INT> <LSBRACE> ExpressionDeclaration() <RSBRACE>
+    |
+      t = <IDENTIFIER> {jjtThis.put("name", t.image);} #Ident <LPAR> <RPAR>
+    )
 }
 
 /*IMPORT DECLARATION*/
@@ -228,7 +234,7 @@ void MethodDeclaration() #Method : {}
 
 void ClassMethod() #void : {}
 {
-    Type() <LPAR> MethodArgs() #MethodArg <RPAR>
+    Type() <LPAR> [MethodArgs() #MethodArg] <RPAR>
     <LBRACE>
         MethodBody()
     <RBRACE>
@@ -249,7 +255,7 @@ void MethodBody() #MethodBody : {}
 {
     (LOOKAHEAD(2)  Statement() | VarDeclaration())*
 
-    [<RET> #ret ExpressionDeclaration() <PVIRG>]
+    [<RET>  ExpressionDeclaration() #ret <PVIRG> ]
 }
 
 

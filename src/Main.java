@@ -15,35 +15,26 @@ public class Main implements JmmParser {
 
 	public JmmParserResult parse(String jmmCode) {
 
-		Parser parser = new Parser(new StringReader(jmmCode));
 		try {
+		    Parser parser = new Parser(new StringReader(jmmCode));
 
-			SimpleNode root = parser.Start(); // returns reference to root node
-
-//				root.dump(""); // prints the tree on the screen
+		    SimpleNode root = null;
+		    try {
+		    	root = parser.Start(); // returns reference to root node
+				root.dump(""); // prints the tree on the screen
 //				System.out.println(root.toJson());
+			}
+		    catch(Exception e) {
+		    	parser.getReports().add(new Report(ReportType.ERROR, Stage.SEMANTIC,
+						-1, e.toString()));
+			}
 
+			return new JmmParserResult(root, parser.getReports());
 
-
-
-//			System.out.println(root.getKind());
-    		return new JmmParserResult(root, parser.getReports());
-		} catch(Exception e) {
-			parser.getReports().add(new Report(ReportType.ERROR, Stage.SEMANTIC,
-					-1, e.toString()));
-			throw new RuntimeException("Error while parsing", e);
+		} catch(Exception j) {
+			System.out.println("cenas" + j.toString());
+			throw new RuntimeException("Error while parsing", j);
 		}
-
-
-//		Parser parser = new Parser(System.in);
-//		try {
-//			SimpleNode root = parser.Expression(); // returns reference to root node
-//			root.dump(""); // prints the tree on the screen
-//		}
-//		catch (Exception e) {
-//			System.out.println(e.toString());
-//			this.reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, t.beginLine, e.toString()));
-//		}
 	}
 
     public static void main(String[] args) {
