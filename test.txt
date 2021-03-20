@@ -1,7 +1,9 @@
 import io.bla;
 class Fac {
     public static void main(String[]args){
-        io.println(new Fac().ComputeFac(10));//assuming the existence
-        // of the classfile io.class
+       if (this.ne(field[neigh[i]],0))
+                       ret = ret + 1;
+                   else {
+                   }
     }
 }

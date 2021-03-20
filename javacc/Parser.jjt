@@ -1,7 +1,7 @@
 options
 {
     LOOKAHEAD=1;
-    DEBUG_PARSER = true;
+    DEBUG_PARSER = false;
 }
 
 PARSER_BEGIN(Parser)
@@ -73,7 +73,7 @@ TOKEN:
     |   < PUBLIC: "public" > | < PRIVATE : "private" > | < PROTECTED : "protected" >
     |   < STRING: "String">
     |   < VOID: "void" >
-    |   < IDENTIFIER: ["A"-"Z", "a"-"z"](["0"-"9", "A"-"Z", "a"-"z", "_"])* >
+    |   < IDENTIFIER: ["_", "$","A"-"Z", "a"-"z"](["0"-"9", "A"-"Z", "a"-"z", "_", "$"])* >
 
 }
 
@@ -182,7 +182,7 @@ void PriorityExpressions() #void : {Token t;}
 {
     Terminals()
     (
-        <LSBRACE>  Terminals() <RSBRACE>
+        <LSBRACE>  ExpressionDeclaration() <RSBRACE>
         |
         <FSTOP> (<LENGTH> #Length | MethodCall())
     )*
@@ -201,11 +201,10 @@ void Terminals() #void : {Token t;}
 
     t = <INTEGER> { jjtThis.put("int", t.image); }#Int  // literal -> type: int; value = token.image
     | t = <LITERALBOOL> { jjtThis.put("boolean", t.image); } #LiteralBool  //literal_boolean
-
+    | t=<IDENTIFIER>{jjtThis.put("name", t.image);} #Ident
     | <THIS>
     | NewDeclaration()
     | <LPAR> ExpressionDeclaration() <RPAR>
-    | t=<IDENTIFIER>{jjtThis.put("name", t.image);} #Ident
 
 }
 
@@ -267,7 +266,7 @@ void MethodBody() #MethodBody : {}
 /*VAR DECLARATIONS*/
 void Array() #Array : {}
 {
-    <LSBRACE> <RSBRACE>
+    <LSBRACE><RSBRACE>
 }
 
 void VarDeclaration(): {}
