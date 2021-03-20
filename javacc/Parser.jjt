@@ -175,42 +175,47 @@ void MultiplicativeExpression() #void : {}
 
 void NegationExpression() #void : {}
 {
-   <EXCLM> AccessExpressions() #Negation(1) | AccessExpressions()
+   <EXCLM> PriorityExpressions() #Negation(1) | PriorityExpressions()
 }
 
-void AccessExpressions() #void : {Token t;}
+void PriorityExpressions() #void : {Token t;}
 {
     Terminals()
     (
         <LSBRACE>  Terminals() <RSBRACE>
         |
-        (
-        <FSTOP> (<LENGTH>
-                |
-                t=<IDENTIFIER>{jjtThis.put("name", t.image);} #Ident <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] <RPAR> )
-        )
+        <FSTOP> (<LENGTH> #Length | MethodCall())
     )*
 }
+
+
+void MethodCall() #Call: {Token t;}
+{
+    t=<IDENTIFIER> {jjtThis.put("name", t.image);} #Ident <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] <RPAR>
+}
+
+
 
 void Terminals() #void : {Token t;}
 {
 
     t = <INTEGER> { jjtThis.put("int", t.image); }#Int  // literal -> type: int; value = token.image
     | t = <LITERALBOOL> { jjtThis.put("boolean", t.image); } #LiteralBool  //literal_boolean
-    | t=<IDENTIFIER>{jjtThis.put("name", t.image);} #Ident
+
     | <THIS>
-    |   NewDeclaration()
-    |   <LPAR> ExpressionDeclaration() <RPAR>
+    | NewDeclaration()
+    | <LPAR> ExpressionDeclaration() <RPAR>
+    | t=<IDENTIFIER>{jjtThis.put("name", t.image);} #Ident
 
 }
 
-void NewDeclaration() #New : {Token t;}
+void NewDeclaration() #void : {Token t;}
 {
     <NEW>
     (
         <INT> <LSBRACE> ExpressionDeclaration() <RSBRACE>
     |
-      t = <IDENTIFIER> {jjtThis.put("name", t.image);} #Ident <LPAR> <RPAR>
+      t = <IDENTIFIER> {jjtThis.put("name", t.image);} #New <LPAR> <RPAR>
     )
 }
 

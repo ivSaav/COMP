@@ -25,6 +25,7 @@ public class Main implements JmmParser {
 //				System.out.println(root.toJson());
 			}
 		    catch(Exception e) {
+		    	parser.getToken(0);
 		    	parser.getReports().add(new Report(ReportType.ERROR, Stage.SEMANTIC,
 						-1, e.toString()));
 			}
@@ -32,7 +33,7 @@ public class Main implements JmmParser {
 			return new JmmParserResult(root, parser.getReports());
 
 		} catch(Exception j) {
-			System.out.println("cenas" + j.toString());
+			System.out.println(j.toString());
 			throw new RuntimeException("Error while parsing", j);
 		}
 	}
