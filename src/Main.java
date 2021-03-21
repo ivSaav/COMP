@@ -7,6 +7,7 @@ import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.specs.util.SpecsIo;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.ArrayList;
 import java.io.StringReader;
 
@@ -21,19 +22,27 @@ public class Main implements JmmParser {
 		    SimpleNode root = null;
 		    try {
 		    	root = parser.Start(); // returns reference to root node
-				root.dump(""); // prints the tree on the screen
+				//root.dump(""); // prints the tree on the screen
 //				System.out.println(root.toJson());
 			}
 		    catch(Exception e) {
+				// System.out.println("=============================");
+				// e.printStackTrace();
+				// System.out.println("=============================");
 		    	parser.getReports().add(new Report(ReportType.ERROR, Stage.SEMANTIC,
+						-1, e.toString()));
+			}catch(TokenMgrError e) {
+		    	parser.getReports().add(new Report(ReportType.ERROR, Stage.LEXICAL,
 						-1, e.toString()));
 			}
 
 			return new JmmParserResult(root, parser.getReports());
 
 		} catch(Exception j) {
-			System.out.println(j.toString());
-			throw new RuntimeException("Error while parsing", j);
+			//System.out.println(j.toString());
+			List<Report> reports = new ArrayList<>();
+			reports.add(new Report(ReportType.ERROR, Stage.OTHER, -1, "Error while parsing: "+j.getMessage()));
+			return new JmmParserResult(null, reports);
 		}
 	}
 

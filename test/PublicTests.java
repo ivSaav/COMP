@@ -37,8 +37,8 @@ public class PublicTests {
     }
 
     @Test
-    public void testLazySort() {
-        testFile("public/LazySort.jmm", false);
+    public void testLazysort() {
+        testFile("public/Lazysort.jmm", false);
     }
 
     @Test

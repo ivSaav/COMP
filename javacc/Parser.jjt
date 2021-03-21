@@ -87,9 +87,9 @@ void Main() #void : {}
     (ImportDeclaration())* ClassDeclaration() <EOF>
 }
 
-void Statement() #Statement: {}
+void Statement() #void: {}
 {
-    <LBRACE> (Statement())* <RBRACE>
+    (<LBRACE> (Statement())* <RBRACE> #Body)
     | IfStatement()
     | WhileStatement()
     | ExpressionDeclaration() [Attribution()] <PVIRG>
@@ -143,6 +143,7 @@ void Attribution() #void:{}
 }
 
 
+
 void ExpressionDeclaration() #void : {}
 {
     ComparisonExpression() (<AND> ComparisonExpression()  #And(2))*
@@ -184,14 +185,14 @@ void PriorityExpressions() #void : {Token t;}
     (
         <LSBRACE>  ExpressionDeclaration() <RSBRACE>
         |
-        <FSTOP> (<LENGTH> #Length | MethodCall())
+        <FSTOP> ((<LENGTH> #Length(1)) | MethodCall())
     )*
 }
 
 
-void MethodCall() #MethodCall: {Token t;}
+void MethodCall() #MethodCall(2): {Token t;}
 {
-    t=<IDENTIFIER> {jjtThis.put("name", t.image);}  <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] <RPAR>
+    t=<IDENTIFIER> {jjtThis.put("name", t.image);}  <LPAR> ([ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] #Arguments) <RPAR>
 }
 
 
@@ -202,7 +203,7 @@ void Terminals() #void : {Token t;}
     t = <INTEGER> { jjtThis.put("int", t.image); }#Int  // literal -> type: int; value = token.image
     | t = <LITERALBOOL> { jjtThis.put("boolean", t.image); } #LiteralBool  //literal_boolean
     | t=<IDENTIFIER>{jjtThis.put("name", t.image);} #Ident
-    | <THIS>
+    | <THIS> #This
     | NewDeclaration()
     | <LPAR> ExpressionDeclaration() <RPAR>
 
@@ -219,33 +220,47 @@ void NewDeclaration() #void : {Token t;}
 }
 
 /*IMPORT DECLARATION*/
-void ImportDeclaration() #ImportDec: {}
+void ImportDeclaration() #ImportDec: {String s;}
 {
-    <IMPORT> Module() <PVIRG>
+    <IMPORT> 
+        s=Module()
+        // (t = <IDENTIFIER> {jjtThis.put("name", t.image);} #Module)
+        // (<FSTOP> t = <IDENTIFIER> {jjtThis.put("name", t.image);} #Module)
+        // s = ModuleAux()
+        // (<FSTOP> s=ModuleAux())*
+            {jjtThis.put("class",s);}
+    <PVIRG>
 }
 
-void Module() #Module: {Token t;}
+// String ModuleAux() #Module: {Token t;}
+// {
+//     t = <IDENTIFIER> {jjtThis.put("name", t.image);}
+//     {return t.image;}
+// }
+
+String Module() #Module: {Token t;String s;}
 {
-   t = <IDENTIFIER> {jjtThis.put("name", t.image);} [<FSTOP> Module()]
+    t = <IDENTIFIER> {jjtThis.put("name", t.image);s = t.image;} [<FSTOP> s=Module()]
+    {return s;}
 }
 
 /*METHOD DECLERATIONS */
-void MethodDeclaration() #Method : {}
+void MethodDeclaration() #void : {}
 {
-    <PUBLIC> (ClassMethod() | MainDeclaration()) #Public
+    <PUBLIC> (ClassMethod() | MainDeclaration())
 }
 
 
-void ClassMethod() #void : {}
+void ClassMethod() #Method: {Token t;}
 {
-    Type() <LPAR> [MethodArgs() #MethodArg] <RPAR>
+    Type() t=<IDENTIFIER> {jjtThis.put("name", t.image); }<LPAR> ([MethodArgs()] #Parameters) <RPAR>
     <LBRACE>
         MethodBody()
     <RBRACE>
 }
-void MainDeclaration() #MainDecl : {Token t;}
+void MainDeclaration() #MainMethod: {Token t;}
 {
-   <STATIC> <VOID> <MAIN> <LPAR> <STRING> Array() t = <IDENTIFIER> {jjtThis.put("name", t.image); } #Ident <RPAR>
+   <STATIC> <VOID> <MAIN> <LPAR> <STRING> ((Array() t = <IDENTIFIER> {jjtThis.put("name", t.image); } #Ident) #Parameters)<RPAR>
    <LBRACE >
           MethodBody()
    <RBRACE>
@@ -253,7 +268,7 @@ void MainDeclaration() #MainDecl : {Token t;}
 }
 void MethodArgs() #void : {}
 {
-    Type() [<COMMA> MethodArgs()]
+    VarDecl() [<COMMA> MethodArgs()]
 }
 void MethodBody() #MethodBody : {}
 {
@@ -269,18 +284,22 @@ void Array() #void : {}
     <LSBRACE><RSBRACE>
 }
 
-void VarDeclaration(): {}
+void VarDeclaration() #void: {}
 {
-     Type() <PVIRG>
+    VarDecl()  <PVIRG>
 }
 
-void Type() #Type : {Token t;}
-{
-    ( t = <INT> [Array()] { jjtThis.put("type", t.image); }
-    | t = <BOOLEAN> { jjtThis.put("type", t.image); }
-    | <IDENTIFIER>)
+void VarDecl() #VarDecl:{Token t;}{
+    Type() t=<IDENTIFIER> {jjtThis.put("name", t.image);}
+}
 
-    t=<IDENTIFIER> {jjtThis.put("name", t.image);} #Ident
+void Type() #Type : {Token t;boolean isArray = false;}
+{
+    ( 
+      t = <INT> [Array() {isArray=true;}] { jjtThis.put("type", t.image);  jjtThis.put("isArray", ""+isArray); }
+    | t = <BOOLEAN> { jjtThis.put("type", t.image); }
+    | t = <IDENTIFIER> { jjtThis.put("type", t.image); }
+    )
 }
 
 void Identifier() #void: {Token t;}
