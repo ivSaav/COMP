@@ -128,7 +128,7 @@ void WhileStatement() #While : {}
         do {
             t = getNextToken();
         }
-        while (t.kind != RPAR); //TODO open brace
+        while (t.kind != RPAR && t.kind != LBRACE);
 
 
 
@@ -189,9 +189,9 @@ void PriorityExpressions() #void : {Token t;}
 }
 
 
-void MethodCall() #Call: {Token t;}
+void MethodCall() #MethodCall: {Token t;}
 {
-    t=<IDENTIFIER> {jjtThis.put("name", t.image);} #Ident <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] <RPAR>
+    t=<IDENTIFIER> {jjtThis.put("name", t.image);}  <LPAR> [ExpressionDeclaration() (<COMMA> ExpressionDeclaration())*] <RPAR>
 }
 
 
@@ -243,9 +243,9 @@ void ClassMethod() #void : {}
         MethodBody()
     <RBRACE>
 }
-void MainDeclaration() #MainDecl : {}
+void MainDeclaration() #MainDecl : {Token t;}
 {
-   <STATIC> <VOID> <MAIN> <LPAR> <STRING> Array() <IDENTIFIER> <RPAR>
+   <STATIC> <VOID> <MAIN> <LPAR> <STRING> Array() t = <IDENTIFIER> {jjtThis.put("name", t.image); } #Ident <RPAR>
    <LBRACE >
           MethodBody()
    <RBRACE>
@@ -264,7 +264,7 @@ void MethodBody() #MethodBody : {}
 
 
 /*VAR DECLARATIONS*/
-void Array() #Array : {}
+void Array() #void : {}
 {
     <LSBRACE><RSBRACE>
 }

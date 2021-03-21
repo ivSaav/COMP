@@ -67,10 +67,6 @@ public class PublicTests {
     }
 
     /* ==================== FAILURE TESTS ==================== */
-//    @Test
-//    public void testArrayIndexNotInt() {
-//        testFile("public/fail/semantic/arr_index_not_int.jmm", true);
-//    }
 
     @Test
     public void testWhiles() {

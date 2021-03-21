@@ -117,33 +117,40 @@ class SimpleNode implements Node, JmmNode {
 
   public void dump(String prefix) {
 
-    String val = prefix;
+    String val = prefix + this.getKind();
 
-    switch (this.getKind()) {
-      case "Module":
-        val += this.get("name");
-        break;
-      case "Type":
-        val += this.get("type");
-        break;
-      case "Int":
-        val += this.get("int");
-        break;
-      case "Boolean":
-        val += this.get("boolean");
-        break;
-      case "Ident":
-        val += this.get("name");
-        break;
-      case "Class":
-        val+= "Class " + this.get("class");
-          break;
-      case "New":
-        val += "new " + this.get("name");
-        break;
-      default:
-        val +=  toString();
+    if (!this.attributes.isEmpty()){
+      val += attributes.toString();
     }
+
+//    switch (this.getKind()) {
+//      case "Module":
+//        val += this.get("name");
+//        break;
+//      case "Type":
+//        val += this.get("type");
+//        break;
+//      case "Int":
+//        val += this.get("int");
+//        break;
+//      case "Boolean":
+//        val += this.get("boolean");
+//        break;
+//      case "Ident":
+//        val += this.get("name");
+//        break;
+//      case "Class":
+//        val+= "Class " + this.get("class");
+//          break;
+//      case "New":
+//        val += "new " + this.get("name");
+//        break;
+//      case "MethodCall":
+//        val += this.get("name");
+//        break;
+//      default:
+//        val +=  toString();
+//    }
 
     System.out.println(val);
 
