@@ -17,7 +17,6 @@ public class PublicTests {
                 TestUtils.mustFail(res.getReports());
             else
                 TestUtils.noErrors(res.getReports());
-
         }
         catch (Exception e) {
             System.out.println("Test Failed =================================");
@@ -72,5 +71,35 @@ public class PublicTests {
 //    public void testArrayIndexNotInt() {
 //        testFile("public/fail/semantic/arr_index_not_int.jmm", true);
 //    }
+
+    @Test
+    public void testWhiles() {
+        testFile("public/fail/syntactical/LengthError.jmm", true);
+    }
+
+    @Test
+    public void testBlowUp() {
+        testFile("public/fail/syntactical/BlowUp.jmm", true);
+    }
+
+    @Test
+    public void testLengthError() {
+        testFile("public/fail/syntactical/LengthError.jmm", true);
+    }
+
+    @Test
+    public void testMissingRightPair() {
+        testFile("public/fail/syntactical/MissingRightPar.jmm", true);
+    }
+
+    @Test
+    public void testMultipleSequential() {
+        testFile("public/fail/syntactical/MultipleSequential.jmm", true);
+    }
+
+    @Test
+    public void testNestedLoop() {
+        testFile("public/fail/syntactical/NestedLoop.jmm", true);
+    }
 
 }
