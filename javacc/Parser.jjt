@@ -224,19 +224,9 @@ void ImportDeclaration() #ImportDec: {String s;}
 {
     <IMPORT> 
         s=Module()
-        // (t = <IDENTIFIER> {jjtThis.put("name", t.image);} #Module)
-        // (<FSTOP> t = <IDENTIFIER> {jjtThis.put("name", t.image);} #Module)
-        // s = ModuleAux()
-        // (<FSTOP> s=ModuleAux())*
             {jjtThis.put("class",s);}
     <PVIRG>
 }
-
-// String ModuleAux() #Module: {Token t;}
-// {
-//     t = <IDENTIFIER> {jjtThis.put("name", t.image);}
-//     {return t.image;}
-// }
 
 String Module() #Module: {Token t;String s;}
 {

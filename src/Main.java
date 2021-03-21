@@ -22,13 +22,10 @@ public class Main implements JmmParser {
 		    SimpleNode root = null;
 		    try {
 		    	root = parser.Start(); // returns reference to root node
-				//root.dump(""); // prints the tree on the screen
+//				root.dump(""); // prints the tree on the screen
 //				System.out.println(root.toJson());
 			}
 		    catch(Exception e) {
-				// System.out.println("=============================");
-				// e.printStackTrace();
-				// System.out.println("=============================");
 		    	parser.getReports().add(new Report(ReportType.ERROR, Stage.SEMANTIC,
 						-1, e.toString()));
 			}catch(TokenMgrError e) {
@@ -51,7 +48,6 @@ public class Main implements JmmParser {
         /*if (args[0].contains("fail")) {
             throw new RuntimeException("It's supposed to fail");
         }
-
          */
 		var fileContents = SpecsIo.read("./test.txt");
 		System.out.println("Executing with args: " + fileContents);
