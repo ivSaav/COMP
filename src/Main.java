@@ -1,6 +1,7 @@
 
 import pt.up.fe.comp.jmm.JmmParser;
 import pt.up.fe.comp.jmm.JmmParserResult;
+import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
@@ -22,11 +23,11 @@ public class Main implements JmmParser {
 		    SimpleNode root = null;
 		    try {
 		    	root = parser.Start(); // returns reference to root node
-//				root.dump(""); // prints the tree on the screen
-//				System.out.println(root.toJson());
+				//root.dump(""); // prints the tree on the screen
+				//System.out.println(root.toJson()); //prints Json version of ast
 			}
 		    catch(Exception e) {
-		    	parser.getReports().add(new Report(ReportType.ERROR, Stage.SEMANTIC,
+		    	parser.getReports().add(new Report(ReportType.ERROR, Stage.OTHER,
 						-1, e.toString()));
 			}catch(TokenMgrError e) {
 		    	parser.getReports().add(new Report(ReportType.ERROR, Stage.LEXICAL,
@@ -36,7 +37,6 @@ public class Main implements JmmParser {
 			return new JmmParserResult(root, parser.getReports());
 
 		} catch(Exception j) {
-			//System.out.println(j.toString());
 			List<Report> reports = new ArrayList<>();
 			reports.add(new Report(ReportType.ERROR, Stage.OTHER, -1, "Error while parsing: "+j.getMessage()));
 			return new JmmParserResult(null, reports);
@@ -44,15 +44,14 @@ public class Main implements JmmParser {
 	}
 
     public static void main(String[] args) {
-
-        /*if (args[0].contains("fail")) {
-            throw new RuntimeException("It's supposed to fail");
-        }
-         */
 		var fileContents = SpecsIo.read("./test.txt");
 		System.out.println("Executing with args: " + fileContents);
-		JmmParserResult r = new Main().parse(fileContents);
-		System.out.println(r.getReports());
+		JmmParserResult parseResult = new Main().parse(fileContents);
+//		System.out.println(r.getReports());
+
+		AnalysisStage analysisStage = new AnalysisStage();
+		JmmSemanticsResult semanticResult = analysisStage.semanticAnalysis(parseResult);
+
 
     }
 }
