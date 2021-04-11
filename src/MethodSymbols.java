@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Map;
 
 public class MethodSymbols {
-    private String name;
-    private Type returnType;
-    private Map<String, Symbol> parameters; //name --> symbol
-    private Map<String, Symbol> localVars; // name --> symbol
+    private final String name;
+    private final Type returnType;
+    private final Map<String, Symbol> parameters; //name --> symbol
+    private final Map<String, Symbol> localVars; // name --> symbol
 
     public MethodSymbols(String name, Type returnType) {
         this.name = name;

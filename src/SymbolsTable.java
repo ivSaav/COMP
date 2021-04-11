@@ -9,16 +9,16 @@ import java.util.Map;
 
 public class SymbolsTable implements SymbolTable {
 
-    private List<String> imports;
+    private final List<String> imports;
     private String className;
     private String superclass;
-    private Map<String, Symbol> fields;
-    private Map<String, MethodSymbols> methods;
+    private final Map<String, Symbol> fields; //name --> class attributes
+    private final Map<String, MethodSymbols> methods; // name --> MethodSymbols
 
-    public SymbolsTable(List<String> imports, String className, String superclass) {
-        this.imports = imports;
-        this.className = className;
-        this.superclass = superclass;
+    public SymbolsTable() {
+        this.imports = new ArrayList<>();
+        this.className = "";
+        this.superclass = "";
         this.fields = new HashMap<>();
         this.methods = new HashMap<>();
     }
@@ -64,5 +64,13 @@ public class SymbolsTable implements SymbolTable {
     public List<Symbol> getLocalVariables(String methodName) {
         MethodSymbols ms = this.methods.get(methodName);
         return ms != null ? ms.getLocalVars() : null;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public void setSuperclass(String superclass) {
+        this.superclass = superclass;
     }
 }
