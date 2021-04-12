@@ -48,7 +48,7 @@ public class Main implements JmmParser {
 		var fileContents = SpecsIo.read("./test.txt");
 		System.out.println("Executing with args: " + fileContents);
 		JmmParserResult parseResult = new Main().parse(fileContents);
-//		System.out.println(r.getReports());
+		System.out.println(parseResult.getReports());
 
 		AnalysisStage analysisStage = new AnalysisStage();
 		JmmSemanticsResult semanticResult = analysisStage.semanticAnalysis(parseResult);

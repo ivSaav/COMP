@@ -27,25 +27,6 @@ public class SymbolTableGenerator extends PreorderJmmVisitor<Void, Void> {
     }
 
 
-
-    /**
-     * Finds the parent of a given node (class or method)
-     * @param node
-     * @return
-     */
-    private JmmNode findParent(JmmNode node) {
-        if (node.getParent() == null) {
-            return null;
-        }
-
-        if (node.getParent().getKind().equals("Class") || node.getParent().getKind().equals("Method")
-                || node.getParent().getKind().equals("MainMethod")) {
-            return node.getParent();
-        }
-
-        return findParent(node.getParent());
-    }
-
     /**
      * Deals with the node in case is type is an import
      * @param node
@@ -70,6 +51,9 @@ public class SymbolTableGenerator extends PreorderJmmVisitor<Void, Void> {
 
             if (node.getNumChildren() > 0) {
                 JmmNode ext = node.getChildren().get(0);
+                JmmNode superIdent = ext.getChildren().get(0);
+
+                st.setSuperclass(superIdent.get("name"));
             }
         }
         else {
@@ -90,7 +74,7 @@ public class SymbolTableGenerator extends PreorderJmmVisitor<Void, Void> {
         Type type = new Type(child.get("type"), Boolean.parseBoolean(child.get("isArray")));
         Symbol symbol = new Symbol(type, varName);
         if (varName != null) {
-            JmmNode firstParent = this.findParent(node);
+            JmmNode firstParent = Utils.findScope(node);
 
             this.st.addVariable(firstParent, varName, symbol);
         }

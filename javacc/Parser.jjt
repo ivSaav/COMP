@@ -285,11 +285,9 @@ void VarDecl() #VarDecl:{Token t;}{
 
 void Type() #Type : {Token t;boolean isArray = false;}
 {
-    ( 
-      t = <INT> [Array() {isArray=true;}] { jjtThis.put("type", t.image);  jjtThis.put("isArray", ""+isArray); }
-    | t = <BOOLEAN> { jjtThis.put("type", t.image); }
-    | t = <IDENTIFIER> { jjtThis.put("type", t.image); }
-    )
+    t = <INT> [Array() {isArray=true;}] { jjtThis.put("type", t.image);  jjtThis.put("isArray", ""+isArray); }
+  | t = <BOOLEAN> { jjtThis.put("type", t.image); jjtThis.put("isArray", "false");}
+  | t = <IDENTIFIER> { jjtThis.put("type", t.image); jjtThis.put("isArray", "false");}
 }
 
 void Identifier() #void: {Token t;}

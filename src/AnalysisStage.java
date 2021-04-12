@@ -2,6 +2,7 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.JmmNode;
@@ -41,6 +42,11 @@ public class AnalysisStage implements JmmAnalysis {
         SymbolsTable st = generator.getSt();
         System.out.println("GENERATED ============================");
         System.out.println(st);
+
+        SemanticAnalyser semanticAnalyser = new SemanticAnalyser(st);
+        List<Report> reports = new ArrayList<>();
+        semanticAnalyser.visit(node, reports);
+        System.out.println(reports);
 
 
         System.out.println("Dump tree with Visitor where you control tree traversal");

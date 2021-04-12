@@ -13,7 +13,6 @@ public class SymbolsTable implements SymbolTable {
     private final List<String> imports;
     private String className;
     private String superclass;
-    private List<String> extend;
     private final Map<String, Symbol> fields; //name --> class attributes
     private final Map<String, MethodSymbols> methods; // name --> MethodSymbols
 
@@ -45,12 +44,13 @@ public class SymbolsTable implements SymbolTable {
         return new ArrayList<>(this.fields.values());
     }
 
+    public Map<String, Symbol> getField() { return this.fields; }
+
     @Override
     public List<String> getMethods() {
         return new ArrayList<>(this.methods.keySet());
     }
 
-    @Override
     public Type getReturnType(String methodName) {
         MethodSymbols ms = this.methods.get(methodName);
         return ms != null ? ms.getReturnType() : null;
@@ -68,10 +68,17 @@ public class SymbolsTable implements SymbolTable {
         return ms != null ? ms.getLocalVars() : null;
     }
 
+    public Symbol getGlobalVariable(String varName) {
+        return this.fields.get(varName);
+    }
+
+    public MethodSymbols getMethod(String methodName) {
+        return methods.get(methodName);
+    }
+
     public void setClassName(String className) {
         this.className = className;
     }
-
 
     public void addMethod(MethodSymbols symbols) {
         this.methods.put(symbols.getName(), symbols);
@@ -106,7 +113,9 @@ public class SymbolsTable implements SymbolTable {
                 ", className='" + className + '\'' +
                 ", superclass='" + superclass + '\'' +
                 ", fields=" + fields +
-                ", methods=" + methods +
+                ",\n methods=" + methods +
                 '}';
     }
+
+
 }

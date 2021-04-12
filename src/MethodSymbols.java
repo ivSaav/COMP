@@ -32,9 +32,13 @@ public class MethodSymbols {
         return new ArrayList<Symbol>(this.parameters.values());
     }
 
+    public Map<String, Symbol> getParameter() { return this.parameters; }
+
     public List<Symbol> getLocalVars() {
         return new ArrayList<Symbol>(this.localVars.values());
     }
+
+    public Map<String, Symbol> getLocalVar() { return this.localVars; }
 
     public void addParameter(String name, Symbol symbol) {
         this.parameters.put(name, symbol);
@@ -56,13 +60,21 @@ public class MethodSymbols {
         }
     }
 
+    public boolean containsVariable(String varName) {
+        return this.localVars.containsKey(varName);
+    }
+
+    public Symbol getVariable(String varName) {
+        return this.localVars.get(varName);
+    }
+
     @Override
     public String toString() {
         return "\nMethodSymbols{" +
                 "name='" + name + '\'' +
                 ", returnType=" + returnType +
                 ", parameters=" + parameters +
-                ", localVars=" + localVars +
+                ",\n\t localVars=" + localVars +
                 '}';
     }
 }
