@@ -24,7 +24,7 @@ public class Main implements JmmParser {
 		    try {
 		    	root = parser.Start(); // returns reference to root node
 				//root.dump(""); // prints the tree on the screen
-				//System.out.println(root.toJson()); //prints Json version of ast
+				System.out.println(root.toJson()); //prints Json version of ast
 			}
 		    catch(Exception e) {
 		    	parser.getReports().add(new Report(ReportType.ERROR, Stage.OTHER,
@@ -43,6 +43,7 @@ public class Main implements JmmParser {
 		}
 	}
 
+
     public static void main(String[] args) {
 		var fileContents = SpecsIo.read("./test.txt");
 		System.out.println("Executing with args: " + fileContents);
@@ -52,7 +53,7 @@ public class Main implements JmmParser {
 		AnalysisStage analysisStage = new AnalysisStage();
 		JmmSemanticsResult semanticResult = analysisStage.semanticAnalysis(parseResult);
 
-		System.out.println(semanticResult.getReports());
+//		System.out.println(semanticResult.getReports());
 
 
     }

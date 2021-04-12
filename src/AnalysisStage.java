@@ -36,7 +36,11 @@ public class AnalysisStage implements JmmAnalysis {
         JmmNode node = parserResult.getRootNode();
         node.sanitize();
         SymbolTableGenerator generator = new SymbolTableGenerator();
-        SymbolsTable st = generator.visit(node);
+
+        generator.visit(node);
+        SymbolsTable st = generator.getSt();
+        System.out.println("GENERATED ============================");
+        System.out.println(st);
 
 
         System.out.println("Dump tree with Visitor where you control tree traversal");

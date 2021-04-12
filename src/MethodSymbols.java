@@ -1,3 +1,4 @@
+import pt.up.fe.comp.jmm.JmmNode;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 
@@ -41,5 +42,27 @@ public class MethodSymbols {
 
     public void addLocalVar(String name, Symbol symbol) {
         this.localVars.put(name, symbol);
+    }
+
+    public void addParameters(JmmNode paramNode) {
+
+        for (JmmNode param : paramNode.getChildren()) {
+            JmmNode paramType = param.getChildren().get(0);
+            if (paramType.getKind().equals("Type")) {
+                Type type = new Type(paramType.get("type"), Boolean.parseBoolean(paramType.get("isArray")));
+                Symbol symbol = new Symbol(type, param.get("name"));
+                this.parameters.put(param.get("name"), symbol);
+            }
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "\nMethodSymbols{" +
+                "name='" + name + '\'' +
+                ", returnType=" + returnType +
+                ", parameters=" + parameters +
+                ", localVars=" + localVars +
+                '}';
     }
 }
