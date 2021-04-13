@@ -25,6 +25,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
         addVisit("VarDecl", this::dealWithVarDecl);
         addVisit("Plus", this::dealWithOperations);
+//        addVisit("Equal", this::dealSomething);
         addVisit("Equal", this::dealWithAssignment);
         addVisit("MethodCall", this::dealWithMethodCall);
 //        addVisit("Method", this::dealWithMethod);
@@ -111,19 +112,17 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
     }
 
     /**
-     *
-     * @param node
-     * @param reports
-     * @return
+     * Checks whether the arithmetic operation is valid
+     * @param node visited node to evaluate
+     * @param reports list of existing reports
+     * @return list of reports with possible added reports, if necessary
      */
     private List<Report> dealWithOperations(JmmNode node, List<Report> reports) {
         JmmNode scope = Utils.findScope(node);
-
-        // Verify if operation is made by operator with the same type
         List<JmmNode> opChildren = node.getChildren();
-
         List<Type> types = new ArrayList<>();
 
+        // If the operation comes from the class
         if (scope.getKind().equals("Class")) {
             Map<String, Symbol> fields = st.getField();
             for (JmmNode children : opChildren) {
@@ -131,6 +130,8 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                 types.add(symbol.getType());
             }
         }
+
+        // If the operation comes from a method
         else if (scope.getKind().equals("Method")) {
             Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
             for (JmmNode children : opChildren) {
@@ -139,11 +140,15 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             }
         }
 
-        if (!verifySameTypes(types))
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variables with different types"));
+        // Verify if operation is made by operator with the same type
+        if (!verifySameTypes(types)) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arithmetic Operation made by variables with different types"));
+            return null;
+        }
 
-        // Verify if it is used arrays directly for arithmetic operations
-
+        // Verify if the type of the List<Type> is of arrays
+        if (types.get(0).isArray())
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arithmetic Operations with arrays"));
 
         return null;
     }
@@ -184,9 +189,9 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
     }
 
     /**
-     * Verifies if the type exists
-     * @param types name of type
-     * @return
+     * Verify if all elements of the list are the same type
+     * @param types list with types
+     * @return true if so, false otherwise
      */
     private boolean verifySameTypes(List<Type> types) {
         Type defaultType = types.get(0);

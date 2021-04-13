@@ -183,7 +183,7 @@ void PriorityExpressions() #void : {Token t;}
 {
     Terminals()
     (
-        <LSBRACE>  ExpressionDeclaration() <RSBRACE>
+        <LSBRACE>  ExpressionDeclaration() <RSBRACE> #Array(2)
         |
         <FSTOP> ((<LENGTH> #Length(1)) | MethodCall())
     )*
@@ -199,7 +199,6 @@ void MethodCall() #MethodCall(2): {Token t;}
 
 void Terminals() #void : {Token t;}
 {
-
     t = <INTEGER> { jjtThis.put("type", "int"); jjtThis.put("value", t.image); }#Literal  // literal -> type: int; value = token.image
     | t = <LITERALBOOL> { jjtThis.put("type", "boolean"); jjtThis.put("value", t.image); } #Literal  //literal_boolean
     | t=<IDENTIFIER>{jjtThis.put("name", t.image);} #Ident

@@ -1,15 +1,16 @@
 import io.bla;
-import io.Cenas;
-class Fac extends College {
+class Fac extends Class {
 
     int[] a;
-
+    boolean b;
 
     public static void main(String[]args){
         a = 1;
 
+        b = true && false;
         io.println(new Fac().ComputeFac(10));//assuming the existence
         bla.length;
         // of the classfile io.class
-    }
+       }
+
 }
