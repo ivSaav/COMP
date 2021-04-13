@@ -200,8 +200,8 @@ void MethodCall() #MethodCall(2): {Token t;}
 void Terminals() #void : {Token t;}
 {
 
-    t = <INTEGER> { jjtThis.put("int", t.image); }#Int  // literal -> type: int; value = token.image
-    | t = <LITERALBOOL> { jjtThis.put("boolean", t.image); } #LiteralBool  //literal_boolean
+    t = <INTEGER> { jjtThis.put("type", "int"); jjtThis.put("value", t.image); }#Literal  // literal -> type: int; value = token.image
+    | t = <LITERALBOOL> { jjtThis.put("type", "boolean"); jjtThis.put("value", t.image); } #Literal  //literal_boolean
     | t=<IDENTIFIER>{jjtThis.put("name", t.image);} #Ident
     | <THIS> #This
     | NewDeclaration()

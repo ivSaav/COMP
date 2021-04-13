@@ -27,8 +27,7 @@ public class Utils {
             return null;
         }
 
-        if (node.getParent().getKind().equals("Class") || node.getParent().getKind().equals("Method")
-                || node.getParent().getKind().equals("MainMethod")) {
+        if (node.getParent().getKind().equals("Class") || node.getParent().getKind().equals("Method")) {
             return node.getParent();
         }
 
@@ -36,16 +35,22 @@ public class Utils {
     }
 
     public static Type determineType(JmmNode node) {
+        System.out.println("DTERMINE " + node);
 
         switch (node.getKind()) {
             case "Ident":
+            case "Literal":
                 return new Type(node.get("name"), false);
-            case "Int":
-                return new Type("int", false);
-            case "LiteralBool":
-                return new Type("boolean", false);
         }
-        return new Type("", false);
+        return null;
+    }
+
+    public static JmmNode getChildOfKind(JmmNode node, String kind) {
+        for (JmmNode child : node.getChildren()) {
+            if (child.getKind().equals(kind))
+                return child;
+        }
+        return null;
     }
 	
 }

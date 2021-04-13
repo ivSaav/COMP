@@ -82,6 +82,7 @@ public interface JmmNode {
         return Optional.empty();
     }
 
+
     /**
      * 
      * @return the children of the node or an empty list if there are no children

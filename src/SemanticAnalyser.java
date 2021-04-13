@@ -25,7 +25,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
         addVisit("VarDecl", this::dealWithVarDecl);
         addVisit("Plus", this::dealWithOperations);
-        //addVisit("Equal", this::dealWithAssignment);
+        addVisit("Equal", this::dealWithAssignment);
         addVisit("MethodCall", this::dealWithMethodCall);
 //        addVisit("Method", this::dealWithMethod);
 //        addVisit("MainMethod", this::dealWithMainMethod);
@@ -46,7 +46,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             if (nodeKind.equals("Ident")) {
 
                 if (!st.getImports().contains(nodeKind))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Couldn't resolve method call " + methodName));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Couldn't resolve method call: " + methodName));
             }
         }
 
@@ -54,29 +54,60 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         return null;
     }
 
+    /**
+     * Handler for assignment nodes
+     * @param node - starting node (Equals)
+     * @param reports
+     * @return
+     */
     private List<Report> dealWithAssignment(JmmNode node, List<Report> reports) {
         JmmNode lhs = node.getChildren().get(0);
         JmmNode rhs = node.getChildren().get(1);
 
-        // Checking if variable as been declared before assignment
+        // Checking if destination has been declared before assignment
         System.out.println(lhs.get("name") + "===============================");
         if (!this.visitedVariables.contains(lhs.get("name"))){
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable " + lhs.get("name")));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + lhs.get("name")));
         }
 
-//        Symbol lhsSymb = this.getVariableSymbol(lhs);
-//        Type lhsType = lhsSymb.getType();
-//        Type rhsType = Utils.determineType(rhs);
-//        // Checking if lhs and rhs have the same type
-//        if (!lhsType.equals(rhsType) && lhsType.isArray() || rhsType.isArray()) {
-//            reports.add(
-//                    new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Conflicting types in assignment " + lhsType.getName() + " and " + rhsType.getName())
-//            );
-//        }
+        reports.addAll(validateAssignExpression(lhs, rhs));
 
-
-        // TODO: operations ???
         return null;
+    }
+
+    private List<Report> validateAssignExpression(JmmNode lhs, JmmNode expr) {
+        List<Report> reports = new ArrayList<>();
+
+        Symbol lhsSymb = this.getVariableSymbol(lhs);
+        Type lhsType = lhsSymb.getType();
+
+        String kind = expr.getKind();
+
+        if (kind.equals("Ident")) {
+            if (!this.visitedVariables.contains(expr.get("name"))) // variable wasn't declared
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable " + expr.get("name")));
+            else {
+                Symbol rhsSymbol = this.getVariableSymbol(expr);
+                Type rhsType = rhsSymbol.getType();
+
+                if (!lhsType.equals(rhsType))
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unmatched data types in assignment: "  + lhsType.getName() + " and " + rhsType.getName()));
+            }
+        }
+        else if (kind.equals("Literal")) { // int or boolean
+
+            // checking lhs and rhs have the same data type
+            if (!lhsType.getName().equals(expr.get("type")) || lhsType.isArray())
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1,
+                            "Unmatched data types in assignment: "
+                                    + lhsType.getName() + (lhsType.isArray() ? "[]" : "")
+                                    + " and " + expr.get("type")));
+        }
+        else if (isOperator(expr)) {
+            //TODO determine operation return type
+        }
+
+        return reports;
     }
 
     /**
@@ -131,15 +162,8 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         JmmNode varChild = node.getChildren().get(0);
         String type = varChild.get("type");
 
-        switch (type) {
-            case "int":
-                break;
-            case"boolean":
-                break;
-            default:
-                if (!verifyType(type))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unrecognized type " + type));
-        }
+        if (!verifyType(type))
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unrecognized type " + type));
 
         return null;
     }
@@ -150,7 +174,13 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
      * @return
      */
     private boolean verifyType(String type) {
-        return st.getImports().contains(type) || st.getClassName().equals(type) || st.getSuper().equals(type);
+        return  type.equals("int") || type.equals("boolean") ||
+                st.getImports().contains(type) || st.getClassName().equals(type) || st.getSuper().equals(type);
+    }
+
+    private boolean isOperator(JmmNode node) {
+        String kind = node.getKind();
+        return kind.equals("Plus") || kind.equals("Minus") || kind.equals("Mult") || kind.equals("Div");
     }
 
     /**
@@ -174,15 +204,19 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
      * @return
      */
     private Symbol getVariableSymbol(JmmNode var) {
-        JmmNode scope = Utils.findScope(var);
-
         String name = var.get("name");
 
-        if (scope.getKind().equals("Class")) {
-            return st.getGlobalVariable(name);
+        // Check in global variables
+        Symbol varSymbol = st.getGlobalVariable(name);
+
+        // Wasn't in global variables
+        if (varSymbol == null) {
+            JmmNode scope = Utils.findScope(var); // determine method there variable is declared
+            if (scope != null)
+                varSymbol = st.getMethod(scope.get("name")).getVariable(var.get("name"));
         }
 
-        return st.getMethod(scope.get("name")).getVariable(var.get("name"));
+        return varSymbol;
     }
 
 
