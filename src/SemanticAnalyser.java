@@ -81,7 +81,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
     }
 
     /**
-     * Checks whether the arithmetic operation is valid
+     * Verify whether the arithmetic operation is valid
      * @param node visited node to evaluate
      * @param reports list of existing reports
      * @return list of reports with possible added reports, if necessary
@@ -122,46 +122,67 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         return null;
     }
 
+    /**
+     * Verify if the access to an array variable is done correctly
+     * @param node visited node to evaluate
+     * @param reports list of existing reports
+     * @return list of reports with possible added reports, if necessary
+     */
     private List<Report> dealSomething(JmmNode node, List<Report> reports) {
-        List<JmmNode> opChildren = node.getChildren();
+        JmmNode scope = Utils.findScope(node);
 
-        JmmNode firstChild = node.getChildren().get(0);
-        JmmNode secondChild = node.getChildren().get(1);
+        JmmNode arrayAccess = node.getChildren().get(1);
 
-        if (secondChild.getKind().equals("Array")) {
+        if (arrayAccess.getKind().equals("Array")) {
 
-        }
+            // Verify if an access array is in fact done over an array
+            JmmNode firstChild = arrayAccess.getChildren().get(0);
+            if (firstChild.getKind().equals("Ident")) {
+                String arrayDec = firstChild.get("name");
+                Symbol symbolArrayDec = null;
 
-/*
+                if (scope.getKind().equals("Class")) {
+                    Map<String, Symbol> fields = st.getField();
+                    symbolArrayDec = fields.get(arrayDec);
+                } else if (scope.getKind().equals("Method")) {
+                    Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
+                    symbolArrayDec = getVariables.get(arrayDec);
+                }
 
-        // If the operation comes from the class
-        if (scope.getKind().equals("Class")) {
-            Map<String, Symbol> fields = st.getField();
-            for (JmmNode children : opChildren) {
-                Symbol symbol = fields.get(children.get("name"));
-                types.add(symbol.getType());
+                if (!symbolArrayDec.getType().isArray()) {
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to non-array variable"));
+                }
             }
-        }
-
-        // If the operation comes from a method
-        else if (scope.getKind().equals("Method")) {
-            Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
-            for (JmmNode children : opChildren) {
-                Symbol symbol = getVariables.get(children.get("name"));
-                types.add(symbol.getType());
+            else {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to non-array variable"));
             }
-        }
 
-        // Verify if operation is made by operator with the same type
-        if (!verifySameTypes(types)) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arithmetic Operation made by variables with different types"));
-            return null;
-        }
+            // Verify if the index of the access array is an integer
+            JmmNode secondChild = arrayAccess.getChildren().get(1);
 
-        // Verify if the type of the List<Type> is of arrays
-        if (types.get(0).isArray())
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arithmetic Operations with arrays"));
-*/
+            if (secondChild.getKind().equals("Ident")) {
+                String arrayInd = secondChild.get("name");
+
+                Symbol symbolArrayInd = null;
+
+                if (scope.getKind().equals("Class")) {
+                    Map<String, Symbol> fields = st.getField();
+                    symbolArrayInd = fields.get(arrayInd);
+                }
+
+                else if (scope.getKind().equals("Method")) {
+                    Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
+                    symbolArrayInd = getVariables.get(arrayInd);
+                }
+
+                if (!symbolArrayInd.getType().getName().equals("int")) {
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to an array with a non-integer"));
+                }
+
+            }
+            else if (!secondChild.getKind().equals("Int"))
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to an array with a non-integer"));
+        }
         return null;
     }
 

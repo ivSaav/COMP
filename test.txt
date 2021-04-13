@@ -2,9 +2,10 @@ import io.bla;
 class Fac extends Class {
 
     int[] a;
+    int b;
 
     public static void main(String[]args){
         int j;
-        j = a[1];
+        j = a[b];
     }
 }
