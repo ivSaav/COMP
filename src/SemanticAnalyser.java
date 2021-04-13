@@ -64,20 +64,19 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
     private List<Report> dealWithMethodCall(JmmNode node, List<Report> reports) {
         String methodName = node.get("name");
 
-        // checking if it's a defined method in this class
-        if (this.st.getMethod(methodName) == null) {
+        JmmNode methodNode = null;
+        // checking if it's not a defined method in this class or in one of the imports
+        if (this.st.getMethod(methodName) == null && !this.st.getImports().contains(methodName)) {
             JmmNode tmp = node.getChildren().get(0);
 
             // class identifier
             String nodeKind = tmp.getKind();
             if (nodeKind.equals("Ident")) {
-
-                if (!st.getImports().contains(nodeKind))
+                if (!st.getImports().contains(tmp.get("name")))
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Couldn't resolve method call: " + methodName));
             }
         }
 
-        // TODO verify if return type is valid
         return null;
     }
 
@@ -94,10 +93,8 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         Symbol lhsSymb;
         Type lhsType;
         if (lhs.getKind().equals("Array")) {
-            if (isValidArrayAccess(lhs, reports))
-                lhsType = new Type("int", false);
-            else
-                return null;
+            // assuming array is valid ( it is checked in another function )
+            lhsType = new Type("int", false);
         }
         else {
             // Checking if destination has been declared before assignment
@@ -105,7 +102,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + lhs.get("name")));
                 return null;
             }
-
             lhsSymb = this.getVariableSymbol(lhs);
             lhsType = lhsSymb.getType();
         }
@@ -142,49 +138,27 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                                     + " and " + expr.get("type")));
         }
         else if (kind.equals("Array")) {
-            isValidArrayAccess(expr, reports);
+            JmmNode arrayIdent = Utils.getChildOfKind(expr, "Ident");
+            Symbol rhsSymbol = this.getVariableSymbol(arrayIdent);
+
+            // variable wasn't declared (handled in another function)
+            if (rhsSymbol == null)
+                return reports;
+
+            Type rhsType = rhsSymbol.getType();
+            if (!lhsType.getName().equals(rhsType.getName())) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unmatched data types in assignment: "  + lhsType.getName() + " and " + rhsType.getName()));
+            }
         }
         else if (isOperator(expr)) {
             //TODO determine operation return type
+
         }
 
+        // TODO deal with -- new int[]
         return reports;
     }
 
-    /**
-     * Validates an array access
-     * @param arrayNode array node
-     * @param reports
-     * @return
-     */
-    private boolean isValidArrayAccess(JmmNode arrayNode, List<Report> reports) {
-        JmmNode arrayIdent = Utils.getChildOfKind(arrayNode, "Ident"); //fetch array identifier
-        JmmNode accessNode = arrayNode.getChildren().get(1);
-
-        if (!this.visitedVariables.contains(arrayIdent.get("name"))) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + arrayIdent.get("name")));
-            return false;
-        }
-
-        // if it is an array access treat its type as an integer
-        if (accessNode != null && accessNode.getKind().equals("Literal")) { // a[1]
-            if (accessNode.get("type").equals("int"))
-               return true;
-            else { // in cases of invalid array access
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Invalid array access of: "
-                        + arrayIdent.get("name") + "[" + accessNode.get("type") + "]"));
-                return false;
-            }
-        }
-        else if (accessNode != null && accessNode.getKind().equals("Ident")) { // a[b]
-            if (!this.visitedVariables.contains(accessNode.get("name"))) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + accessNode.get("name")));
-                return false;
-            }
-            return true;
-        }
-        return false;
-    }
 
     /**
      * Checks whether the arithmetic operation is valid

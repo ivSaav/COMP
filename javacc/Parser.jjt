@@ -221,10 +221,7 @@ void NewDeclaration() #void : {Token t;}
 /*IMPORT DECLARATION*/
 void ImportDeclaration() #ImportDec: {String s;}
 {
-    <IMPORT> 
-        s=Module()
-            {jjtThis.put("class",s);}
-    <PVIRG>
+    <IMPORT> s=Module() {jjtThis.put("class",s);} <PVIRG>
 }
 
 String Module() #Module: {Token t;String s;}
