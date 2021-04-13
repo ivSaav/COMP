@@ -7,6 +7,10 @@ class Fac extends College {
 
     Cenas c;
 
+    public Cenas coisas() {
+        int mais;
+        mais = a + c;
+    }
     public static void main(String[]args){
         int[] d;
         d = a + b;

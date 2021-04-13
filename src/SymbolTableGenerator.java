@@ -20,7 +20,6 @@ public class SymbolTableGenerator extends PreorderJmmVisitor<Void, Void> {
         addVisit("Class", this::dealWithClass);
         addVisit("VarDecl", this::dealWithVarDecl);
         addVisit("Method", this::dealWithMethod);
-        addVisit("MainMethod", this::dealWithMainMethod);
 
         setDefaultVisit(this::defaultVisit);
         this.st = new SymbolsTable();
@@ -88,6 +87,10 @@ public class SymbolTableGenerator extends PreorderJmmVisitor<Void, Void> {
         String methodName = node.get("name");
 
         // For the type
+        if (methodName.equals("main")) {
+            this.dealWithMainMethod(node, null);
+            return null;
+        }
         JmmNode childType = node.getChildren().get(0);
 
         Type methodType = new Type(childType.get("type"), Boolean.parseBoolean(childType.get("isArray")));

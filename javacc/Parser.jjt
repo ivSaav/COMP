@@ -248,9 +248,9 @@ void ClassMethod() #Method: {Token t;}
         MethodBody()
     <RBRACE>
 }
-void MainDeclaration() #MainMethod: {Token t;}
+void MainDeclaration() #Method: {Token t; Token main;}
 {
-   <STATIC> <VOID> <MAIN> <LPAR> <STRING> ((Array() t = <IDENTIFIER> {jjtThis.put("name", t.image); } #Ident) #Parameters)<RPAR>
+   <STATIC> <VOID> main = <MAIN> {jjtThis.put("name", main.image);} <LPAR> <STRING> (Array() t = <IDENTIFIER> {jjtThis.put("name", t.image); } #Ident) #Parameters<RPAR>
    <LBRACE >
           MethodBody()
    <RBRACE>

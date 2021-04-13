@@ -100,10 +100,6 @@ public class SymbolsTable implements SymbolTable {
             MethodSymbols symbols = this.methods.get(parent.get("name"));
             symbols.addLocalVar(name, symbol);
         }
-        else if (parent.getKind().equals("MainMethod")) {
-            MethodSymbols symbols = this.methods.get("main");
-            symbols.addLocalVar(name, symbol);
-        }
     }
 
     @Override

@@ -50,6 +50,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             }
         }
 
+        // TODO verify if return type is valid
         return null;
     }
 
@@ -58,19 +59,20 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         JmmNode rhs = node.getChildren().get(1);
 
         // Checking if variable as been declared before assignment
+        System.out.println(lhs.get("name") + "===============================");
         if (!this.visitedVariables.contains(lhs.get("name"))){
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable " + lhs.get("name")));
         }
 
-        Symbol lhsSymb = this.getVariableSymbol(lhs);
-        Type lhsType = lhsSymb.getType();
-        Type rhsType = Utils.determineType(rhs);
-        // Checking if lhs and rhs have the same type
-        if (!lhsType.equals(rhsType)) {
-            reports.add(
-                    new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Conflicting types in assignment " + lhsType.getName() + " and " + rhsType.getName())
-            );
-        }
+//        Symbol lhsSymb = this.getVariableSymbol(lhs);
+//        Type lhsType = lhsSymb.getType();
+//        Type rhsType = Utils.determineType(rhs);
+//        // Checking if lhs and rhs have the same type
+//        if (!lhsType.equals(rhsType) && lhsType.isArray() || rhsType.isArray()) {
+//            reports.add(
+//                    new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Conflicting types in assignment " + lhsType.getName() + " and " + rhsType.getName())
+//            );
+//        }
 
 
         // TODO: operations ???
@@ -99,14 +101,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             for (JmmNode children : opChildren) {
                 Symbol symbol = method.getVariable(children.get("name"));
 
-                if (symbol != null)
-                    types.add(symbol.getType());
-            }
-        }
-        else if (scope.getKind().equals("MainMethod")) {
-            MethodSymbols method = st.getMethod("main");
-            for (JmmNode children : opChildren) {
-                Symbol symbol = method.getVariable(children.get("name"));
                 if (symbol != null)
                     types.add(symbol.getType());
             }
@@ -183,6 +177,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         if (scope.getKind().equals("Class")) {
             return st.getGlobalVariable(name);
         }
+
         return st.getMethod(scope.get("name")).getVariable(var.get("name"));
     }
 
