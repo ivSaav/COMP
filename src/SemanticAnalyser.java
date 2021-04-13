@@ -7,6 +7,7 @@ import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.specs.util.SpecsCheck;
 
+import javax.swing.plaf.synth.SynthCheckBoxMenuItemUI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -24,15 +25,40 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         this.visitedVariables = new HashSet<>();
 
         addVisit("VarDecl", this::dealWithVarDecl);
-        addVisit("Plus", this::dealWithOperations);
+//        addVisit("Plus", this::dealWithOperations);
 //        addVisit("Equal", this::dealSomething);
         addVisit("Equal", this::dealWithAssignment);
         addVisit("MethodCall", this::dealWithMethodCall);
 //        addVisit("Method", this::dealWithMethod);
+        addVisit("Array", this::dealWithArrayAccess);
 //        addVisit("MainMethod", this::dealWithMainMethod);
 
         setDefaultVisit(this::defaultVisit);
 
+    }
+
+    private List<Report> dealWithArrayAccess(JmmNode arrayNode, List<Report> reports) {
+
+        JmmNode arrayIdent = Utils.getChildOfKind(arrayNode, "Ident"); //fetch array identifier
+        JmmNode accessNode = arrayNode.getChildren().get(1);
+
+        if (!this.visitedVariables.contains(arrayIdent.get("name"))) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + arrayIdent.get("name")));
+            return null;
+        }
+
+        // if it is an array access treat its type as an integer
+        if (accessNode != null && accessNode.getKind().equals("Literal")) { // a[1]
+            if (!accessNode.get("type").equals("int")) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Invalid array access of: "
+                        + arrayIdent.get("name") + "[" + accessNode.get("type") + "]"));
+            }
+        }
+        else if (accessNode != null && accessNode.getKind().equals("Ident")) { // a[b]
+            if (!this.visitedVariables.contains(accessNode.get("name")))
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + accessNode.get("name")));
+        }
+        return null;
     }
 
     private List<Report> dealWithMethodCall(JmmNode node, List<Report> reports) {
@@ -65,22 +91,33 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         JmmNode lhs = node.getChildren().get(0);
         JmmNode rhs = node.getChildren().get(1);
 
-        // Checking if destination has been declared before assignment
-        System.out.println(lhs.get("name") + "===============================");
-        if (!this.visitedVariables.contains(lhs.get("name"))){
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + lhs.get("name")));
+        Symbol lhsSymb;
+        Type lhsType;
+        if (lhs.getKind().equals("Array")) {
+            if (isValidArrayAccess(lhs, reports))
+                lhsType = new Type("int", false);
+            else
+                return null;
+        }
+        else {
+            // Checking if destination has been declared before assignment
+            if (!this.visitedVariables.contains(lhs.get("name"))){
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + lhs.get("name")));
+                return null;
+            }
+
+            lhsSymb = this.getVariableSymbol(lhs);
+            lhsType = lhsSymb.getType();
         }
 
-        reports.addAll(validateAssignExpression(lhs, rhs));
+        // validate lhs with rhs of expression
+        reports.addAll(validateAssignExpression(lhsType, rhs));
 
         return null;
     }
 
-    private List<Report> validateAssignExpression(JmmNode lhs, JmmNode expr) {
+    private List<Report> validateAssignExpression(Type lhsType, JmmNode expr) {
         List<Report> reports = new ArrayList<>();
-
-        Symbol lhsSymb = this.getVariableSymbol(lhs);
-        Type lhsType = lhsSymb.getType();
 
         String kind = expr.getKind();
 
@@ -104,11 +141,49 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                                     + lhsType.getName() + (lhsType.isArray() ? "[]" : "")
                                     + " and " + expr.get("type")));
         }
+        else if (kind.equals("Array")) {
+            isValidArrayAccess(expr, reports);
+        }
         else if (isOperator(expr)) {
             //TODO determine operation return type
         }
 
         return reports;
+    }
+
+    /**
+     * Validates an array access
+     * @param arrayNode array node
+     * @param reports
+     * @return
+     */
+    private boolean isValidArrayAccess(JmmNode arrayNode, List<Report> reports) {
+        JmmNode arrayIdent = Utils.getChildOfKind(arrayNode, "Ident"); //fetch array identifier
+        JmmNode accessNode = arrayNode.getChildren().get(1);
+
+        if (!this.visitedVariables.contains(arrayIdent.get("name"))) {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + arrayIdent.get("name")));
+            return false;
+        }
+
+        // if it is an array access treat its type as an integer
+        if (accessNode != null && accessNode.getKind().equals("Literal")) { // a[1]
+            if (accessNode.get("type").equals("int"))
+               return true;
+            else { // in cases of invalid array access
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Invalid array access of: "
+                        + arrayIdent.get("name") + "[" + accessNode.get("type") + "]"));
+                return false;
+            }
+        }
+        else if (accessNode != null && accessNode.getKind().equals("Ident")) { // a[b]
+            if (!this.visitedVariables.contains(accessNode.get("name"))) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + accessNode.get("name")));
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 
     /**
