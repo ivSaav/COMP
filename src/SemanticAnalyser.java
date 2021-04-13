@@ -25,7 +25,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
         addVisit("VarDecl", this::dealWithVarDecl);
         addVisit("Plus", this::dealWithOperations);
-        addVisit("Equal", this::dealWithAssignment);
+        //addVisit("Equal", this::dealWithAssignment);
         addVisit("MethodCall", this::dealWithMethodCall);
 //        addVisit("Method", this::dealWithMethod);
 //        addVisit("MainMethod", this::dealWithMainMethod);
@@ -79,6 +79,12 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         return null;
     }
 
+    /**
+     *
+     * @param node
+     * @param reports
+     * @return
+     */
     private List<Report> dealWithOperations(JmmNode node, List<Report> reports) {
         JmmNode scope = Utils.findScope(node);
 
@@ -89,26 +95,24 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
         if (scope.getKind().equals("Class")) {
             Map<String, Symbol> fields = st.getField();
-
             for (JmmNode children : opChildren) {
                 Symbol symbol = fields.get(children.get("name"));
                 types.add(symbol.getType());
             }
-
         }
         else if (scope.getKind().equals("Method")) {
-            MethodSymbols method = st.getMethod(scope.get("name"));
+            Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
             for (JmmNode children : opChildren) {
-                Symbol symbol = method.getVariable(children.get("name"));
-
-                if (symbol != null)
-                    types.add(symbol.getType());
+                Symbol symbol = getVariables.get(children.get("name"));
+                types.add(symbol.getType());
             }
         }
 
-
         if (!verifySameTypes(types))
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable with different types"));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variables with different types"));
+
+        // Verify if it is used arrays directly for arithmetic operations
+
 
         return null;
     }
