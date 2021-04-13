@@ -116,7 +116,15 @@ class SimpleNode implements Node, JmmNode {
      out its children. */
 
   public void dump(String prefix) {
-    System.out.println(toString(prefix));
+
+    String val = prefix + " " + this.getKind();
+
+    if (!this.attributes.isEmpty()){
+      val += attributes.toString();
+    }
+
+    System.out.println(val);
+
     if (children != null) {
       for (int i = 0; i < children.length; ++i) {
         SimpleNode n = (SimpleNode)children[i];
