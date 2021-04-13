@@ -183,7 +183,7 @@ void PriorityExpressions() #void : {Token t;}
 {
     Terminals()
     (
-        <LSBRACE>  ExpressionDeclaration() <RSBRACE>
+        <LSBRACE>  ExpressionDeclaration() <RSBRACE> #Array(2)
         |
         <FSTOP> ((<LENGTH> #Length(1)) | MethodCall())
     )*

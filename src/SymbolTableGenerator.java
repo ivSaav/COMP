@@ -52,7 +52,8 @@ public class SymbolTableGenerator extends PreorderJmmVisitor<Void, Void> {
                 JmmNode ext = node.getChildren().get(0);
                 JmmNode superIdent = ext.getChildren().get(0);
 
-                st.setSuperclass(superIdent.get("name"));
+                if (ext.getKind().equals(("Extends")))
+                    st.setSuperclass(superIdent.get("name"));
             }
         }
         else {
@@ -124,7 +125,6 @@ public class SymbolTableGenerator extends PreorderJmmVisitor<Void, Void> {
 
         return null;
     }
-
 
     private Void defaultVisit(JmmNode node, Void unused) {
         return null;

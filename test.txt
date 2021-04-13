@@ -1,27 +1,10 @@
 import io.bla;
-import io.Cenas;
-class Fac extends College {
+class Fac extends Class {
 
     int[] a;
-    int[] b;
 
-    Cenas c;
-
-    public Cenas coisas() {
-        int mais;
-        mais = a + c;
-    }
     public static void main(String[]args){
-        int[] d;
-        d = a + b;
-
         int j;
-
         j = a[1];
-        k = true;
-
-        io.println(new Fac().ComputeFac(10));//assuming the existence
-        bla.length;
-        // of the classfile io.class
     }
 }
