@@ -106,6 +106,19 @@ public class SymbolsTable implements SymbolTable {
         }
     }
 
+    public Map<String, Symbol> getVariables(String method) {
+        Map<String, Symbol> allVariables = new HashMap<>();
+
+        // Put all global variables
+        allVariables.putAll(this.fields);
+
+        // Put all local variables from the method
+        MethodSymbols methodSymbols = this.methods.get(method);
+        allVariables.putAll(methodSymbols.getLocalVar());
+
+        return allVariables;
+    }
+
     @Override
     public String toString() {
         return "SymbolsTable{" +
@@ -116,6 +129,5 @@ public class SymbolsTable implements SymbolTable {
                 ",\n methods=" + methods +
                 '}';
     }
-
 
 }
