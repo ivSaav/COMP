@@ -183,7 +183,7 @@ void PriorityExpressions() #void : {Token t;}
 {
     Terminals()
     (
-        <LSBRACE>  ExpressionDeclaration() <RSBRACE>
+        <LSBRACE>  ExpressionDeclaration() <RSBRACE> #Array(2)
         |
         <FSTOP> ((<LENGTH> #Length(1)) | MethodCall())
     )*
@@ -199,9 +199,8 @@ void MethodCall() #MethodCall(2): {Token t;}
 
 void Terminals() #void : {Token t;}
 {
-
-    t = <INTEGER> { jjtThis.put("int", t.image); }#Int  // literal -> type: int; value = token.image
-    | t = <LITERALBOOL> { jjtThis.put("boolean", t.image); } #LiteralBool  //literal_boolean
+    t = <INTEGER> { jjtThis.put("type", "int"); jjtThis.put("value", t.image); }#Literal  // literal -> type: int; value = token.image
+    | t = <LITERALBOOL> { jjtThis.put("type", "boolean"); jjtThis.put("value", t.image); } #Literal  //literal_boolean
     | t=<IDENTIFIER>{jjtThis.put("name", t.image);} #Ident
     | <THIS> #This
     | NewDeclaration()
@@ -213,19 +212,17 @@ void NewDeclaration() #void : {Token t;}
 {
     <NEW>
     (
-        <INT> <LSBRACE> ExpressionDeclaration() <RSBRACE>
+        <INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> #NewArray(1)
     |
       t = <IDENTIFIER> {jjtThis.put("name", t.image);} #New <LPAR> <RPAR>
     )
+
 }
 
 /*IMPORT DECLARATION*/
 void ImportDeclaration() #ImportDec: {String s;}
 {
-    <IMPORT> 
-        s=Module()
-            {jjtThis.put("class",s);}
-    <PVIRG>
+    <IMPORT> s=Module() {jjtThis.put("class",s);} <PVIRG>
 }
 
 String Module() #Module: {Token t;String s;}

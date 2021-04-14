@@ -1,17 +1,19 @@
-import io.bla;
-import io.Cenas;
-class Fac extends College {
+import io;
+class Fac extends Class {
 
     int[] a;
     int[] b;
+    boolean c;
+    int y;
 
-    public Cenas coisas() {
-        int mais;
-        mais = a;
+    public boolean coisas() {
+        c = true;
+        return c;
     }
 
-    public int teste(int a, int b){
-        return a+b;
+    public int teste(int e, int f){
+        y = 4;
+        return y;
     }
 
     public static void main(String[]args){
@@ -26,23 +28,16 @@ class Fac extends College {
         boolean k;
         k = true;
 
-        if (g){
-        }else{
-        }
-
-        k = !p;
-        k = k && p;
 
 
-        j = Cenas.teste(j, k);
 
-        j = Cenas.teste(j,p);
-
+        j = Cenas.teste(j, l);
 
 
 
 
 
         // of the classfile io.class
-    }
+       }
+
 }
