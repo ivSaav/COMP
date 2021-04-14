@@ -38,7 +38,7 @@ public class Utils {
 
     public static boolean isOperator(JmmNode node) {
         String kind = node.getKind();
-        return kind.equals("Plus") || kind.equals("Minus") || kind.equals("Mult") || kind.equals("Div");
+        return kind.equals("Plus") || kind.equals("Minus") || kind.equals("Mult") || kind.equals("Div"); //|| kind.equals("Smaller");
     }
 
     public static JmmNode getChildOfKind(JmmNode node, String kind) {

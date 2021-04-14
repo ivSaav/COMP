@@ -1,7 +1,5 @@
 import io;
 class Fac extends Class {
-
-    int[] a;
     int[] b;
     boolean c;
     int y;
@@ -11,9 +9,10 @@ class Fac extends Class {
         return c;
     }
 
-    public int teste(int e, int f){
+    public int teste(int a, int b){
         y = 4;
-        return y;
+
+        return y + 1;
     }
 
     public static void main(String[]args){
@@ -28,13 +27,7 @@ class Fac extends Class {
         boolean k;
         k = true;
 
-
-
-
         j = Cenas.teste(j, l);
-
-
-
 
 
         // of the classfile io.class

@@ -111,6 +111,7 @@ public class SymbolsTable implements SymbolTable {
         // Put all local variables from the method
         MethodSymbols methodSymbols = this.methods.get(method);
         allVariables.putAll(methodSymbols.getLocalVar());
+        allVariables.putAll(methodSymbols.getParameter());
 
         return allVariables;
     }
