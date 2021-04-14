@@ -200,6 +200,9 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                     Symbol symb = getVariableSymbol(child);
                     return symb == null ? null : symb.getType();
                 }
+                else if (child.getKind().equals("Array")) {
+                    return new Type("int", false); // assuming it's correct
+                }
             }
         }
         return null;
