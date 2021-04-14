@@ -25,6 +25,10 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
         addVisit("VarDecl", this::dealWithVarDecl);
         addVisit("Plus", this::dealWithOperations);
+        addVisit("Smaller", this::dealWithOperations);
+        addVisit("Negation", this::dealWithBool);
+        addVisit("If", this:: dealWithIfStatement);
+        addVisit("And", this::dealWithBool);
         //addVisit("Equal", this::dealWithAssignment);
         addVisit("MethodCall", this::dealWithMethodCall);
 //        addVisit("Method", this::dealWithMethod);
@@ -52,6 +56,113 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
         // TODO verify if return type is valid
         return null;
+    }
+    private List<Report> dealWithIfStatement (JmmNode node, List<Report> reports){
+
+        JmmNode mustbool = node.getChildren().get(0);
+
+
+        //im confused onto how to know if its smaller/larger/equal....
+        String varKind = mustbool.getKind();
+        switch(varKind){
+            case "Smaller" :
+            case "LiteralBool":
+            case "And":
+            case "Negation":
+                break;
+            case "Ident":
+                if (!getVariableSymbol(mustbool).getType().getName().equals("boolean")){
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable at if statement is of wrong type"));
+                }
+                break;
+            case "MethodCall":
+                MethodSymbols method = st.getMethod(mustbool.get("name"));
+
+                if(!method.getReturnType().getName().equals("boolean")) {
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Method return at if is of wrong type"));
+                }
+                break;
+
+            default:
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "If statement is not of type boolean" ));
+
+        }
+
+
+
+        return null;
+    }
+
+    private List<Report> dealWithBool (JmmNode node, List<Report> reports){
+
+        //for ! and &&
+
+        JmmNode scope = Utils.findScope(node);
+        List<JmmNode> opChildren = node.getChildren();
+        JmmNode child;
+
+        switch (node.getKind()){
+            case "Negation":
+                    child = opChildren.get(0);
+
+                    switch (child.getKind()){
+                        case "LiteralBool":
+                            break;
+                        case "Ident":
+                            Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
+
+                            if(!getVariables.get(child.get("name")).getType().getName().equals("boolean")){
+                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Negation done with wrong type"));
+                            }
+                            break;
+                        case "MethodCall":
+                            MethodSymbols method = st.getMethod(child.get("name"));
+
+                            if(!method.getReturnType().getName().equals("boolean")) {
+                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Invalid method call at negation"));
+                            }
+                            break;
+                    }
+
+                break;
+            case "And":
+
+
+                for(JmmNode currentChild : opChildren){
+                    if (currentChild.getKind().equals("Ident")) {
+                        Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
+
+                        if (!getVariables.get(currentChild.get("name")).getType().getName().equals("boolean")) {
+
+                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "logic AND done with wrong type"));
+                            break;
+                        }
+                    } else if(currentChild.getKind().equals("MethodCall")){
+
+                            MethodSymbols method = st.getMethod(currentChild.get("name"));
+
+                            if(!method.getReturnType().getName().equals("boolean")) {
+                                System.out.println("morreu aqui");
+                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Invalid method call at negation"));
+                                break;
+                            }
+
+                    }
+                    else if(currentChild.getKind().equals("LiteralBool") || currentChild.getKind().equals("Negation") || currentChild.getKind().equals("And")){
+                    }
+
+                    else{
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "logic AND done with wrong type"));
+                        break;
+                    }
+                }
+
+                break;
+
+            default:
+                break;
+        }
+                return null;
     }
 
     private List<Report> dealWithAssignment(JmmNode node, List<Report> reports) {
@@ -114,10 +225,13 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         // Verify if it is used arrays directly for arithmetic operations
 
 
+        //TODO VERIFY VaRIABLES OR INT LITERALS
+
         return null;
     }
 
     private List<Report> dealWithVarDecl(JmmNode node, List<Report> reports) {
+        //int i =0;
         String varName = node.get("name");
 
         // Verify if variable was already declared
