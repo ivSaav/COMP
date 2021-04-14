@@ -46,7 +46,8 @@ public class AnalysisStage implements JmmAnalysis {
         SemanticAnalyser semanticAnalyser = new SemanticAnalyser(st);
         List<Report> reports = new ArrayList<>();
         semanticAnalyser.visit(node, reports);
-        System.out.println(reports);
+        for (Report r : reports)
+            System.out.println(r);
 
 
         System.out.println("Dump tree with Visitor where you control tree traversal");

@@ -1,11 +1,15 @@
-import io.bla;
+import io;
 class Fac extends Class {
 
     int[] a;
     int b;
 
+
     public static void main(String[]args){
         int j;
+
+        b = a[true];
         j = a[b];
     }
+
 }

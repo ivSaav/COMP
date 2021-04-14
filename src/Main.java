@@ -23,8 +23,8 @@ public class Main implements JmmParser {
 		    SimpleNode root = null;
 		    try {
 		    	root = parser.Start(); // returns reference to root node
-				//root.dump(""); // prints the tree on the screen
-				System.out.println(root.toJson()); //prints Json version of ast
+				root.dump(""); // prints the tree on the screen
+//				System.out.println(root.toJson()); //prints Json version of ast
 			}
 		    catch(Exception e) {
 		    	parser.getReports().add(new Report(ReportType.ERROR, Stage.OTHER,
