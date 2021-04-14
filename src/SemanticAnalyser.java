@@ -26,15 +26,24 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
         addVisit("VarDecl", this::dealWithVarDecl);
 //        addVisit("Plus", this::dealWithOperations);
-//        addVisit("Equal", this::dealSomething);
         addVisit("Equal", this::dealWithAssignment);
         addVisit("MethodCall", this::dealWithMethodCall);
 //        addVisit("Method", this::dealWithMethod);
         addVisit("Array", this::dealWithArrayAccess);
-//        addVisit("MainMethod", this::dealWithMainMethod);
+        addVisit("NewArray", this::dealWithArrayInit);
 
         setDefaultVisit(this::defaultVisit);
 
+    }
+
+    private List<Report> dealWithArrayInit(JmmNode arrayNode, List<Report> reports) {
+        JmmNode literal = Utils.getChildOfKind(arrayNode, "Literal");
+
+        if (literal == null || !literal.get("type").equals("int"))
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1,
+                    "Invalid array initialization size: " +
+                            (literal == null ? "" : literal.get("value"))));
+        return null;
     }
 
     private List<Report> dealWithArrayAccess(JmmNode arrayNode, List<Report> reports) {
@@ -147,16 +156,53 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
             Type rhsType = rhsSymbol.getType();
             if (!lhsType.getName().equals(rhsType.getName())) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unmatched data types in assignment: "  + lhsType.getName() + " and " + rhsType.getName()));
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1,
+                            "Unmatched data types in assignment: "  + lhsType.getName() + " and " + rhsType.getName()));
             }
         }
-        else if (isOperator(expr)) {
-            //TODO determine operation return type
+        else if (Utils.isOperator(expr)) {
+           Type t = findOperationReturnType(expr);
+
+           if (t == null)
+               reports.add(new Report(ReportType.WARNING, Stage.SEMANTIC, -1,
+                       "Couldn't determine expression result type "));
+           else {
+               if (!lhsType.equals(t))
+                   reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1,
+                           "Unmatched data types in assignment after expression: "  + lhsType.getName() + " and " + t.getName()));
+           }
 
         }
-
-        // TODO deal with -- new int[]
+        else if (kind.equals("NewArray")) {
+            // assuming right side is correct (validated elsewhere)
+            if (!lhsType.isArray())
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1,
+                        "Invalid variable assignment: "  + lhsType.getName() + " = int[]"));
+        }
         return reports;
+    }
+
+    /**
+     * Determines the return type of an expression
+     * (Assumes operation is correct)
+     * @param oper
+     * @return
+     */
+    public Type findOperationReturnType(JmmNode oper) {
+        for (JmmNode child : oper.getChildren()) {
+            if (!Utils.isOperator(child)) {
+                if (child.getKind().equals("Literal")) {
+                    if (child.get("type").equals("int"))
+                        return new Type("int", false);
+                    return new Type("boolean", false);
+                }
+                else if (child.getKind().equals("Ident")){
+                    Symbol symb = getVariableSymbol(child);
+                    return symb == null ? null : symb.getType();
+                }
+            }
+        }
+        return null;
     }
 
 
@@ -230,11 +276,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
     private boolean verifyType(String type) {
         return  type.equals("int") || type.equals("boolean") ||
                 st.getImports().contains(type) || st.getClassName().equals(type) || st.getSuper().equals(type);
-    }
-
-    private boolean isOperator(JmmNode node) {
-        String kind = node.getKind();
-        return kind.equals("Plus") || kind.equals("Minus") || kind.equals("Mult") || kind.equals("Div");
     }
 
     /**

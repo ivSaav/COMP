@@ -212,10 +212,11 @@ void NewDeclaration() #void : {Token t;}
 {
     <NEW>
     (
-        <INT> <LSBRACE> ExpressionDeclaration() <RSBRACE>
+        <INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> #NewArray(1)
     |
       t = <IDENTIFIER> {jjtThis.put("name", t.image);} #New <LPAR> <RPAR>
     )
+
 }
 
 /*IMPORT DECLARATION*/

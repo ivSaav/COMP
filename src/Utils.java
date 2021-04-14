@@ -34,15 +34,11 @@ public class Utils {
         return findScope(node.getParent());
     }
 
-    public static Type determineType(JmmNode node) {
-        System.out.println("DTERMINE " + node);
 
-        switch (node.getKind()) {
-            case "Ident":
-            case "Literal":
-                return new Type(node.get("name"), false);
-        }
-        return null;
+
+    public static boolean isOperator(JmmNode node) {
+        String kind = node.getKind();
+        return kind.equals("Plus") || kind.equals("Minus") || kind.equals("Mult") || kind.equals("Div");
     }
 
     public static JmmNode getChildOfKind(JmmNode node, String kind) {
