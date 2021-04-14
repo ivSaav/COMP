@@ -10,24 +10,37 @@ class Fac extends College {
         mais = a;
     }
 
-    public int teste(){
-        return true;
+    public int teste(int a, int b){
+        return a+b;
     }
+
     public static void main(String[]args){
         int[] d;
         //d = a + b;
 
-        int j;
 
-        j = a[1];
+        int j;
+        j = 2;
+        int l;
+        l = 1;
         boolean k;
         k = true;
-        boolean l;
-        l = !k;
+
+        if (g){
+        }else{
+        }
+
+        k = !p;
+        k = k && p;
 
 
-        if (true && l){}
-        else{}
+        j = Cenas.teste(j, k);
+
+        j = Cenas.teste(j,p);
+
+
+
+
 
 
         // of the classfile io.class

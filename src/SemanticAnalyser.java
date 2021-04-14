@@ -27,7 +27,8 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         addVisit("Plus", this::dealWithOperations);
         addVisit("Smaller", this::dealWithOperations);
         addVisit("Negation", this::dealWithBool);
-        addVisit("If", this:: dealWithIfStatement);
+        addVisit("If", this:: dealWithIfWhileStatement);
+        addVisit("While", this:: dealWithIfWhileStatement);
         addVisit("And", this::dealWithBool);
         //addVisit("Equal", this::dealWithAssignment);
         addVisit("MethodCall", this::dealWithMethodCall);
@@ -40,9 +41,11 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
     private List<Report> dealWithMethodCall(JmmNode node, List<Report> reports) {
         String methodName = node.get("name");
+        MethodSymbols method = this.st.getMethod(methodName);
+
 
         // checking if it's a defined method in this class
-        if (this.st.getMethod(methodName) == null) {
+        if (method == null) {
             JmmNode tmp = node.getChildren().get(0);
 
             // class identifier
@@ -52,14 +55,71 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                 if (!st.getImports().contains(nodeKind))
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Couldn't resolve method call " + methodName));
             }
+        }else{
+            //CHECKS
+
+            List<Symbol> parameters = method.getParameters();
+            List<JmmNode> args = node.getChildren().get(1).getChildren();
+
+            if(parameters.size()!=args.size()){
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arguments doesn't not match paramenters in method " + methodName));
+                return null;
+            }else{
+
+
+                for(int i=0; i<parameters.size(); i++){
+                    System.out.println("PARAMETER " + parameters.get(i).getType().getName());
+                    System.out.println("ARG " + args.get(i).getKind());
+
+                    switch (args.get(i).getKind()){
+                        case "Ident":
+                            if (getVariableSymbol(args.get(i))!= null){
+                                if (!getVariableSymbol(args.get(i)).getType().getName().equals(parameters.get(i).getType().getName())){
+                                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arguments type don't match in method " + methodName));
+                                }
+                                break;
+                            }
+                            else{
+                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable at " + methodName ));
+                            }
+                        case "Int":
+                        case "LiteralBool":
+                            break;
+
+
+
+                    }
+                    /*if(!parameters.get(i).getType().getName().equals(args.get(i).get("type"))){
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arguments type don't match in method " + methodName));
+                        return null;
+                    }*/
+                }
+            }
+
+
+
+
+
+            //System.out.println("METHOD:" + );
+
         }
+
+
+
+
+
+
+
 
         // TODO verify if return type is valid
         return null;
     }
-    private List<Report> dealWithIfStatement (JmmNode node, List<Report> reports){
+
+
+    private List<Report> dealWithIfWhileStatement (JmmNode node, List<Report> reports){
 
         JmmNode mustbool = node.getChildren().get(0);
+        String nodeName = node.getKind();
 
 
         //im confused onto how to know if its smaller/larger/equal....
@@ -71,24 +131,27 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             case "Negation":
                 break;
             case "Ident":
-                if (!getVariableSymbol(mustbool).getType().getName().equals("boolean")){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable at if statement is of wrong type"));
+                if (getVariableSymbol(mustbool) == null){
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable " + mustbool.getKind() ));
+
+                }
+                else if (!getVariableSymbol(mustbool).getType().getName().equals("boolean")){
+
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable at " + nodeName + " statement is of wrong type"));
                 }
                 break;
             case "MethodCall":
                 MethodSymbols method = st.getMethod(mustbool.get("name"));
 
                 if(!method.getReturnType().getName().equals("boolean")) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Method return at if is of wrong type"));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Method return at "+ nodeName+" is of wrong type"));
                 }
                 break;
 
             default:
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "If statement is not of type boolean" ));
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, nodeName+ " statement is not of type boolean" ));
 
         }
-
-
 
         return null;
     }
@@ -111,7 +174,12 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                         case "Ident":
                             Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
 
-                            if(!getVariables.get(child.get("name")).getType().getName().equals("boolean")){
+                            if (getVariables.get(child.get("name")) == null){
+                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable " + child.getKind() ));
+
+                            }
+
+                            else if(!getVariables.get(child.get("name")).getType().getName().equals("boolean")){
                                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Negation done with wrong type"));
                             }
                             break;
