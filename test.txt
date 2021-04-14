@@ -12,6 +12,12 @@ class Fac extends Class {
     public int teste(int a, int b){
         y = 4;
 
+        if ( true && true ) {
+
+        }
+        else {
+
+        }
         return y + 1;
     }
 

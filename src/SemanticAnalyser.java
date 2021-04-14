@@ -107,7 +107,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                 break;
 
         }
-        System.out.println("RET " + node.getChildren());
+
         return null;
     }
 
@@ -203,8 +203,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
 
                 for (int i = 0; i < parameters.size(); i++) {
-                    System.out.println("PARAMETER " + parameters.get(i).getType().getName());
-                    System.out.println("ARG " + args.get(i).getKind());
 
                     switch (args.get(i).getKind()) {
                         case "Ident":
@@ -216,8 +214,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                             } else {
                                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable at " + methodName));
                             }
-                        case "Int":
-                        case "LiteralBool":
+                        case "Literal":
                             break;
 
 
@@ -233,7 +230,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
         }
 
-        System.out.println("METHOD RETURN: " + method);
+
         return null;
     }
 
@@ -247,15 +244,21 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         Map<String, Symbol> variables = st.getVariables(scope.get("name"));
 
 
-        //im confused onto how to know if its smaller/larger/equal....
+
         String varKind = mustbool.getKind();
         switch(varKind){
             case "Smaller" :
-            case "LiteralBool":
             case "And":
             case "Negation":
                 break;
+            case "Literal":
+                if (!mustbool.get("type").equals("boolean")){
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable at " + nodeName + " is of wrong type"));
+
+                }
+                break;
             case "Ident":
+
 
                 if (variables.get(mustbool) == null){
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable " + mustbool.getKind() ));
@@ -341,13 +344,18 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
                             MethodSymbols method = st.getMethod(currentChild.get("name"));
 
-                            if(!method.getReturnType().getName().equals("boolean")) {
-                                System.out.println("morreu aqui");
+                            if(!method.getReturnType().getName().equals("boolean")){
                                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Invalid method call at negation"));
                                 break;
                             }
                     }
-                    else if(currentChild.getKind().equals("LiteralBool") || currentChild.getKind().equals("Negation") || currentChild.getKind().equals("And")){
+                    else if (currentChild.getKind().equals("Negation") || currentChild.getKind().equals("And")){
+                    }
+                    else if (currentChild.getKind().equals("Literal")){
+                        if (!currentChild.get("type").equals("boolean")){
+                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "logic AND done with wrong type"));
+                            break;
+                        }
                     }
 
                     else{
@@ -540,7 +548,9 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
         // Verify if the type of the List<Type> is of arrays
         if (types.get(0).isArray())
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arithmetic Operations with arrays"));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arithmetic Operation invalid with arrays"));
+        if(types.get(0).getName().equals("boolean"))
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arithmetic Operation invalid with boolean"));
 
         return null;
     }
