@@ -64,6 +64,31 @@ public class Utils {
     }
 
     /**
+     * Returns a string version of a variable (int b --> b.i32)
+     * Takes into consideration if the variable is an array and if it's being accessed
+     * @param symbol - variable's symbol
+     * @parma arrayAccess - if variable is an array that's being accessed
+     * @return name.type (identifiers); name (array access); name.array.int (arrays)
+     */
+    public static String getOllirVar(Symbol symbol, boolean arrayAccess) {
+        Type type = symbol.getType();
+        String name = symbol.getName();
+
+        String t = getOllirType(type);
+
+        String ret = "";
+        if (type.isArray()) { // A[]
+            if (arrayAccess) // A[0] --> A
+                ret += name;
+            else
+                ret = name + ".array."+ t; // A[] --> A.array.i32
+        }
+        else
+            ret = name + "." + t;
+        return ret;
+    }
+
+    /**
      * Returns a ollir string version of a type (int --> i32)
      * @param type
      * @return
@@ -86,7 +111,7 @@ public class Utils {
 
     /**
      * Returns a ollir string version of a type (int --> i32)
-     * @param type
+     * @param literalNode
      * @return
      */
     public static String getOllirLiteral(JmmNode literalNode) {

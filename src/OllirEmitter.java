@@ -81,43 +81,93 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         JmmNode lhs = equalNode.getChildren().get(0);
         JmmNode rhs = equalNode.getChildren().get(1);
 
-        // get variable symbol
-        Symbol lhsSymbol = this.st.getVariableSymbol(lhs);
+        assign.append(this.resolveVariableIdentifier(lhs));
 
-        Optional<JmmNode> methodOptional = equalNode.getAncestor("Method");
-        if (methodOptional.isPresent()) {// variable assignment inside method
-            JmmNode methodNode = methodOptional.get();
-            MethodSymbols method = this.st.getMethod(methodNode.get("name"));
-            int paramIndex = method.getParameterIndex(lhsSymbol.getName());
-            if (paramIndex != -1)
-                assign.append("$").append(paramIndex).append(".");
+        String assignmentType = ".i32 "; // special case where destination is array access
+        if (!lhs.getKind().equals("Array")) {
+            Symbol lhsSymbol = this.st.getVariableSymbol(lhs);
+             assignmentType = "." +  Utils.getOllirType(lhsSymbol.getType()) + " "; // if not array access, then fetch type
         }
-
-        assign.append(Utils.getOllirVar(lhsSymbol));
-
-        String assignmentType = "." +  Utils.getOllirType(lhsSymbol.getType()) + " ";
         assign.append(" :=").append(assignmentType);
 
         assign.append(this.handleRhsAssign(rhs)).append(";");
         return assign.toString();
     }
 
+    /**
+     * Receives a variable identifier Node
+     * Determines if it is an array access an array or an identifier
+     * Checks if variable is part of a method's parameters
+     * @param node - variable node
+     * @return ollir version of variable
+     */
+    private String resolveVariableIdentifier(JmmNode node) {
+
+        StringBuilder identBuilder = new StringBuilder();
+        Symbol identSymbol = null;
+        boolean isArrayAccess = node.getKind().equals("Array");
+        if (isArrayAccess) {
+            JmmNode arrayIdent = node.getChildren().get(0);
+            identSymbol = this.st.getVariableSymbol(arrayIdent);
+        }
+        else // node is identifier
+            identSymbol = this.st.getVariableSymbol(node);
+
+        // checking if variable is a parameter variable
+        int paramIndex = this.getArgVariableIndex(node, identSymbol);
+        if (paramIndex != -1)
+            identBuilder.append("$").append(paramIndex).append("."); // assignment with parameter variable
+
+        identBuilder.append(Utils.getOllirVar(identSymbol, isArrayAccess)); // append ollir version of variable
+
+        if (isArrayAccess) {
+            String innerAccess = "[";
+            JmmNode accessNode = node.getChildren().get(1);
+
+            if (accessNode.getKind().equals("Literal")) // A[0]
+                innerAccess += accessNode.get("value") + ".i32";
+            else // array access is an identifier A[b]
+                innerAccess += resolveVariableIdentifier(accessNode);
+            innerAccess += "].i32";
+
+            identBuilder.append(innerAccess);
+        }
+        return identBuilder.toString();
+    }
+
     private String handleRhsAssign(JmmNode rhs) {
-        StringBuilder rhsBuiler = new StringBuilder();
+        StringBuilder rhsBuilder = new StringBuilder();
         switch (rhs.getKind()) {
             case "Literal":
-                rhsBuiler.append(Utils.getOllirLiteral(rhs));
+                rhsBuilder.append(Utils.getOllirLiteral(rhs));
                 break;
             case "Ident":
-                Symbol varSymb = this.st.getVariableSymbol(rhs);
-                rhsBuiler.append(Utils.getOllirVar(varSymb));
+            case "Array":
+                rhsBuilder.append(this.resolveVariableIdentifier(rhs));
                 break;
             default:
+                if (Utils.isOperator(rhs))
+                    // TODO call operation
                 System.out.println("Olha morri _________________________");
         }
-        return rhsBuiler.toString();
+        return rhsBuilder.toString();
     }
-    
+
+    /**
+     * Determines if a variable is part of a method's parameters
+     * @param varNode - variable to be checked
+     * @param varSymbol - symbol of the variable
+     * @return variable index (if is a method parameter variable); -1 otherwise
+     */
+    private int getArgVariableIndex(JmmNode varNode, Symbol varSymbol) {
+        Optional<JmmNode> methodOptional = varNode.getAncestor("Method");
+        if (methodOptional.isPresent()) {// variable assignment inside method
+            JmmNode methodNode = methodOptional.get();
+            MethodSymbols method = this.st.getMethod(methodNode.get("name"));
+           return method.getParameterIndex(varSymbol.getName());
+        }
+        return -1;
+    }
 
     private static String reduce(JmmNode node, String nodeResult, List<String> childrenResults) {
         var content = new StringBuilder();
