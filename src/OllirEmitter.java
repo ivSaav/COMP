@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import pt.up.fe.comp.jmm.JmmNode;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
@@ -18,18 +19,20 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
 
         addVisit("Class", this::dealWithClass);
         addVisit("Method", this::dealWithMethod);
-        // addVisit("Equal", this::dealWithEquals);
+         addVisit("Equal", this::dealWithEquals);
         // addVisit("If", this::dealWithIf);
         // addVisit("While", this::dealWithWhile);
         // addVisit("Plus", this::dealWithLogicalOp);
         // addVisit("And", this::dealWithArithmeticOp);
     }
 
+
+
     public String defaultVisit(JmmNode node, Void unused) {
         return "";
     }
     
-    public String dealWithClass(JmmNode classNode, Void unused) {
+    private String dealWithClass(JmmNode classNode, Void unused) {
         StringBuilder stringBuilder = new StringBuilder(classNode.get("class"));
         
         stringBuilder.append("{\n");
@@ -41,7 +44,7 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         return stringBuilder.toString();
     }
 
-    public String dealWithMethod(JmmNode methodNode, Void unused) {
+    private String dealWithMethod(JmmNode methodNode, Void unused) {
         StringBuilder stringBuilder = new StringBuilder();
 
         MethodSymbols methodSymbols = this.st.getMethod(methodNode.get("name"));
@@ -70,13 +73,58 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
 
         return stringBuilder.toString();
     }
-    
+
+    private String dealWithEquals(JmmNode equalNode, Void unused) {
+
+        StringBuilder assign = new StringBuilder("\t");
+
+        JmmNode lhs = equalNode.getChildren().get(0);
+        JmmNode rhs = equalNode.getChildren().get(1);
+
+        // get variable symbol
+        Symbol lhsSymbol = this.st.getVariableSymbol(lhs);
+
+        Optional<JmmNode> methodOptional = equalNode.getAncestor("Method");
+        if (methodOptional.isPresent()) {// variable assignment inside method
+            JmmNode methodNode = methodOptional.get();
+            MethodSymbols method = this.st.getMethod(methodNode.get("name"));
+            int paramIndex = method.getParameterIndex(lhsSymbol.getName());
+            if (paramIndex != -1)
+                assign.append("$").append(paramIndex).append(".");
+        }
+
+        assign.append(Utils.getOllirVar(lhsSymbol));
+
+        String assignmentType = "." +  Utils.getOllirType(lhsSymbol.getType()) + " ";
+        assign.append(" :=").append(assignmentType);
+
+        assign.append(this.handleRhsAssign(rhs)).append(";");
+        return assign.toString();
+    }
+
+    private String handleRhsAssign(JmmNode rhs) {
+        StringBuilder rhsBuiler = new StringBuilder();
+        switch (rhs.getKind()) {
+            case "Literal":
+                rhsBuiler.append(Utils.getOllirLiteral(rhs));
+                break;
+            case "Ident":
+                Symbol varSymb = this.st.getVariableSymbol(rhs);
+                rhsBuiler.append(Utils.getOllirVar(varSymb));
+                break;
+            default:
+                System.out.println("Olha morri _________________________");
+        }
+        return rhsBuiler.toString();
+    }
     
 
-    private static String reduce(String nodeResult, List<String> childrenResults) {
+    private static String reduce(JmmNode node, String nodeResult, List<String> childrenResults) {
         var content = new StringBuilder();
 
-        if (!nodeResult.isBlank()) 
+        boolean validNode = !nodeResult.isBlank(); // don't add newlines to ignored nodes
+
+        if (validNode)
             content.append("\n");
         content.append(nodeResult);
 
@@ -84,7 +132,11 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
             content.append(childResult);
         }
 
-        return content.toString();
+        String tab = "";
+        if (node.getKind().equals("Method"))
+            tab = "\n\t}\n";
+
+        return content + tab;
     }
 
     @Override
@@ -102,6 +154,6 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
             childrenResults.add(visit(child));
         }
 
-        return reduce(nodeResult, childrenResults);
+        return reduce(jmmNode, nodeResult, childrenResults);
     }
 }

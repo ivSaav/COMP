@@ -1,5 +1,8 @@
 import io;
 class Fac {
+
+    int b;
+
     public int ComputeFac(int num){
         int num_aux ;
         if (num < 1)

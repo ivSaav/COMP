@@ -39,26 +39,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         setDefaultVisit(this::defaultVisit);
 
     }
-    /**
-     * Fetches variable's symbol from local or global variables
-     * @param var
-     * @return
-     */
-    private Symbol getVariableSymbol(JmmNode var) {
-        String name = var.get("name");
 
-        // Check in global variables
-        Symbol varSymbol = st.getGlobalVariable(name);
-
-        // Wasn't in global variables
-        if (varSymbol == null) {
-            JmmNode scope = Utils.findScope(var); // determine method where variable is declared
-            if (scope != null)
-                varSymbol = st.getMethod(scope.get("name")).getVariable(var.get("name"));
-        }
-
-        return varSymbol;
-    }
 
 
     private List<Report> dealWithReturn(JmmNode node, List <Report> reports){
@@ -73,8 +54,8 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
         switch (returnNode.getKind()){
             case "Ident":
-                if (getVariableSymbol(returnNode) != null) {
-                    if (!getVariableSymbol(returnNode).getType().getName().equals(methodType)) {
+                if (st.getVariableSymbol(returnNode) != null) {
+                    if (!st.getVariableSymbol(returnNode).getType().getName().equals(methodType)) {
                         reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unmatched return types at method " + methodName));
                     }
                     break;
@@ -136,7 +117,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + firstChild.get("name")));
                     return null;
                 }
-                Symbol symbolArrayDec = this.getVariableSymbol(firstChild);
+                Symbol symbolArrayDec = st.getVariableSymbol(firstChild);
 
                 if (!symbolArrayDec.getType().isArray()) {
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to non-array variable"));
@@ -154,7 +135,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + secondChild.get("name")));
                     return null;
                 }
-                Symbol symbolArrayInd = this.getVariableSymbol(secondChild);
+                Symbol symbolArrayInd = st.getVariableSymbol(secondChild);
 
                 if (!symbolArrayInd.getType().getName().equals("int")) {
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to an array with a non-integer"));
@@ -199,8 +180,8 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
                     switch (args.get(i).getKind()) {
                         case "Ident":
-                            if (getVariableSymbol(args.get(i)) != null) {
-                                if (!getVariableSymbol(args.get(i)).getType().getName().equals(parameters.get(i).getType().getName())) {
+                            if (st.getVariableSymbol(args.get(i)) != null) {
+                                if (!st.getVariableSymbol(args.get(i)).getType().getName().equals(parameters.get(i).getType().getName())) {
                                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arguments type don't match in method " + methodName));
                                 }
                                 break;
@@ -253,7 +234,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable " + mustbool.getKind() ));
 
                 }
-                else if (!getVariableSymbol(mustbool).getType().getName().equals("boolean")){
+                else if (!st.getVariableSymbol(mustbool).getType().getName().equals("boolean")){
 
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable at " + nodeName + " statement is of wrong type"));
                 }
@@ -376,7 +357,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + lhs.get("name")));
                 return null;
             }
-            lhsSymb = this.getVariableSymbol(lhs);
+            lhsSymb = st.getVariableSymbol(lhs);
             lhsType = lhsSymb.getType();
         }
 
@@ -396,7 +377,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             if (!this.visitedVariables.contains(expr.get("name"))) // variable wasn't declared
                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable " + expr.get("name")));
             else {
-                Symbol rhsSymbol = this.getVariableSymbol(expr);
+                Symbol rhsSymbol = st.getVariableSymbol(expr);
                 Type rhsType = rhsSymbol.getType();
 
                 if (!lhsType.equals(rhsType))
@@ -414,7 +395,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         }
         else if (kind.equals("Array")) {
             JmmNode arrayIdent = Utils.getChildOfKind(expr, "Ident");
-            Symbol rhsSymbol = this.getVariableSymbol(arrayIdent);
+            Symbol rhsSymbol = st.getVariableSymbol(arrayIdent);
 
             // variable wasn't declared (handled in another function)
             if (rhsSymbol == null)
@@ -459,15 +440,12 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
      * @return
      */
     public Type findOperationReturnType(JmmNode oper) {
-
-
-
         for (JmmNode child : oper.getChildren()) {
             if (!Utils.isOperator(child)) {
                 if (child.getKind().equals("Literal"))
                     return new Type(child.get("type"), false);
                 else if (child.getKind().equals("Ident")){
-                    Symbol symb = getVariableSymbol(child);
+                    Symbol symb = st.getVariableSymbol(child);
                     return symb == null ? null : symb.getType();
                 }
                 else if (child.getKind().equals("Array")) {

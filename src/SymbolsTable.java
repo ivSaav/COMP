@@ -111,9 +111,30 @@ public class SymbolsTable implements SymbolTable {
         // Put all local variables from the method
         MethodSymbols methodSymbols = this.methods.get(method);
         allVariables.putAll(methodSymbols.getLocalVar());
-        allVariables.putAll(methodSymbols.getParameter());
+        allVariables.putAll(methodSymbols.getParameterMap());
 
         return allVariables;
+    }
+
+    /**
+     * Fetches variable's symbol from local or global variables
+     * @param var
+     * @return
+     */
+    public Symbol getVariableSymbol(JmmNode var) {
+        String name = var.get("name");
+
+        // Check in global variables
+        Symbol varSymbol = this.getGlobalVariable(name);
+
+        // Wasn't in global variables
+        if (varSymbol == null) {
+            JmmNode scope = Utils.findScope(var); // determine method where variable is declared
+            if (scope != null) // fetch symbol from method (local or in parameters)
+                varSymbol = this.getMethod(scope.get("name")).getVariable(var.get("name"));
+        }
+
+        return varSymbol;
     }
 
     @Override

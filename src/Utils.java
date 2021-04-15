@@ -83,4 +83,23 @@ public class Utils {
         }
         return t;
     }
+
+    /**
+     * Returns a ollir string version of a type (int --> i32)
+     * @param type
+     * @return
+     */
+    public static String getOllirLiteral(JmmNode literalNode) {
+        String t = "";
+        switch (literalNode.get("type")) {
+            case "int":
+                t = "i32";
+                break;
+            case "boolean":
+                t = "bool";
+                break;
+        }
+        return literalNode.get("value") + "." + t;
+    }
+
 }
