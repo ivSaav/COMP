@@ -7,15 +7,12 @@ import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.specs.util.SpecsCheck;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Map;
+import java.util.*;
 
 public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
     private final SymbolsTable st;
+
 
     private final Set<String> visitedVariables;
 
@@ -55,7 +52,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
         // Wasn't in global variables
         if (varSymbol == null) {
-            JmmNode scope = Utils.findScope(var); // determine method there variable is declared
+            JmmNode scope = Utils.findScope(var); // determine method where variable is declared
             if (scope != null)
                 varSymbol = st.getMethod(scope.get("name")).getVariable(var.get("name"));
         }
@@ -252,8 +249,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                 }
                 break;
             case "Ident":
-
-
                 if (variables.get(mustbool.get("name")) == null){
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable " + mustbool.getKind() ));
 
@@ -301,7 +296,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable " + child.getKind() ));
 
                             }
-
                             else if(!getVariables.get(child.get("name")).getType().getName().equals("boolean")){
                                 reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Negation done with wrong type"));
                             }
@@ -455,7 +449,9 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
     }
 
 
-
+    public JmmNode getClassNode(JmmNode origin) {
+        return origin.getAncestor("Class").get();
+    }
     /**
      * Determines the return type of an expression
      * (Assumes operation is correct)
@@ -463,13 +459,13 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
      * @return
      */
     public Type findOperationReturnType(JmmNode oper) {
+
+
+
         for (JmmNode child : oper.getChildren()) {
             if (!Utils.isOperator(child)) {
-                if (child.getKind().equals("Literal")) {
-                    if (child.get("type").equals("int"))
-                        return new Type("int", false);
-                    return new Type("boolean", false);
-                }
+                if (child.getKind().equals("Literal"))
+                    return new Type(child.get("type"), false);
                 else if (child.getKind().equals("Ident")){
                     Symbol symb = getVariableSymbol(child);
                     return symb == null ? null : symb.getType();
@@ -477,7 +473,31 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                 else if (child.getKind().equals("Array")) {
                     return new Type("int", false); // assuming it's correct
                 }
+                else if (child.getKind().equals("MethodCall"))
+                    return this.determineMethodReturnType(child, null);
             }
+        }
+        return null;
+    }
+
+    /**
+     * Receives a "MethodCall" node and determines it's return type
+     * Looks for locally declared methods and imported ones
+     * If the method does not exist in this scope adds a new report
+     * @param methodNode - "MethodCall" node
+     * @param reports - list with reports
+     * @return Type - method's return type
+     */
+    public Type determineMethodReturnType(JmmNode methodNode, List<Report> reports) {
+        MethodSymbols method = this.st.getMethod(methodNode.get("name"));
+
+        if (method != null)
+            return method.getReturnType();
+        else { // method is not declared in this class
+            if (!this.st.getImports().contains(methodNode.get("name"))) // method is not in one of the imports
+                if (reports != null)
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1,
+                        "Couldn't determine method return type for " + methodNode.get("name") +" in operation"));
         }
         return null;
     }
@@ -523,14 +543,22 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                     types.add(new Type(children.get("type"), false));
                     continue;
                 }
+                else if (children.getKind().equals("Ident")) {
+                    Symbol symbol = getVariables.get(children.get("name"));
 
-                Symbol symbol = getVariables.get(children.get("name"));
-
-                if (symbol == null) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable " + children.get("name") + " not declared"));
-                    continue;
+                    if (symbol == null) {
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable " + children.get("name") + " not declared"));
+                        continue;
+                    }
+                    types.add(symbol.getType());
                 }
-                types.add(symbol.getType());
+                else if (children.getKind().equals("MethodCall")) {
+                    Type methodType = this.determineMethodReturnType(children, reports);
+
+                    if (methodType != null)
+                        types.add(methodType);
+                }
+
             }
         }
 

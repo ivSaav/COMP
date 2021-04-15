@@ -32,8 +32,12 @@ public class OllirResult {
      * @param reports
      */
     public OllirResult(JmmSemanticsResult semanticsResult, String ollirCode, List<Report> reports) {
-        this(OllirUtils.parse(ollirCode), semanticsResult.getSymbolTable(),
-                SpecsCollections.concat(semanticsResult.getReports(), reports));
+        // TODO uncomment
+        this.ollirClass = null;
+        this.symbolTable = null;
+        this.reports = null;
+//        this(OllirUtils.parse(ollirCode), semanticsResult.getSymbolTable(),
+//                SpecsCollections.concat(semanticsResult.getReports(), reports));
     }
 
     public ClassUnit getOllirClass() {

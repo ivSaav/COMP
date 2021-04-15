@@ -65,7 +65,8 @@ public class MethodSymbols {
     }
 
     public Symbol getVariable(String varName) {
-        return this.localVars.get(varName);
+        Symbol symbol = this.localVars.get(varName);
+        return symbol == null ? this.parameters.get(varName) : symbol;
     }
 
     @Override

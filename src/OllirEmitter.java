@@ -34,8 +34,8 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         
         stringBuilder.append("{\n");
         String classConstructor = "\t.constructor " + classNode.get("class") +"().V {\n"
-                                +       "\tinvokespecial(this, \"<init>\").V;\n"
-                                + "\n\t}";
+                                +       "\t\tinvokespecial(this, \"<init>\").V;\n"
+                                + "\t}";
         stringBuilder.append(classConstructor);
                                 
         return stringBuilder.toString();
