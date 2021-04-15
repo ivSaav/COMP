@@ -24,11 +24,39 @@ public class Type {
         return "Type [name=" + name + ", isArray=" + isArray + "]";
     }
 
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Type type = (Type) o;
-        return isArray == type.isArray && name.equals(type.name);
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (isArray ? 1231 : 1237);
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        return result;
     }
+
+    /* (non-Javadoc)
+     * @see java.lang.Object#equals(java.lang.Object)
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Type other = (Type) obj;
+        if (isArray != other.isArray)
+            return false;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        return true;
+    }
+
+
 }
