@@ -2,13 +2,11 @@ import pt.up.fe.comp.jmm.JmmNode;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.ast.AJmmVisitor;
-import pt.up.fe.comp.jmm.ast.JmmNodeImpl;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.specs.util.SpecsCheck;
 
-import javax.swing.plaf.synth.SynthCheckBoxMenuItemUI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -177,8 +175,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         String methodName = node.get("name");
         MethodSymbols method = this.st.getMethod(methodName);
 
-
-        JmmNode methodNode = null;
         // checking if it's not a defined method in this class or in one of the imports
         if (method == null && !this.st.getImports().contains(methodName)) {
 
@@ -243,8 +239,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         String nodeName = node.getKind();
         Map<String, Symbol> variables = st.getVariables(scope.get("name"));
 
-
-
         String varKind = mustbool.getKind();
         switch(varKind){
             case "Smaller" :
@@ -260,7 +254,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             case "Ident":
 
 
-                if (variables.get(mustbool) == null){
+                if (variables.get(mustbool.get("name")) == null){
                     reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable " + mustbool.getKind() ));
 
                 }
@@ -331,7 +325,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
                     if (currentChild.getKind().equals("Ident")) {
                         Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
-                        if (getVariables.get(currentChild) == null){
+                        if (getVariables.get(currentChild.get("name")) == null){
                             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable " + currentChild.getKind() ));
 
                         }
