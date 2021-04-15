@@ -1,42 +1,17 @@
 import io;
-class Fac extends Class {
-    int[] b;
-    boolean c;
-    int y;
-
-    public boolean coisas() {
-        c = true;
-        return c;
+class Fac {
+    public int ComputeFac(int num){
+        int num_aux ;
+        if (num < 1)
+            num_aux = 1;
+        else
+            num_aux =num * (this.ComputeFac(num-1));
+        
+        return num_aux;
     }
-
-    public int teste(int a, int b){
-        y = 4;
-
-        if ( true && true ) {
-
-        }
-        else {
-
-        }
-        return y + 1;
-    }
-
+    
     public static void main(String[]args){
-        int[] d;
-        //d = a + b;
-
-
-        int j;
-        j = 2;
-        int l;
-        l = 1;
-        boolean k;
-        k = true;
-
-        j = Cenas.teste(j, l);
-
-
+        io.println(new Fac().ComputeFac(10));//assuming the existence 
         // of the classfile io.class
-       }
-
+    }
 }

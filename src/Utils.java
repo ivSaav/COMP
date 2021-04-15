@@ -1,4 +1,5 @@
 import pt.up.fe.comp.jmm.JmmNode;
+import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 
 import java.io.ByteArrayInputStream;
@@ -48,5 +49,38 @@ public class Utils {
         }
         return null;
     }
-	
+
+    /**
+     * Returns a string version of a variable (int b --> b.i32)
+     * @param symbol
+     * @return
+     */
+    public static String getOllirVar(Symbol symbol) {
+        Type type = symbol.getType();
+        String name = symbol.getName();
+
+        String t = getOllirType(type);
+        return name + "." + (type.isArray() ? "array." : "") + t; 
+    }
+
+    /**
+     * Returns a ollir string version of a type (int --> i32)
+     * @param type
+     * @return
+     */
+    public static String getOllirType(Type type) {
+        String t = "";
+        switch (type.getName()) {
+            case "int":
+                t = "i32";
+                break;
+            case "boolean":
+                t = "bool";
+                break;
+            default:
+                t = type.getName();
+                break;
+        }
+        return t;
+    }
 }
