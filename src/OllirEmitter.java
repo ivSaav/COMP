@@ -19,14 +19,12 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
 
         addVisit("Class", this::dealWithClass);
         addVisit("Method", this::dealWithMethod);
-         addVisit("Equal", this::dealWithEquals);
-        // addVisit("If", this::dealWithIf);
+        addVisit("Equal", this::dealWithEquals);
+        addVisit("If", this::dealWithIf);
         // addVisit("While", this::dealWithWhile);
         // addVisit("Plus", this::dealWithLogicalOp);
         // addVisit("And", this::dealWithArithmeticOp);
     }
-
-
 
     public String defaultVisit(JmmNode node, Void unused) {
         return "";
@@ -94,6 +92,73 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         return assign.toString();
     }
 
+    private String handleRhsAssign(JmmNode rhs) {
+        StringBuilder rhsBuilder = new StringBuilder();
+        switch (rhs.getKind()) {
+            case "Literal":
+                rhsBuilder.append(Utils.getOllirLiteral(rhs));
+                break;
+            case "Ident":
+            case "Array":
+                rhsBuilder.append(this.resolveVariableIdentifier(rhs));
+                break;
+            default:
+                if (Utils.isOperator(rhs))
+                    // TODO call operation
+                System.out.println("Olha morri _________________________");
+        }
+        return rhsBuilder.toString();
+    }
+
+
+    private String dealWithIf(JmmNode jmmNode, Void unused) {
+        StringBuilder ifBuilder = new StringBuilder("\t if (");
+
+        List<String> expr = new ArrayList<>();
+        this.dealWithExpression(jmmNode.getChildren().get(0), expr);
+
+        System.out.println(expr);
+        // TODO operation
+        ifBuilder.append(") got to else;");
+
+
+        return ifBuilder.toString();
+    }
+
+
+    private String dealWithExpression(JmmNode expr, List<String> expressions) {
+
+        System.out.println(expr);
+        if (Utils.isOperator(expr)) {
+
+            System.out.println("IS OPERATOR  " + expr);
+
+            // special case where operator is unary
+            if (expr.getKind().equals("Negation")) {
+                JmmNode child = expr.getChildren().get(0);
+                String innerNegation = dealWithExpression(child, expressions);
+                expressions.add(innerNegation); // TODO revese expression
+            }
+            else { // other operators
+                JmmNode lhsNode = expr.getChildren().get(0);
+                JmmNode rhsNode = expr.getChildren().get(1);
+                System.out.println("______________________" + lhsNode + " " + rhsNode);
+                String lhsExpr = dealWithExpression(lhsNode, expressions);
+                String rhsExpr = dealWithExpression(rhsNode, expressions);
+                expressions.add(lhsExpr + "<" + rhsExpr); // TODO determmine type of operator
+            }
+        }
+        else if (expr.getKind().equals("Literal")) { // terminator
+            return Utils.getOllirLiteral(expr);
+        }
+        else {
+            return resolveVariableIdentifier(expr);
+        }
+
+        return "";
+    }
+
+
     /**
      * Receives a variable identifier Node
      * Determines if it is an array access an array or an identifier
@@ -102,7 +167,6 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
      * @return ollir version of variable
      */
     private String resolveVariableIdentifier(JmmNode node) {
-
         StringBuilder identBuilder = new StringBuilder();
         Symbol identSymbol = null;
         boolean isArrayAccess = node.getKind().equals("Array");
@@ -133,24 +197,6 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
             identBuilder.append(innerAccess);
         }
         return identBuilder.toString();
-    }
-
-    private String handleRhsAssign(JmmNode rhs) {
-        StringBuilder rhsBuilder = new StringBuilder();
-        switch (rhs.getKind()) {
-            case "Literal":
-                rhsBuilder.append(Utils.getOllirLiteral(rhs));
-                break;
-            case "Ident":
-            case "Array":
-                rhsBuilder.append(this.resolveVariableIdentifier(rhs));
-                break;
-            default:
-                if (Utils.isOperator(rhs))
-                    // TODO call operation
-                System.out.println("Olha morri _________________________");
-        }
-        return rhsBuilder.toString();
     }
 
     /**
@@ -185,6 +231,9 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         String tab = "";
         if (node.getKind().equals("Method"))
             tab = "\n\t}\n";
+        else if (node.getKind().equals("If")) {
+
+        }
 
         return content + tab;
     }
