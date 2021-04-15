@@ -12,13 +12,13 @@ class Fac extends Class {
     public int teste(int a, int b){
         y = 4;
 
-        if ( true && true ) {
+        if ( y < y ) {
 
         }
         else {
 
         }
-        return y + y + y ;
+        return y  + y  < y;
     }
 
     public static void main(String[]args){
