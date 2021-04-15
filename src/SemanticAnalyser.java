@@ -499,6 +499,9 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             Map<String, Symbol> fields = st.getField();
             for (JmmNode children : opChildren) {
 
+                if (Utils.isOperator(children))
+                    continue;
+
                 if (children.getKind().equals("Literal")) {
                     types.add(new Type(children.get("type"), false));
                     continue;
@@ -518,6 +521,9 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         else if (scope.getKind().equals("Method")) {
             Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
             for (JmmNode children : opChildren) {
+
+                if (Utils.isOperator(children))
+                    continue;
 
                 if (children.getKind().equals("Literal")) {
                     types.add(new Type(children.get("type"), false));

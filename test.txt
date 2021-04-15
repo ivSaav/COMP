@@ -18,7 +18,7 @@ class Fac extends Class {
         else {
 
         }
-        return y + 1;
+        return y + y + y ;
     }
 
     public static void main(String[]args){
