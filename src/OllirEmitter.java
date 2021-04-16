@@ -25,16 +25,18 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         addVisit("Equal", this::dealWithEquals);
         addVisit("If", this::dealWithIf);
         // addVisit("While", this::dealWithWhile);
-        // addVisit("Plus", this::dealWithLogicalOp);
-        // addVisit("And", this::dealWithArithmeticOp);
     }
 
     public String defaultVisit(JmmNode node, Void unused) {
         return "";
     }
 
-
-    
+    /**
+     * Pass the content of the class to Ollir's notation
+     * @param classNode node to visit referring a class
+     * @param unused
+     * @return
+     */
     private String dealWithClass(JmmNode classNode, Void unused) {
         StringBuilder stringBuilder = new StringBuilder(classNode.get("class"));
         
@@ -47,15 +49,26 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         return stringBuilder.toString();
     }
 
+    /**
+     * Pass the content of the method to Ollir's notation
+     * @param methodNode node to visit referring a method
+     * @param unused
+     * @return
+     */
     private String dealWithMethod(JmmNode methodNode, Void unused) {
+
         StringBuilder stringBuilder = new StringBuilder();
 
+        // Get the contents of the method from SymbolsTable
         MethodSymbols methodSymbols = this.st.getMethod(methodNode.get("name"));
 
+        // Method declaration
         String methodDec = "\t.method public " + methodSymbols.getName();
+
+        // Method parameters
         String methodParam = "(";
-        
         for (int i = 0; i < methodSymbols.getParameters().size(); i++) {
+            // Get the parameters of the method from SymbolsTable
             Symbol symbol = methodSymbols.getParameters().get(i);
 
             // Last iteraction
@@ -67,38 +80,54 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
             methodParam += Utils.getOllirVar(symbol) + ",";
         }
 
+        // Method return
         Type retType = methodSymbols.getReturnType();
         String methodRet = "." + Utils.getOllirType(retType) + " {\n";
 
-        stringBuilder.append(methodDec);
-        stringBuilder.append(methodParam);
-        stringBuilder.append(methodRet);
+        stringBuilder.append(methodDec).append(methodParam).append(methodRet);
 
         return stringBuilder.toString();
     }
 
+    /**
+     * Pass the content of when an assignment is made to Ollir's notation
+     * @param equalNode node to visit referring an assignment
+     * @param unused
+     * @return
+     */
     private String dealWithEquals(JmmNode equalNode, Void unused) {
 
         StringBuilder assign = new StringBuilder("\t");
 
+
         JmmNode lhs = equalNode.getChildren().get(0);
         JmmNode rhs = equalNode.getChildren().get(1);
 
+        // For the variable that stores the value
         assign.append(this.resolveVariableIdentifier(lhs));
 
         String assignmentType = ".i32 "; // special case where destination is array access
         if (!lhs.getKind().equals("Array")) {
             Symbol lhsSymbol = this.st.getVariableSymbol(lhs);
-             assignmentType = "." +  Utils.getOllirType(lhsSymbol.getType()) + " "; // if not array access, then fetch type
+            assignmentType = "." +  Utils.getOllirType(lhsSymbol.getType()) + " "; // if not array access, then fetch type
         }
         assign.append(" :=").append(assignmentType);
 
+        // For the value to be saved
         assign.append(this.handleRhsAssign(rhs, assign)).append(";");
+
         return assign.toString();
     }
 
+    /**
+     * Pass the content of when an assignment is made to Ollir's notation
+     * @param rhs node to visit referring the content that follows the equal sign
+     * @param builder an object to add content with Ollir's notation
+     * @return
+     */
     private String handleRhsAssign(JmmNode rhs, StringBuilder builder) {
         StringBuilder rhsBuilder = new StringBuilder();
+
         switch (rhs.getKind()) {
             case "Literal":
                 rhsBuilder.append(Utils.getOllirLiteral(rhs));
@@ -107,7 +136,7 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
             case "Array":
                 rhsBuilder.append(this.resolveVariableIdentifier(rhs));
                 break;
-            case "MethodCall":
+            case "MethodCall": // In the case of a call to a method
                 List<String> auxExpressions = new ArrayList<>();
                 String methodCall = this.handleMethodCall(rhs, auxExpressions);
                 
@@ -124,6 +153,7 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
                 rhsBuilder.append(methodCall);
                 break;
             default:
+                // In the case it is an expression
                 if (Utils.isOperator(rhs)) {
                     List<String> expr = new ArrayList<>();
                    String rhsExpr =  this.dealWithExpression(rhs, 0, expr, null);
@@ -149,12 +179,18 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         return rhsBuilder.toString();
     }
 
-
-    private String dealWithIf(JmmNode jmmNode, Void unused) {
+    /**
+     * Pass the content of when an if logical condition is made to Ollir's notation
+     * @param ifNode node to visit referring an if logical condition
+     * @param unused
+     * @return
+     */
+    private String dealWithIf(JmmNode ifNode, Void unused) {
 
         StringBuilder ifBuilder = new StringBuilder();
+
         List<String> expr = new ArrayList<>();
-        this.dealWithExpression(jmmNode.getChildren().get(0), 0, expr, null);
+        this.dealWithExpression(ifNode.getChildren().get(0), 0, expr, null);
 
         System.out.println(expr);
         
@@ -173,6 +209,14 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
     }
 
 
+    /**
+     * Saves the content of when an expression is made with the Ollir's notation
+     * @param expr node to visit referring an expression
+     * @param level to track the current level of the expression tree
+     * @param expressions list of strings that stores in Ollir's notation possible auxiliary variables of the main expression
+     * @param createdVars auxiliar list
+     * @return
+     */
     // TODO: at lower levels create auxiliar variables
     private String dealWithExpression(JmmNode expr, int level, List<String> expressions, Map<String, String> createdVars) {
 
@@ -181,25 +225,26 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
 
         if (Utils.isOperator(expr)) {
 
-            // special case where operator is unary
+            // Special case where operator is unary
             if (expr.getKind().equals("Negation")) {
+
                 JmmNode child = expr.getChildren().get(0);
-        
+
+                // Go to the next level in the tree
                 level++;
                 String innerNegation = dealWithExpression(child, level, expressions, createdVars);
-                
-                String ident = "";
-                String t = "";
+
+                String t = "", ident = "";
                 if (level > 1) {
-                    ident = "t" + (createdVars.size() + 1) + ".bool";
+                    ident = "t" + (createdVars.size() + 1) + Utils.getOllirExpReturnType(expr.getKind());
                     t = ident + " = ";
-                    createdVars.put(ident, ".bool");
+                    createdVars.put(ident, "....");
                 }
                  
                 expressions.add(t + Utils.getOllirOp(expr.getKind()) + " " + innerNegation); // TODO revese expression
                 return ident; 
             }
-            else { // other operators
+            else {
                 JmmNode lhsNode = expr.getChildren().get(0);
                 JmmNode rhsNode = expr.getChildren().get(1);
 
@@ -208,19 +253,20 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
                 level++;
                 String rhsExpr = dealWithExpression(rhsNode, level, expressions, createdVars);
 
-                String ident = "";
-                String t = "";
+                String t = "", ident = "";
                 if (level > 1) {
-                    ident = "t" + (createdVars.size() +1) + Utils.getOllirExpReturnType(expr.getKind());
+                    ident = "t" + (createdVars.size() + 1) + Utils.getOllirExpReturnType(expr.getKind());
                     t = ident + " = ";
-                    createdVars.put(ident, ".bool");
+                    createdVars.put(ident, "....");
                 }
 
                 expressions.add(t + lhsExpr + " " + Utils.getOllirOp(expr.getKind()) + " " + rhsExpr); // TODO determmine type of operator
+
                 return ident;
             }
         }
-        else if (expr.getKind().equals("Literal")) { // terminator
+        // The remaining options are terminal
+        else if (expr.getKind().equals("Literal")) {
             return Utils.getOllirLiteral(expr);
         }
         else if (expr.getKind().equals("MethodCall")) {
@@ -231,7 +277,6 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         }
 
         return "";
-    
     }
 
     public String handleMethodCall(JmmNode methodNode, List<String> auxExpressions) {
@@ -289,7 +334,6 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         return paramsBuilder.toString();
             
     }
-
 
     /**
      * Receives a variable identifier Node
