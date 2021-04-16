@@ -76,6 +76,8 @@ public class SymbolsTable implements SymbolTable {
         return methods.get(methodName);
     }
 
+
+
     public void setClassName(String className) {
         this.className = className;
     }

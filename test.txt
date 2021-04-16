@@ -1,21 +1,27 @@
 import io;
+import Cenas;
 class Fac {
 
     int b;
 
     public int ComputeFac(int num){
-        int[] num_aux;
+        int num_aux;
         int a;
-        if (((a + b) < b) && ( a < b))
-            num_aux[num] = num;
+        // a = new int[19];
+
+       // Cenas coisas;
+        //coisas = new Cenas();
+        if (a < b) {
+            num_aux = num + a + b;
+        }
         else
-            num_aux[0] =num * (this.ComputeFac(num-1));
+            num_aux = 1;
         
-        return num_aux +a + b;
+        return num_aux + a + b;
     }
     
     public static void main(String[]args){
-        io.println(new Fac().ComputeFac(10));//assuming the existence 
+        // io.println(new Fac().ComputeFac(10));//assuming the existence 
         // of the classfile io.class
     }
 }
