@@ -1,5 +1,8 @@
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import pt.up.fe.comp.jmm.JmmNode;
@@ -29,6 +32,8 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
     public String defaultVisit(JmmNode node, Void unused) {
         return "";
     }
+
+
     
     private String dealWithClass(JmmNode classNode, Void unused) {
         StringBuilder stringBuilder = new StringBuilder(classNode.get("class"));
@@ -115,7 +120,7 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         StringBuilder ifBuilder = new StringBuilder("\t if (");
 
         List<String> expr = new ArrayList<>();
-        this.dealWithExpression(jmmNode.getChildren().get(0), expr);
+        this.dealWithExpression(jmmNode.getChildren().get(0), 0, expr, null);
 
         System.out.println(expr);
         // TODO operation
@@ -126,26 +131,55 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
     }
 
 
-    private String dealWithExpression(JmmNode expr, List<String> expressions) {
+    // TODO: at lower levels create auxiliar variables
+    private String dealWithExpression(JmmNode expr, int level, List<String> expressions, Map<String, String> createdVars) {
+
+        if (createdVars == null)
+            createdVars = new HashMap<>();
 
         System.out.println(expr);
         if (Utils.isOperator(expr)) {
 
             System.out.println("IS OPERATOR  " + expr);
-
+            
             // special case where operator is unary
             if (expr.getKind().equals("Negation")) {
                 JmmNode child = expr.getChildren().get(0);
-                String innerNegation = dealWithExpression(child, expressions);
-                expressions.add(innerNegation); // TODO revese expression
+        
+                level++;
+                String innerNegation = dealWithExpression(child, level, expressions, createdVars);
+                
+                String ident = "";
+                String t = "";
+                if (level > 1) {
+                    ident = "t" + (createdVars.size() + 1) + ".bool";
+                    t = ident + " = ";
+                    createdVars.put(ident, ".bool");
+                }
+                 
+                expressions.add(t + Utils.getOllirOp(expr.getKind()) + " " + innerNegation); // TODO revese expression
+                return ident; 
             }
             else { // other operators
                 JmmNode lhsNode = expr.getChildren().get(0);
                 JmmNode rhsNode = expr.getChildren().get(1);
                 System.out.println("______________________" + lhsNode + " " + rhsNode);
-                String lhsExpr = dealWithExpression(lhsNode, expressions);
-                String rhsExpr = dealWithExpression(rhsNode, expressions);
-                expressions.add(lhsExpr + "<" + rhsExpr); // TODO determmine type of operator
+
+                level++;
+                String lhsExpr = dealWithExpression(lhsNode, level, expressions, createdVars);
+                level++;
+                String rhsExpr = dealWithExpression(rhsNode, level, expressions, createdVars);
+
+                String ident = "";
+                String t = "";
+                if (level > 1) {
+                    ident = "t" + (createdVars.size() +1) + Utils.getOllirExpReturnType(expr.getKind());
+                    t = ident + " = ";
+                    createdVars.put(ident, ".bool");
+                }
+
+                expressions.add(t + lhsExpr + " " + Utils.getOllirOp(expr.getKind()) + " " + rhsExpr); // TODO determmine type of operator
+                return ident;
             }
         }
         else if (expr.getKind().equals("Literal")) { // terminator
@@ -155,7 +189,6 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
             return resolveVariableIdentifier(expr);
         }
 
-        return "";
     }
 
 

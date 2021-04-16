@@ -40,7 +40,7 @@ public class Utils {
     public static boolean isOperator(JmmNode node) {
         String kind = node.getKind();
         return kind.equals("Plus") || kind.equals("Minus") || kind.equals("Mult") || kind.equals("Div")
-                || kind.equals("Smaller") || kind.equals("Negation");
+                || kind.equals("Smaller") || kind.equals("Negation") || kind.equals("And");
     }
 
     public static JmmNode getChildOfKind(JmmNode node, String kind) {
@@ -127,5 +127,59 @@ public class Utils {
         }
         return literalNode.get("value") + "." + t;
     }
+
+        /**
+     * Returns a ollir string version of an operator (< --> <.i32)
+     * @param operator
+     * @return
+     */
+    public static String getOllirOp(String operator) {
+        String op = "";
+        switch (operator) {
+            case "Smaller":
+                op = "<.i32";
+                break;
+            case "And":
+                op = "&&.bool";
+                break;
+            case "Negation":
+                op = "!.bool";
+                break;
+            case "Plus":
+                op = "+.i32";
+                break;
+            case "Minus":
+                op = "-.i32";
+                break;
+            case "Mult":
+                op = "*.i32";
+                break;
+            case "Div":
+                op = "/.i32";
+                break;
+            default:
+                op = operator;
+                break;
+        }
+        return op;
+    }
+
+    public static String getOllirExpReturnType(String operator) {
+
+        String op = "";
+        switch (operator) {
+            case "Smaller":
+            case "And":
+            case "Negation":
+                op = ".bool";
+                break;
+            default:
+                op = ".i32";
+                break;
+        }
+        return op;
+        
+    }
+
 
 }

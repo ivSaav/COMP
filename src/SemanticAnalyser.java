@@ -488,57 +488,9 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
      * @return list of reports with possible added reports, if necessary
      */
     private List<Report> dealWithOperations(JmmNode node, List<Report> reports) {
-        JmmNode scope = Utils.findScope(node);
-        List<JmmNode> opChildren = node.getChildren();
+        
         List<Type> types = new ArrayList<>();
-
-        // If the operation comes from the class
-        if (scope.getKind().equals("Class")) {
-            Map<String, Symbol> fields = st.getField();
-            for (JmmNode children : opChildren) {
-
-                if (children.getKind().equals("Literal")) {
-                    types.add(new Type(children.get("type"), false));
-                    continue;
-                }
-
-                Symbol symbol = fields.get(children.get("name"));
-
-                if (symbol == null) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable " + children.get("name") + " not declared"));
-                    continue;
-                }
-                types.add(symbol.getType());
-            }
-        }
-
-        // If the operation comes from a method
-        else if (scope.getKind().equals("Method")) {
-            Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
-            for (JmmNode children : opChildren) {
-
-                if (children.getKind().equals("Literal")) {
-                    types.add(new Type(children.get("type"), false));
-                    continue;
-                }
-                else if (children.getKind().equals("Ident")) {
-                    Symbol symbol = getVariables.get(children.get("name"));
-
-                    if (symbol == null) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable " + children.get("name") + " not declared"));
-                        continue;
-                    }
-                    types.add(symbol.getType());
-                }
-                else if (children.getKind().equals("MethodCall")) {
-                    Type methodType = this.determineMethodReturnType(children, reports);
-
-                    if (methodType != null)
-                        types.add(methodType);
-                }
-
-            }
-        }
+        this.getExpressionTypes(node, types, reports);
 
         // Verify if operation is made by operator with the same type
         if (!verifySameTypes(types)) {
@@ -553,6 +505,50 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arithmetic Operation invalid with boolean"));
 
         return null;
+    }
+
+    /**
+     * Get all types of operands
+     * @param operNode visited node to evaluate
+     * @param types list of existing type
+     * @param reports list of existing reports
+     */
+    private void getExpressionTypes(JmmNode operNode, List<Type> types, List<Report> reports) {
+        List<JmmNode> opChildren = operNode.getChildren();
+        JmmNode scope = Utils.findScope(operNode);
+
+        Map<String, Symbol> variables;
+        if (scope.getKind().equals("Class"))
+            variables = st.getField();
+        else
+            variables = st.getVariables(scope.get("name"));
+
+        for (JmmNode children : opChildren) {
+
+            if (Utils.isOperator(children))
+                getExpressionTypes(children, types, reports);;
+
+            if (children.getKind().equals("Literal")) {
+                types.add(new Type(children.get("type"), false));
+                continue;
+            }
+            else if (children.getKind().equals("Ident")) {
+                Symbol symbol = variables.get(children.get("name"));
+
+                if (symbol == null) {
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable " + children.get("name") + " not declared"));
+                    continue;
+                }
+                types.add(symbol.getType());
+            }
+            else if (children.getKind().equals("MethodCall")) {
+                Type methodType = this.determineMethodReturnType(children, reports);
+
+                if (methodType != null)
+                    types.add(methodType);
+            }
+
+        }
     }
 
     private List<Report> dealWithVarDecl(JmmNode node, List<Report> reports) {

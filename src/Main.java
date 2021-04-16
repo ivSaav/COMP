@@ -44,7 +44,6 @@ public class Main implements JmmParser {
 		}
 	}
 
-
     public static void main(String[] args) {
 		var fileContents = SpecsIo.read("./test.txt");
 		System.out.println("Executing with args: " + fileContents);
