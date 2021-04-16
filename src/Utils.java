@@ -103,6 +103,9 @@ public class Utils {
             case "boolean":
                 t = "bool";
                 break;
+            case "void":
+                t = "V";
+                break;
             default:
                 t = type.getName();
                 break;

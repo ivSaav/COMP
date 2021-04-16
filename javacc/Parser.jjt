@@ -89,7 +89,7 @@ void Main() #void : {}
 
 void Statement() #void: {}
 {
-    (<LBRACE> (Statement())* <RBRACE> #Body)
+    (<LBRACE> (Statement())* <RBRACE>)
     | IfStatement()
     | WhileStatement()
     | ExpressionDeclaration() [Attribution()] <PVIRG>
@@ -99,7 +99,7 @@ void Statement() #void: {}
 void IfStatement() #If: {}
 {
     <IF> <LPAR> ExpressionDeclaration() <RPAR>
-        Statement()
+        Statement() #Body
     <ELSE>
         Statement() #Else
 }
