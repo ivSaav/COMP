@@ -2,8 +2,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.specs.comp.ollir.ClassUnit;
-import org.specs.comp.ollir.OllirErrorException;
+import org.specs.comp.ollir.*;
 
 import pt.up.fe.comp.jmm.jasmin.JasminBackend;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
@@ -29,6 +28,7 @@ public class BackendStage implements JasminBackend {
 
     @Override
     public JasminResult toJasmin(OllirResult ollirResult) {
+
         ClassUnit ollirClass = ollirResult.getOllirClass();
 
         try {
@@ -38,15 +38,76 @@ public class BackendStage implements JasminBackend {
             ollirClass.buildCFGs(); // build the CFG of each method
             ollirClass.outputCFGs(); // output to .dot files the CFGs, one per method
             ollirClass.buildVarTables(); // build the table of variables for each method
-            ollirClass.show(); // print to console main information about the input OLLIR
+            //ollirClass.show(); // print to console main information about the input OLLIR
 
             // Convert the OLLIR to a String containing the equivalent Jasmin code
-            String jasminCode = ""; // Convert node ...
+            StringBuilder jasminCode = new StringBuilder(); // Convert node ...
+
+            jasminCode.append(".class public ");
+            if(ollirClass.isFinalClass()) jasminCode.append("final ");
+            if(ollirClass.isStaticClass()) jasminCode.append("static ");
+            jasminCode.append(ollirClass.getClassName());
+
+            jasminCode.append("\n.super java/lang/Object\n\n");
+
+
+            for(Field field : ollirClass.getFields()){
+                if(field.getFieldType().equals("ARRAYREF")){
+                    jasminCode.append("; array "+ field.getFieldName()+"\n");
+                }
+
+                jasminCode.append(".field ");
+                if(field.isStaticField()) jasminCode.append("static ");
+                jasminCode.append(field.getFieldName()+" ");
+                jasminCode.append(parseType(field.getFieldType()));
+
+                if(field.isInitialized()){
+                    jasminCode.append(" = ");
+                    jasminCode.append(field.getInitialValue());
+                }
+
+                jasminCode.append("\n");
+
+            }
+
+
+            for(Method method : ollirClass.getMethods()){
+                jasminCode.append(".method public ");
+                if(method.isStaticMethod()) jasminCode.append("static ");
+                if(method.isFinalMethod()) jasminCode.append("final ");
+                if(method.isConstructMethod()){
+                    jasminCode.append("<init>(");
+                    parseMethodParameters(method.getParams(), jasminCode);
+                    jasminCode.append(")V");
+                }else{
+                    jasminCode.append(method.getMethodName() + "(");
+                    parseMethodParameters(method.getParams(), jasminCode);
+                    jasminCode.append(")"+parseType(method.getReturnType()));
+                }
+
+
+
+                for (Instruction inst : method.getInstructions()){
+                    //System.out.println();
+                }
+
+
+                jasminCode.append("\n.end method \n\n");
+
+            }
+
+
+
+
+            System.out.println("JASMIN CODE\n" + jasminCode.toString());
+
+
 
             // More reports from this stage
             List<Report> reports = new ArrayList<>();
+            //jasminCode=SpecsIo.getResource("fixtures/public/jasmin/Greeter.j");
 
-            return new JasminResult(ollirResult, jasminCode, reports);
+            return new JasminResult(ollirResult, jasminCode.toString(), reports);
 
         } catch (OllirErrorException e) {
             return new JasminResult(ollirClass.getClassName(), null,
@@ -55,4 +116,37 @@ public class BackendStage implements JasminBackend {
 
     }
 
+
+
+    public void parseMethodParameters(ArrayList<Element> paramList, StringBuilder jasminCode){
+        for(Element element: paramList){
+            jasminCode.append(parseType(element.getType()));
+        }
+    }
+
+
+    public String parseType(Type type){
+        switch (type.getTypeOfElement()){
+            case INT32:
+                return "I";
+            case BOOLEAN:
+                return "B";
+            case ARRAYREF:
+                return "[I";
+            case OBJECTREF:
+                return "O";
+            case CLASS:
+                return "C";
+            case THIS:
+                return "T";
+            case STRING:
+                return "S";
+            case VOID:
+                return "V";
+        }
+        return null;
+    }
+
 }
+
+
