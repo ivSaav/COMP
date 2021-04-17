@@ -21,12 +21,7 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
 
         addVisit("Class", this::dealWithClass);
         addVisit("Method", this::dealWithMethod);
-        // addVisit("MethodBody", this::dealWithStatementBody);
-        // addVisit("Body", this::dealWithStatementBody);
         addVisit("Else", this::dealWithStatementBody);
-        // addVisit("Equal", this::dealWithEquals);
-        //addVisit("If", this::dealWithIf);
-        // addVisit("While", this::dealWithWhile);
     }
 
     public String defaultVisit(JmmNode node, Void unused) {
@@ -111,7 +106,7 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         return retBuilder.toString();
     }
 
-    /**
+    /**a
      * Pass the content of when an assignment is made to Ollir's notation
      * @param equalNode node to visit referring an assignment
      * @param unused
@@ -225,7 +220,14 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         StringBuilder conditionBuilder = new StringBuilder("if (");
         this.dealWithExpression(whileNode.getChildren().get(0), 0, expr, null);
         
-        String auxExp = this.insertAuxiliarExpressions(conditionBuilder, expr, true);
+        String aux = "";
+        for (int i = 0; i < expr.size()-1; i++) {
+            aux += expr.get(i) + ";\n";
+        }
+
+        conditionBuilder.insert(0, aux);
+
+        String auxExp = expr.get(expr.size()-1);
 
         conditionBuilder.append(auxExp).append(") goto Body;\ngoto EndLoop;\n");
 
