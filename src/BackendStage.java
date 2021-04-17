@@ -1,9 +1,11 @@
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import org.specs.comp.ollir.*;
 
+import org.specs.comp.ollir.Node;
 import pt.up.fe.comp.jmm.jasmin.JasminBackend;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
@@ -43,33 +45,8 @@ public class BackendStage implements JasminBackend {
             // Convert the OLLIR to a String containing the equivalent Jasmin code
             StringBuilder jasminCode = new StringBuilder(); // Convert node ...
 
-            jasminCode.append(".class public ");
-            if(ollirClass.isFinalClass()) jasminCode.append("final ");
-            if(ollirClass.isStaticClass()) jasminCode.append("static ");
-            jasminCode.append(ollirClass.getClassName());
-
-            jasminCode.append("\n.super java/lang/Object\n\n");
-
-
-            for(Field field : ollirClass.getFields()){
-                if(field.getFieldType().equals("ARRAYREF")){
-                    jasminCode.append("; array "+ field.getFieldName()+"\n");
-                }
-
-                jasminCode.append(".field ");
-                if(field.isStaticField()) jasminCode.append("static ");
-                jasminCode.append(field.getFieldName()+" ");
-                jasminCode.append(parseType(field.getFieldType()));
-
-                if(field.isInitialized()){
-                    jasminCode.append(" = ");
-                    jasminCode.append(field.getInitialValue());
-                }
-
-                jasminCode.append("\n");
-
-            }
-
+            handleClass(ollirClass, jasminCode);
+            handleFields(ollirClass, jasminCode);
 
             for(Method method : ollirClass.getMethods()){
                 jasminCode.append(".method public ");
@@ -77,27 +54,34 @@ public class BackendStage implements JasminBackend {
                 if(method.isFinalMethod()) jasminCode.append("final ");
                 if(method.isConstructMethod()){
                     jasminCode.append("<init>(");
+                    //if main
                     parseMethodParameters(method.getParams(), jasminCode);
-                    jasminCode.append(")V");
+                    jasminCode.append(")V\n");
+                    jasminCode.append("\taload_0");
                 }else{
-                    jasminCode.append(method.getMethodName() + "(");
-                    parseMethodParameters(method.getParams(), jasminCode);
-                    jasminCode.append(")"+parseType(method.getReturnType()));
-                }
+
+                    String methodName = method.getMethodName();
+
+                    jasminCode.append(methodName + "(");
+                    if (methodName.equals("main")){
+                        jasminCode.append("[Ljava/lang/String;");
+
+                    }else{
+                        parseMethodParameters(method.getParams(), jasminCode);
+                    }
+                    jasminCode.append(")"+parseType(method.getReturnType().getTypeOfElement()));
+                }jasminCode.append("\n");
 
 
 
-                for (Instruction inst : method.getInstructions()){
-                    //System.out.println();
-                }
+                //TODO limits
+                handleInstructions(jasminCode, method);
 
 
-                jasminCode.append("\n.end method \n\n");
+
+                jasminCode.append(".end method \n\n");
 
             }
-
-
-
 
             System.out.println("JASMIN CODE\n" + jasminCode.toString());
 
@@ -116,17 +100,195 @@ public class BackendStage implements JasminBackend {
 
     }
 
+    private void handleInstructions(StringBuilder jasminCode, Method method) {
+        for (Instruction instruction : method.getInstructions()){
+
+            switch (instruction.getInstType()){
+                case RETURN:
+                    ReturnInstruction returnInstruction = (ReturnInstruction) instruction;
+                    ElementType returnType = method.getReturnType().getTypeOfElement();
+
+                    if(returnType != null && returnType!=ElementType.VOID){
+                        jasminCode.append("\t" + parseType(returnType).toLowerCase(Locale.ROOT));
+                    }
+
+                    jasminCode.append("return ");
+
+                    jasminCode.append("\n");
+                    break;
 
 
-    public void parseMethodParameters(ArrayList<Element> paramList, StringBuilder jasminCode){
-        for(Element element: paramList){
-            jasminCode.append(parseType(element.getType()));
+
+                case GETFIELD:
+                    GetFieldInstruction getFieldInstruction = (GetFieldInstruction) instruction;
+                    jasminCode.append("\tgetfield ");
+                    break;
+                case ASSIGN:
+                    AssignInstruction assignInstruction = (AssignInstruction) instruction;
+                    //TODO
+                    break;
+                case GOTO:
+                    GotoInstruction gotoInstruction = (GotoInstruction) instruction;
+                    jasminCode.append("\tgoto " + gotoInstruction.getLabel()+"\n");
+                    break;
+                case BRANCH:
+                    CondBranchInstruction condBranchInstruction = (CondBranchInstruction) instruction;
+                    Operation operation = condBranchInstruction.getCondOperation();
+
+                    //TODO CAST
+                    //Operand operand = (Operand) condBranchInstruction.getLeftOperand();
+                    //LiteralElement literalElement = (LiteralElement) condBranchInstruction.getRightOperand();
+
+                    //TODO CHECK IF OPERANDS
+
+                    //jasminCode.append("\tif" + parseOperationType(operation.getOpType())+" "+ condBranchInstruction.getLabel()+"\n");
+                    break;
+                case CALL:
+                    //callType methodspec  numargs
+
+                    CallInstruction callInstruction = (CallInstruction) instruction;
+
+                    //TODO INVOCATION TYPE
+
+                     Operand classOperand = (Operand) callInstruction.getFirstArg();
+                     String className = classOperand.getName();
+
+                     LiteralElement methodLiteral = (LiteralElement) callInstruction.getSecondArg();
+                     String methodName = methodLiteral.getLiteral().substring(1, methodLiteral.getLiteral().length()-1);
+
+                     if(className.equals("this"))
+                         className = "java/lang/Object";
+
+                     jasminCode.append("\t"+className+"/" +methodName+ "(");
+
+                     for(Element element: callInstruction.getListOfOperands()){
+                         Operand operand1 = (Operand) element;
+
+                         jasminCode.append(parseType(operand1.getType().getTypeOfElement()));
+                     }
+
+
+                     jasminCode.append(")");
+
+                     jasminCode.append(parseType(callInstruction.getReturnType().getTypeOfElement())+"\n");
+                    break;
+                default:
+                    jasminCode.append("\t" + instruction.toString()+"\n");
+                    break;
+            }
         }
     }
 
+    private void handleClass(ClassUnit ollirClass, StringBuilder jasminCode) {
+        jasminCode.append(".class ");
+        AccessModifiers accessModifiers = ollirClass.getClassAccessModifier();
+        if(!accessModifiers.equals(AccessModifiers.DEFAULT)) jasminCode.append(ollirClass.getClassAccessModifier()+ " ");
+        if(ollirClass.isFinalClass()) jasminCode.append("final ");
+        if(ollirClass.isStaticClass()) jasminCode.append("static ");
+        jasminCode.append(ollirClass.getClassName());
+        if (ollirClass.getPackage()==null){
+            jasminCode.append("\n.super java/lang/Object\n\n");
+        }
 
-    public String parseType(Type type){
-        switch (type.getTypeOfElement()){
+    }
+
+    private void handleFields(ClassUnit ollirClass, StringBuilder jasminCode) {
+        //.field <access-spec> <field-name> <signature> [ = <value> ]
+        for(Field field : ollirClass.getFields()){
+
+            jasminCode.append(".field ");
+            if(field.isStaticField()) jasminCode.append("static ");
+            jasminCode.append(field.getFieldName()+" ");
+            jasminCode.append(parseType(field.getFieldType().getTypeOfElement()));
+
+            if(field.isInitialized()){
+                jasminCode.append(" = ");
+                jasminCode.append(field.getInitialValue());
+            }
+
+            jasminCode.append("\n");
+
+        }
+        jasminCode.append("\n");
+    }
+
+
+    public void parseMethodParameters(ArrayList<Element> paramList, StringBuilder jasminCode){
+
+        int paramListSize = paramList.size();
+
+        for(int i=0; i < paramListSize; i++){
+            jasminCode.append(parseType(paramList.get(i).getType().getTypeOfElement()));
+            if(i!=paramListSize-1){
+                jasminCode.append(";");
+            }
+        }
+
+    }
+
+
+
+    public String parseOperationType(OperationType type){
+        switch (type){
+
+            /**
+             * COND BRANCH OPERATIONS
+             */
+
+            case LTH:
+            case LTHI32:
+                return "lt";
+            case GTH:
+            case GTHI32:
+                return "gt";
+            case EQ:
+            case EQI32:
+                return "eq";
+            case NEQ:
+            case NEQI32:
+                return "ne";
+            case LTE:
+            case LTEI32:
+                return "le";
+            case GTE:
+            case GTEI32:
+               return "ge";
+
+
+
+            /*case MUL:
+
+            case DIV:
+                        SHR,
+                        SHL,
+                        SHRR,
+                        XOR,
+                        AND,
+                        OR,
+
+                        ADDI32,
+                        SUBI32,
+                        MULI32,
+                        DIVI32,
+                        SHRI32,
+                        SHLI32,
+                        SHRRI32,
+                        XORI32,
+
+
+
+                        ANDB,  // boolean
+                        ORB, // boolean
+                        NOTB, // boolean
+                        case NOT:*/
+        }
+        return null;
+
+    }
+
+
+    public String parseType(ElementType type){
+        switch (type){
             case INT32:
                 return "I";
             case BOOLEAN:
@@ -134,7 +296,7 @@ public class BackendStage implements JasminBackend {
             case ARRAYREF:
                 return "[I";
             case OBJECTREF:
-                return "O";
+                return "Ljava/lang/Object";
             case CLASS:
                 return "C";
             case THIS:
@@ -143,8 +305,10 @@ public class BackendStage implements JasminBackend {
                 return "S";
             case VOID:
                 return "V";
+            default:
+                return null;
         }
-        return null;
+
     }
 
 }
