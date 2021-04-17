@@ -13,6 +13,6 @@ class Fac {
     }
     
     public static void main(String[]args){
-        io.println(new Fac().compFac());
+        io.println(new Fac().compFac(10));
         }
     }

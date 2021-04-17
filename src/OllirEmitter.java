@@ -227,12 +227,16 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
                     List<String> auxExpressions = new ArrayList<>();
 
                     StringBuilder methodBuilder = new StringBuilder();
-                    methodBuilder.append(this.handleStuff(child, 0, auxExpressions));
+                    methodBuilder.append(this.handleStuff(child, 0, auxExpressions, 1));
+
                     String aux = "";
                     for (int i = 0; i < auxExpressions.size(); i++) {
                         aux += auxExpressions.get(i);
                     }
+
                     methodBuilder.insert(0, aux);
+                    stmBuilder.append(methodBuilder.toString());
+                    break;
             }
         }
 
@@ -346,62 +350,106 @@ public class OllirEmitter extends AJmmVisitor<Void, String> {
         return methodBuilder.toString();
     }
 
-    private String handleStuff(JmmNode methodCall, int level, List<String> auxExpressions) {
-        
-       
-        JmmNode firstChild = methodCall.getChildren().get(0);
-        JmmNode arguments = methodCall.getChildren().get(1);
+    private String handleStuff(JmmNode methodCall, int level, List<String> auxExpressions, int counter) {
 
-        System.out.println("MTHODC ++++++++++ " + methodCall);
-        System.out.println("FIRSTCH ++++++++++ " + firstChild);
+        JmmNode firstChild = null;
+        JmmNode arguments = null;
         StringBuilder builder = new StringBuilder();
-        if (firstChild.getKind().equals("Ident")) { // static
 
-            builder.append("invokestatic(");
-            String varName = null;
+        if (methodCall.getKind().equals("MethodCall")) {
+            firstChild = methodCall.getChildren().get(0);
+            arguments = methodCall.getChildren().get(1);
 
-            for (JmmNode child : arguments.getChildren()) {
-                level++;
-                varName = this.handleStuff(child, level, auxExpressions);
+            if (firstChild.getKind().equals("Ident")) { // static
+
+                builder.append("invokestatic(");
+                String varName = null;
+
+                for (JmmNode child : arguments.getChildren()) {
+                    level++;
+                    varName = this.handleStuff(child, level, auxExpressions, counter);
+                }
+
+                builder.append(firstChild.get("name") + ", " + methodCall.get("name") + ", " + varName + ");\n");
             }
+            else if (firstChild.getKind().equals("New")) {
+                builder.append("invokespecial").append(firstChild.get("name"));
+                String name = firstChild.get("name");
+                String ident = "aux" + counter + "." + name + " :=." + name + " new(" + name + ")." + name + ";\n";
+                counter++;
+                auxExpressions.add(ident);
+                auxExpressions.add("invokespecial(aux1." + name + ", <init>).V;\n");
 
-            System.out.println("STATIC---------------- " + auxExpressions);
+                String varName = null;
+                for (JmmNode child : arguments.getChildren()) {
+                    level++;
+                    varName = this.handleStuff(child, level, auxExpressions, counter);
+                }
 
-            String aux = "";
-            for (int i = 0; i < auxExpressions.size(); i++) {
-                aux += auxExpressions.get(i);
+                if (level > 0) {
+                    String id = "aux" + counter;
+                    auxExpressions.add(id + " = invokevirtual(" + methodCall.get("name") + ", " + varName + ");\n");
+                    counter++;
+                    return id;
+                }
             }
-
-            builder.insert(0, aux);
-            
-            builder.append(firstChild.get("name") + ", " + methodCall.get("name") + ", " + varName + ");\n");
-            System.out.println(builder.toString());
         }
 
-        // else if (firstChild.getKind().equals("MethodCall")) {
-            
-        //     builder.append("invokevirtual(");
+        else if (methodCall.getKind().equals("New")) {
 
-        //     String result = this.handleStuff(firstChild, auxExpressions);
-
-        //     System.out.println("VIRTUAL---------------- " + auxExpressions);
-
-        //     String add = auxExpressions.get(auxExpressions.size() - 1) + ", " + firstChild.get("name") + ", " + auxExpressions.get(auxExpressions.size() - 2) + ")\n";
-
-        //     auxExpressions.add(add);
-        // }
-        else if (firstChild.getKind().equals("New")) {
-            builder.append("invokespecial").append(firstChild.get("name"));
-            String name = firstChild.get("name");
-            String ident = "aux1." + name + " :=." + name + " new(" + name + ")." + name;
+            String name = methodCall.get("name");
+            String varName = "aux" + counter;
+            String ident = varName + "." + name + " :=." + name + " new(" + name + ")." + name + ";\n";
+            counter++;
             auxExpressions.add(ident);
             auxExpressions.add("invokespecial(aux1." + name + ", <init>).V;\n");
+            builder.append(varName);
+        }
+        else if (methodCall.getKind().equals("Literal")) {
+            String value = methodCall.get("value");
+            builder.append(value);
         }
 
-        if (level > 0) {
-            auxExpressions.add("aux2 = invokevirtual(" + methodCall.get("name") + ")\n");
-            return "aux2";
-        }
+//        if (firstChild.getKind().equals("Ident")) { // static
+//
+//            builder.append("invokestatic(");
+//            String varName = null;
+//
+//            for (JmmNode child : arguments.getChildren()) {
+//                level++;
+//                varName = this.handleStuff(child, level, auxExpressions, counter);
+//            }
+//
+//            builder.append(firstChild.get("name") + ", " + methodCall.get("name") + ", " + varName + ");\n");
+//        }
+//
+//        // else if (firstChild.getKind().equals("MethodCall")) {
+//
+//        //     builder.append("invokevirtual(");
+//
+//        //     String result = this.handleStuff(firstChild, auxExpressions);
+//
+//        //     System.out.println("VIRTUAL---------------- " + auxExpressions);
+//
+//        //     String add = auxExpressions.get(auxExpressions.size() - 1) + ", " + firstChild.get("name") + ", " + auxExpressions.get(auxExpressions.size() - 2) + ")\n";
+//
+//        //     auxExpressions.add(add);
+//        // }
+//        else if (firstChild.getKind().equals("New")) {
+//            builder.append("invokespecial").append(firstChild.get("name"));
+//            String name = firstChild.get("name");
+//            String ident = "aux" + counter + "." + name + " :=." + name + " new(" + name + ")." + name + ";\n";
+//            counter++;
+//            auxExpressions.add(ident);
+//            auxExpressions.add("invokespecial(aux1." + name + ", <init>).V;\n");
+//
+//            if (level > 0) {
+//                String id = "aux" + counter;
+//                auxExpressions.add(id + " = invokevirtual(" + methodCall.get("name") + ");\n");
+//                counter++;
+//                return id;
+//            }
+//        }
 
         return builder.toString();
         
