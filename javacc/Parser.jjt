@@ -134,7 +134,7 @@ void WhileStatement() #While : {}
 
         this.errorCnt++;
     }
-        Statement()
+        Statement() #Body
 }
 
 void Attribution() #void:{}
