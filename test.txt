@@ -6,6 +6,8 @@ class Fac {
         num_aux = 1;
         else
         num_aux = num * (this.compFac(num-1));
+
+        num_aux = this.compFac(num-1);
         
         Fac f;
         f = new Fac();
@@ -13,6 +15,6 @@ class Fac {
     }
     
     public static void main(String[]args){
-        io.println(new Fac().compFac(10));
+        io.println(new Fac());
         }
     }
