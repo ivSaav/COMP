@@ -1,17 +1,15 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 import org.specs.comp.ollir.*;
 
 import org.specs.comp.ollir.Node;
+import pt.up.fe.comp.jmm.jasmin.InstructionHandlers.*;
 import pt.up.fe.comp.jmm.jasmin.JasminBackend;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
+import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
-import pt.up.fe.specs.util.SpecsIo;
 
 /**
  * Copyright 2021 SPeCS.
@@ -48,13 +46,15 @@ public class BackendStage implements JasminBackend {
             handleClass(ollirClass, jasminCode);
             handleFields(ollirClass, jasminCode);
 
+
             for(Method method : ollirClass.getMethods()){
+                HashMap<String, Descriptor> varTable = OllirAccesser.getVarTable(method);
+
                 jasminCode.append(".method public ");
                 if(method.isStaticMethod()) jasminCode.append("static ");
                 if(method.isFinalMethod()) jasminCode.append("final ");
                 if(method.isConstructMethod()){
                     jasminCode.append("<init>(");
-                    //if main
                     parseMethodParameters(method.getParams(), jasminCode);
                     jasminCode.append(")V\n");
                     jasminCode.append("\taload_0");
@@ -69,15 +69,23 @@ public class BackendStage implements JasminBackend {
                     }else{
                         parseMethodParameters(method.getParams(), jasminCode);
                     }
-                    jasminCode.append(")"+parseType(method.getReturnType().getTypeOfElement()));
+                    jasminCode.append(")"+ JasminUtils.parseType(method.getReturnType().getTypeOfElement()));
+
+
+                    //LIMITS
+
+                    int localVariables = 0;
+
+                    for(Map.Entry<String, Descriptor> variable : varTable.entrySet()){
+                        if (variable.getValue().getScope().equals(VarScope.LOCAL))
+                            localVariables++;
+                    }
+                    jasminCode.append("\n\t"+ ".limit locals " + localVariables);
+
                 }jasminCode.append("\n");
 
 
-
-                //TODO limits
-                handleInstructions(jasminCode, method);
-
-
+                handleInstructions(jasminCode, method, varTable);
 
                 jasminCode.append(".end method \n\n");
 
@@ -100,83 +108,81 @@ public class BackendStage implements JasminBackend {
 
     }
 
-    private void handleInstructions(StringBuilder jasminCode, Method method) {
-        for (Instruction instruction : method.getInstructions()){
+    private void handleInstructions(StringBuilder jasminCode, Method method, HashMap<String, Descriptor> varTable) {
 
-            switch (instruction.getInstType()){
-                case RETURN:
-                    ReturnInstruction returnInstruction = (ReturnInstruction) instruction;
-                    ElementType returnType = method.getReturnType().getTypeOfElement();
+        InstructionAllocator instructionAllocator = new InstructionAllocator();
 
-                    if(returnType != null && returnType!=ElementType.VOID){
-                        jasminCode.append("\t" + parseType(returnType).toLowerCase(Locale.ROOT));
-                    }
-
-                    jasminCode.append("return ");
-
-                    jasminCode.append("\n");
-                    break;
-
-
-
-                case GETFIELD:
-                    GetFieldInstruction getFieldInstruction = (GetFieldInstruction) instruction;
-                    jasminCode.append("\tgetfield ");
-                    break;
-                case ASSIGN:
-                    AssignInstruction assignInstruction = (AssignInstruction) instruction;
-                    //TODO
-                    break;
-                case GOTO:
-                    GotoInstruction gotoInstruction = (GotoInstruction) instruction;
-                    jasminCode.append("\tgoto " + gotoInstruction.getLabel()+"\n");
-                    break;
-                case BRANCH:
-                    CondBranchInstruction condBranchInstruction = (CondBranchInstruction) instruction;
-                    Operation operation = condBranchInstruction.getCondOperation();
-
-                    //TODO CAST
-                    //Operand operand = (Operand) condBranchInstruction.getLeftOperand();
-                    //LiteralElement literalElement = (LiteralElement) condBranchInstruction.getRightOperand();
-
-                    //TODO CHECK IF OPERANDS
-
-                    //jasminCode.append("\tif" + parseOperationType(operation.getOpType())+" "+ condBranchInstruction.getLabel()+"\n");
-                    break;
-                case CALL:
-                    //callType methodspec  numargs
-
-                    CallInstruction callInstruction = (CallInstruction) instruction;
-
-                    //TODO INVOCATION TYPE
-
-                     Operand classOperand = (Operand) callInstruction.getFirstArg();
-                     String className = classOperand.getName();
-
-                     LiteralElement methodLiteral = (LiteralElement) callInstruction.getSecondArg();
-                     String methodName = methodLiteral.getLiteral().substring(1, methodLiteral.getLiteral().length()-1);
-
-                     if(className.equals("this"))
-                         className = "java/lang/Object";
-
-                     jasminCode.append("\t"+className+"/" +methodName+ "(");
-
-                     for(Element element: callInstruction.getListOfOperands()){
-                         Operand operand1 = (Operand) element;
-
-                         jasminCode.append(parseType(operand1.getType().getTypeOfElement()));
-                     }
-
-
-                     jasminCode.append(")");
-
-                     jasminCode.append(parseType(callInstruction.getReturnType().getTypeOfElement())+"\n");
-                    break;
-                default:
-                    jasminCode.append("\t" + instruction.toString()+"\n");
-                    break;
-            }
+        for (Instruction instruction : method.getInstructions()) {
+            jasminCode.append(instructionAllocator.allocateAndHandle(instruction, method));
         }
+
+    }
+
+
+    private void generate(Node T, StringBuilder jasminCode, Stack<String> stack) {
+
+        System.out.println("GENERATE");
+
+        Node leftNode = T.getSucc1();
+        Node rightNode = T.getSucc2();
+
+        if (leftNode == null && rightNode == null) {
+            System.out.println("ULTIMA");
+            jasminCode.append(T.toString() + stack.peek().toString() + leftNode.toString() + rightNode.toString());
+        } else if (leftNode != null || rightNode != null){
+            System.out.println("fudeu");
+            System.out.println(genrs(rightNode));
+            System.out.println("aqui");
+            //System.out.println(leftNode+"|"+rightNode.getSucc1());
+
+            if (rightNode.getSucc1()==null){
+                System.out.println("fudeu aqui");
+                //generate(leftNode, jasminCode);
+                //jasminCode.append(T.toString() + stack.peek().toString() + leftNode.toString() + rightNode.toString());
+            }
+
+            if (genrs(leftNode)>= genrs(rightNode)){
+                System.out.println("entrou aqui");
+                generate(leftNode, jasminCode, stack);
+                System.out.println("chegou aaqui tambem");
+                String r = stack.pop();
+                System.out.printf("chegou aqui aqui tambem");
+                generate(rightNode, jasminCode, stack);
+                System.out.printf("chegou aqui aqui aqui tambem");
+                stack.push(r);
+            }
+
+            else{
+                System.out.println("else");
+                swapTopElements(stack);
+
+                generate(rightNode, jasminCode, stack);
+                String r = stack.pop();
+                generate(leftNode, jasminCode, stack);
+                stack.push(r);
+
+                swapTopElements(stack);
+            }
+        }else{
+            System.out.println("entrei no else");
+        }
+
+
+    }
+
+    private int genrs(Node n ){
+
+        if (n.getSucc2() != null)return  2;
+        if (n.getSucc1()!= null)return 1;
+        return 0;
+    }
+
+
+    private void swapTopElements(Stack<String> stack){
+        String first = stack.pop();
+        String second = stack.pop();
+        stack.push(first);
+        stack.push(second);
     }
 
     private void handleClass(ClassUnit ollirClass, StringBuilder jasminCode) {
@@ -199,7 +205,7 @@ public class BackendStage implements JasminBackend {
             jasminCode.append(".field ");
             if(field.isStaticField()) jasminCode.append("static ");
             jasminCode.append(field.getFieldName()+" ");
-            jasminCode.append(parseType(field.getFieldType().getTypeOfElement()));
+            jasminCode.append(JasminUtils.parseType(field.getFieldType().getTypeOfElement()));
 
             if(field.isInitialized()){
                 jasminCode.append(" = ");
@@ -218,7 +224,7 @@ public class BackendStage implements JasminBackend {
         int paramListSize = paramList.size();
 
         for(int i=0; i < paramListSize; i++){
-            jasminCode.append(parseType(paramList.get(i).getType().getTypeOfElement()));
+            jasminCode.append(JasminUtils.parseType(paramList.get(i).getType().getTypeOfElement()));
             if(i!=paramListSize-1){
                 jasminCode.append(";");
             }
@@ -287,29 +293,7 @@ public class BackendStage implements JasminBackend {
     }
 
 
-    public String parseType(ElementType type){
-        switch (type){
-            case INT32:
-                return "I";
-            case BOOLEAN:
-                return "B";
-            case ARRAYREF:
-                return "[I";
-            case OBJECTREF:
-                return "Ljava/lang/Object";
-            case CLASS:
-                return "C";
-            case THIS:
-                return "T";
-            case STRING:
-                return "S";
-            case VOID:
-                return "V";
-            default:
-                return null;
-        }
 
-    }
 
 }
 

@@ -9,8 +9,9 @@ import java.io.InputStreamReader;
 
 import jas.jasError;
 import jasmin.ClassFile;
+import org.specs.comp.ollir.ElementType;
 
-class JasminUtils {
+public class JasminUtils {
     /**
 	 * Extracted from Jasmin code
 	 */
@@ -19,7 +20,7 @@ class JasminUtils {
         try (FileInputStream fs = new FileInputStream(inputFile);
             InputStreamReader ir = new InputStreamReader(fs);
             BufferedReader inp = new BufferedReader(ir);) {
-            
+
             ClassFile classFile = new ClassFile();
             classFile.readJasmin(inp, inputFile.getName(), true);
 
@@ -113,5 +114,32 @@ class JasminUtils {
             }
         }
         return new String(tmp);
+    }
+
+
+
+
+    public static String parseType(ElementType type){
+        switch (type){
+            case INT32:
+                return "I";
+            case BOOLEAN:
+                return "B";
+            case ARRAYREF:
+                return "[I";
+            case OBJECTREF:
+                return "Ljava/lang/Object";
+            case CLASS:
+                return "C";
+            case THIS:
+                return "T";
+            case STRING:
+                return "S";
+            case VOID:
+                return "V";
+            default:
+                return null;
+        }
+
     }
 }
