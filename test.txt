@@ -1,18 +1,16 @@
-class myClass {
-    public boolean check(int[] A, int N, int T){
-        int i;
-        i = 0;
+import io;
 
-        boolean all;
-        all = false;
+class Fac {
+    public int ComputeFac(int num){
+        int num_aux ;
+        if (num < 1)
+            num_aux = 1;
+        else
+            num_aux = num * (this.ComputeFac(num-1));
 
-
-        while((i < N) && (A[i] < T)) {
-            i = 1 + 2 +3;
-        }
-
-        i = 2;
-            
-        return all;
+        return num_aux;
+    }
+    public static void main(String[]args){
+        io.println(new Fac().ComputeFac(10));//assuming the existence // of the classfile io.class
     }
 }

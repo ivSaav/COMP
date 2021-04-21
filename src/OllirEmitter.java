@@ -21,7 +21,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         addVisit("Class", this::dealWithClass);
         addVisit("Method", this::dealWithMethod);
-        addVisit("Else", this::dealWithStatementBody);
     }
 
     public String defaultVisit(JmmNode node, String indent) {
@@ -42,7 +41,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                                 +       "\t\tinvokespecial(this, \"<init>\").V;\n"
                                 + "\t}";
         stringBuilder.append(classConstructor);
-                                
+
+        //TODO insert class variables into constructor;
         return stringBuilder.toString();
     }
 
@@ -206,7 +206,11 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         ifBuilder.append(auxExp).append(") got to else;\n");
 
-        ifBuilder.append(this.dealWithStatementBody(ifNode.getChildren().get(1), indent));
+        ifBuilder.append(this.dealWithStatementBody(ifNode.getChildren().get(1), indent + "\t"));
+
+        JmmNode elseNode = Utils.getChildOfKind(ifNode, "Else");
+        ifBuilder.append(indent + "else:\n");
+        ifBuilder.append(this.dealWithStatementBody(elseNode, indent + "\t"));
 
         return ifBuilder.toString();
     }
@@ -245,8 +249,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     
     private String dealWithStatementBody(JmmNode statement, String indent) {
         StringBuilder stmBuilder = new StringBuilder();
-        if (statement.getKind().equals("Else"))
-            stmBuilder.append(indent + "else:\n");
             
         for (JmmNode child : statement.getChildren()) {
             
