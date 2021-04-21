@@ -8,9 +8,7 @@ class myClass {
 
 
         while((i < N) && (A[i] < T)) {
-            i = i + 1;
-            i = 2;
-            i = 3;
+            i = 1 + 2 +3;
         }
 
         i = 2;
