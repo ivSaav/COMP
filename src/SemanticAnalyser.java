@@ -41,7 +41,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
     }
 
 
-
     private List<Report> dealWithReturn(JmmNode node, List <Report> reports){
 
         JmmNode scope = Utils.findScope(node);
@@ -56,21 +55,21 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             case "Ident":
                 if (st.getVariableSymbol(returnNode) != null) {
                     if (!st.getVariableSymbol(returnNode).getType().getName().equals(methodType)) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unmatched return types at method " + methodName));
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unmatched return types at method " + methodName));
                     }
                     break;
                 } else {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable at method " + methodName));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "No declaration available for variable at method " + methodName));
                 }
             case "Literal":
                 if(!returnNode.get("type").equals(methodType))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unmatched return types at method " + methodName));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unmatched return types at method " + methodName));
                 break;
             case "And":
             case "Smaller":
             case "Negation":
                 if (!methodType.equals("boolean")){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unmatched return types at method " + methodName));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unmatched return types at method " + methodName));
                 }
                 break;
             case "Plus":
@@ -78,7 +77,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             case "Mult":
             case "Div":
                 if (!methodType.equals("int")){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unmatching return types" ));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unmatched return types" ));
                 }
                 break;
 
@@ -93,7 +92,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         JmmNode literal = Utils.getChildOfKind(arrayNode, "Literal");
 
         if (literal == null || !literal.get("type").equals("int"))
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1,
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode,
                     "Invalid array initialization size: " +
                             (literal == null ? "" : literal.get("value"))));
         return null;
@@ -114,17 +113,17 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             if (firstChild.getKind().equals("Ident")) {
 
                 if (!this.visitedVariables.contains(firstChild.get("name"))){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + firstChild.get("name")));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode, "Undeclared variable: " + firstChild.get("name")));
                     return null;
                 }
                 Symbol symbolArrayDec = st.getVariableSymbol(firstChild);
 
                 if (!symbolArrayDec.getType().isArray()) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to non-array variable"));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode, "Access on non-array variable"));
                 }
             }
             else {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to non-array variable"));
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode, "Access on non-array variable"));
             }
 
             // Verify if the index of the access array is an integer
@@ -132,18 +131,18 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             if (secondChild.getKind().equals("Ident")) {
 
                 if (!this.visitedVariables.contains(secondChild.get("name"))){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + secondChild.get("name")));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, secondChild, "Undeclared variable: " + secondChild.get("name")));
                     return null;
                 }
                 Symbol symbolArrayInd = st.getVariableSymbol(secondChild);
 
                 if (!symbolArrayInd.getType().getName().equals("int")) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to an array with a non-integer"));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, secondChild, "Access to an array with a non-integer"));
                 }
             }
             else if (secondChild.getKind().equals("Literal")) {
                 if (!secondChild.get("type").equals("int"))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to an array with a non-integer"));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, secondChild, "Access to an array with a non-integer"));
             }
         }
         return null;
@@ -162,7 +161,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             String nodeKind = tmp.getKind();
             if (nodeKind.equals("Ident")) {
                 if (!st.getImports().contains(tmp.get("name")))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Couldn't resolve method call: " + methodName));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, tmp, "Couldn't resolve method call: " + methodName));
             }
         }else {
             //CHECKS
@@ -171,7 +170,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             List<JmmNode> args = node.getChildren().get(1).getChildren();
 
             if (parameters.size() != args.size()) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arguments doesn't not match paramenters in method " + methodName));
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Arguments don't match parameters in method: " + methodName));
                 return null;
             } else {
 
@@ -182,11 +181,11 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                         case "Ident":
                             if (st.getVariableSymbol(args.get(i)) != null) {
                                 if (!st.getVariableSymbol(args.get(i)).getType().getName().equals(parameters.get(i).getType().getName())) {
-                                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arguments type don't match in method " + methodName));
+                                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Arguments type don't match in method " + methodName));
                                 }
                                 break;
                             } else {
-                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable at " + methodName));
+                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "No declaration available for variable at " + methodName));
                             }
                         case "Literal":
                             break;
@@ -225,30 +224,30 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                 break;
             case "Literal":
                 if (!mustbool.get("type").equals("boolean")){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable at " + nodeName + " is of wrong type"));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Variable at " + nodeName + " is of wrong type"));
 
                 }
                 break;
             case "Ident":
                 if (variables.get(mustbool.get("name")) == null){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable " + mustbool.getKind() ));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "No declaration available for variable " + mustbool.getKind() ));
 
                 }
                 else if (!st.getVariableSymbol(mustbool).getType().getName().equals("boolean")){
 
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable at " + nodeName + " statement is of wrong type"));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Variable at " + nodeName + " statement is of wrong type"));
                 }
                 break;
             case "MethodCall":
                 MethodSymbols method = st.getMethod(mustbool.get("name"));
 
                 if(!method.getReturnType().getName().equals("boolean")) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Method return at "+ nodeName+" is of wrong type"));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Method return at "+ nodeName+" is of wrong type"));
                 }
                 break;
 
             default:
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, nodeName+ " statement is not of type boolean" ));
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, nodeName+ " statement is not of type boolean" ));
 
         }
 

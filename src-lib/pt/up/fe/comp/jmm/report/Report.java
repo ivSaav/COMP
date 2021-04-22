@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import pt.up.fe.comp.jmm.JmmNode;
 
 public class Report {
 
@@ -20,6 +21,15 @@ public class Report {
         this.stage = stage;
         this.line = line;
         this.column = column;
+        this.message = message;
+        this.exception = null;
+    }
+
+    public Report(ReportType type, Stage stage, JmmNode node, String message) {
+        this.type = type;
+        this.stage = stage;
+        this.line = Integer.parseInt(node.get("line"));
+        this.column = Integer.parseInt(node.get("col"));
         this.message = message;
         this.exception = null;
     }
