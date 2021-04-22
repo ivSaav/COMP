@@ -2,6 +2,7 @@ options
 {
     LOOKAHEAD=1;
     DEBUG_PARSER = false;
+    NODE_SCOPE_HOOK = true;
 }
 
 PARSER_BEGIN(Parser)
@@ -21,6 +22,14 @@ public class Parser
 
     }
 
+    private void jjtreeOpenNodeScope(Node n) {
+        SimpleNode sn = (SimpleNode) n;
+        Token t = getToken(1);
+        sn.put("line", Integer.toString(t.beginLine));
+        sn.put("col", Integer.toString(t.beginColumn));
+    }
+
+    private void jjtreeCloseNodeScope(Node n) {}
     public int getErrorCnt() {return this.errorCnt;}
     public ArrayList<Report> getReports() { return this.reports; }
 }
