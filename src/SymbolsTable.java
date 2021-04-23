@@ -139,6 +139,13 @@ public class SymbolsTable implements SymbolTable {
         return varSymbol;
     }
 
+    public boolean isGlobalVar(String varIdent) {
+        return this.fields.containsKey(varIdent);
+    }
+    public boolean isGlobalVar(JmmNode varNode) {
+        return this.fields.containsKey(varNode.get("name"));
+    }
+
     @Override
     public String toString() {
         return "SymbolsTable{" +

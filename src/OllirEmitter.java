@@ -127,6 +127,39 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         return retBuilder.toString();
     }
 
+
+    /**
+     * Called when the value of a class field variable is needed
+     * @param varNode
+     * @return the identifier of the created expression and the created expression
+     */
+    private String[] handleGetFieldCall(JmmNode varNode) {
+        Symbol varSymbol = st.getGlobalVariable(varNode.get("name"));
+        String varType = Utils.getOllirType(varSymbol.getType());
+
+        String auxId = "t" + this.idCounter++ + "." + varType;
+
+        String getField = String.format("%s :=.%s getfield(this, %s.%s).%s",
+                auxId, varType, varSymbol.getName(), varType, varType);
+        return new String[] {auxId, getField};
+    }
+
+    /**
+     * Called when the value of a class field variable is needed
+     * @param varNode
+     * @return the identifier of the created expression and the created expression
+     */
+    private String[] handlePutFieldCall(JmmNode varNode, String rhsVar) {
+        Symbol varSymbol = st.getGlobalVariable(varNode.get("name"));
+        String varType = Utils.getOllirType(varSymbol.getType());
+
+        String auxId = "t" + this.idCounter++ + "." + varType;
+
+        String getField = String.format("%s :=.%s putfield(this, %s).%s",
+                auxId, varType, rhsVar, varType);
+        return new String[] {auxId, getField};
+    }
+
     /**a
      * Pass the content of when an assignment is made to Ollir's notation
      * @param equalNode node to visit referring an assignment
@@ -172,19 +205,31 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 rhsBuilder.append(Utils.getOllirLiteral(rhs));
                 break;
             case "Ident":
+                // global variable in rhs of assignment --> call getfield
+                if (st.isGlobalVar(rhs)) {
+                    String[] res = this.handleGetFieldCall(rhs);
+                    builder.insert(0, indent + res[1] + ";\n"); // add expression on top
+                    rhsBuilder.append(res[0]); // add auxiliary variable
+                    break;
+                }
             case "Array":
+
+                JmmNode identNode = rhs.getChildren().get(0);
+                if (st.isGlobalVar(identNode)) {
+                    String[] res = this.handleGetFieldCall(identNode);
+                    builder.insert(0, indent + res[1] + ";\n");
+                    rhsBuilder.append(res[0]);
+                    break;
+                }
                 rhsBuilder.append(this.resolveVariableIdentifier(rhs, auxExpressions));
                 break;
             case "MethodCall": // In the case of a call to a method
-                
-
                 String methodCall = this.handleMethodCall(rhs, 0, auxExpressions, "");
 
                 for (String aux : auxExpressions)
                     builder.insert(0, aux + ";\n");
 
                 rhsBuilder.append(methodCall);
-
                 break;
             case "New":
                 String ident = "new(" + rhs.get("name") + ")." + rhs.get("name") + ";\n";
@@ -202,9 +247,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 String lengthExpr = auxId + " :=.i32 arraylength("+ this.resolveVariableIdentifier(rhs.getChildren().get(0), auxExpressions) + ").i32;\n";
                 builder.insert(0, lengthExpr);
                 rhsBuilder.append(auxId);
-
                 break;
-
             default:
                 // In the case it is an expression
                 if (Utils.isOperator(rhs)) {
@@ -242,7 +285,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         ifBuilder.append(this.dealWithStatementBody(ifNode.getChildren().get(1), indent + "\t"));
         
         ifBuilder.append(indent + "endif:\n");
-        // TODO endif
         return ifBuilder.toString();
     }
 
@@ -305,13 +347,13 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                     StringBuilder methodBuilder = new StringBuilder();
                     methodBuilder.append(this.handleMethodCall(child, 0, auxExpressions, indent));
 
-                    String aux = "";
-                    for (int i = 0; i < auxExpressions.size(); i++) {
-                        aux += indent + auxExpressions.get(i) + ";\n";
+                    StringBuilder aux = new StringBuilder();
+                    for (String auxExpression : auxExpressions) {
+                        aux.append(indent).append(auxExpression).append(";\n");
                     }
 
                     methodBuilder.insert(0, aux);
-                    stmBuilder.append(methodBuilder.toString() + ";\n");
+                    stmBuilder.append(methodBuilder).append(";\n");
                     break;
             }
         }
@@ -406,6 +448,13 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         }
         // Case the terminal is an Identifier
         else {
+            // variable needs a getfield auxiliary function
+            if (st.isGlobalVar(expr)) {
+                String[] res = this.handleGetFieldCall(expr);
+                expressions.add(res[1]);
+                return res[0];
+            }
+            // resolve local variable
             return resolveVariableIdentifier(expr, expressions);
         }
     }
@@ -554,11 +603,10 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             identSymbol = this.st.getVariableSymbol(arrayIdent);
         }
         else { // node is identifier
-            if (auxExpr != null && node.getKind().equals("Length")) {
+            if (auxExpr != null && node.getKind().equals("Length")) { // array.length
                 String auxId = "t" + this.idCounter++ + ".i32";
                 String lengthExpr = auxId + " :=.i32 arraylength("+ this.resolveVariableIdentifier(node.getChildren().get(0), auxExpr) + ").i32";
                 auxExpr.add(lengthExpr);
-
                 return auxId;
             }
 
