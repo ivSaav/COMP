@@ -13,7 +13,7 @@ public class CallInstructionHandler implements IntructionHandler{
 
 
     @Override
-    public String handleInstruction() {
+    public String handleInstruction(Method method) {
 
         StringBuilder string = new StringBuilder();
 

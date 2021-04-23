@@ -2,6 +2,7 @@ package pt.up.fe.comp.jmm.jasmin.InstructionHandlers;
 
 import org.specs.comp.ollir.GetFieldInstruction;
 import org.specs.comp.ollir.Instruction;
+import org.specs.comp.ollir.Method;
 
 public class GetFieldInstructionHandler implements IntructionHandler{
 
@@ -13,7 +14,7 @@ public class GetFieldInstructionHandler implements IntructionHandler{
     }
 
 
-    public String handleInstruction() {
+    public String handleInstruction(Method method) {
         return "\tgetfield ";
     }
 }

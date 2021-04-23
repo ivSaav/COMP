@@ -1,10 +1,9 @@
 package pt.up.fe.comp.jmm.jasmin.InstructionHandlers;
 
-import org.specs.comp.ollir.BinaryOpInstruction;
-import org.specs.comp.ollir.Element;
-import org.specs.comp.ollir.Instruction;
+import org.specs.comp.ollir.*;
 import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 
+import java.util.HashMap;
 import java.util.Locale;
 
 public class BinaryOpInstructionHandler implements IntructionHandler{
@@ -17,33 +16,42 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
 
 
     @Override
-    public String handleInstruction() {
+    public String handleInstruction(Method method) {
         StringBuilder string = new StringBuilder();
+        HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
 
         Element rop = instruction.getRightOperand();
         Element lop = instruction.getLeftOperand();
 
         if (rop.isLiteral()){
-            string.append("\tldc literal \n");
-            //string.append(op.);
+            LiteralElement literal = (LiteralElement) rop;
+            string.append("\tldc "+ literal.getLiteral()+"\n");
+
         }else{
             string.append("\t"+JasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
-            string.append("load variable \n");
+            Operand variable = (Operand) instruction.getRightOperand();
+            Descriptor d = vars.get(variable.getName());
+            string.append("load "+ d.getVirtualReg()+"\n");
         }
 
         if (lop.isLiteral()){
-            string.append("\tldc literal \n");
+            LiteralElement literal = (LiteralElement) lop;
+            string.append("\tldc "+ literal.getLiteral() +"\n");
             //string.append(op.);
         }else{
             string.append("\t"+JasminUtils.parseType(lop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
-            string.append("load variable \n");
+            Operand variable = (Operand) lop;
+            Descriptor d = vars.get(variable.getName()); //d is null?
+            string.append("load "+ d.getVirtualReg()+"\n");
         }
 
+        string.append("OP:" + instruction.getUnaryOperation().getOpType() + "\n");
 
-        //System.out.println(instruction.getUnaryOperation().getOpType());
-        if (instruction.getUnaryOperation().getOpType()!=null)
-        string.append(JasminUtils.parseType(rop.getType().getTypeOfElement())+JasminUtils.parseOperationType(instruction.getUnaryOperation().getOpType())+"\n");
+
+
 
         return string.toString();
     }
+
+  
 }

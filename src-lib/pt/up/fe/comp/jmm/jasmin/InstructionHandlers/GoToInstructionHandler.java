@@ -2,6 +2,7 @@ package pt.up.fe.comp.jmm.jasmin.InstructionHandlers;
 
 import org.specs.comp.ollir.GotoInstruction;
 import org.specs.comp.ollir.Instruction;
+import org.specs.comp.ollir.Method;
 
 public class GoToInstructionHandler implements IntructionHandler{
 
@@ -12,7 +13,7 @@ public class GoToInstructionHandler implements IntructionHandler{
     }
 
     @Override
-    public String handleInstruction() {
+    public String handleInstruction(Method method) {
         return "\tgoto " + instruction.getLabel()+"\n";
     }
 

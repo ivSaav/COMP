@@ -9,15 +9,15 @@ import java.util.Locale;
 public class AssignInstructionHandler implements IntructionHandler{
 
     private AssignInstruction instruction;
-    private Method method;
 
-    public AssignInstructionHandler(Instruction instruction, Method method) {
+
+    public AssignInstructionHandler(Instruction instruction) {
         this.instruction = (AssignInstruction) instruction;
-        this.method = method;
+
     }
 
     @Override
-    public String handleInstruction() {
+    public String handleInstruction(Method method) {
         StringBuilder string = new StringBuilder();
         //instruction.show();
 
@@ -28,19 +28,22 @@ public class AssignInstructionHandler implements IntructionHandler{
         string.append(rhss);
 
 
+        HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
 
 
-        //HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
+       Operand variable = (Operand) instruction.getDest();
+       Descriptor d = vars.get(variable.getName()); //d is null?
 
-       // Descriptor d = vars.get(instruction.getDest()); //d is null?
-        //string.append(d);
-        //if(d.getScope()== VarScope.FIELD){
 
-        //}else{
-            //string.append(JasminUtils.parseType(d.getVarType().getTypeOfElement()).toLowerCase(Locale.ROOT));
-            //string.append("store ");
-            //string.append(d.getVirtualReg());
-        //}
+        if(d.getScope()== VarScope.FIELD){
+            string.append("field");
+
+        }else{
+            string.append("\t");
+            string.append(JasminUtils.parseType(d.getVarType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+            string.append("store ");
+            string.append(d.getVirtualReg()+"\n");
+        }
         //como distinguir entre store e pufield
 
 

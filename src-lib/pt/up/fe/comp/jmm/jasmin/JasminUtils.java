@@ -147,9 +147,7 @@ public class JasminUtils {
     public static String parseOperationType(OperationType type){
         switch (type){
 
-            /**
-             * COND BRANCH OPERATIONS
-             */
+
 
             case LTH:
             case LTHI32:

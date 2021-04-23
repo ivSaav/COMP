@@ -81,6 +81,7 @@ public class BackendStage implements JasminBackend {
                             localVariables++;
                     }
                     jasminCode.append("\n\t"+ ".limit locals " + localVariables);
+                    jasminCode.append("\n\t" + ".limit stack 99");
 
                 }jasminCode.append("\n");
 
@@ -115,58 +116,6 @@ public class BackendStage implements JasminBackend {
         for (Instruction instruction : method.getInstructions()) {
             jasminCode.append(instructionAllocator.allocateAndHandle(instruction, method));
         }
-
-    }
-
-
-    private void generate(Node T, StringBuilder jasminCode, Stack<String> stack) {
-
-        System.out.println("GENERATE");
-
-        Node leftNode = T.getSucc1();
-        Node rightNode = T.getSucc2();
-
-        if (leftNode == null && rightNode == null) {
-            System.out.println("ULTIMA");
-            jasminCode.append(T.toString() + stack.peek().toString() + leftNode.toString() + rightNode.toString());
-        } else if (leftNode != null || rightNode != null){
-            System.out.println("fudeu");
-            System.out.println(genrs(rightNode));
-            System.out.println("aqui");
-            //System.out.println(leftNode+"|"+rightNode.getSucc1());
-
-            if (rightNode.getSucc1()==null){
-                System.out.println("fudeu aqui");
-                //generate(leftNode, jasminCode);
-                //jasminCode.append(T.toString() + stack.peek().toString() + leftNode.toString() + rightNode.toString());
-            }
-
-            if (genrs(leftNode)>= genrs(rightNode)){
-                System.out.println("entrou aqui");
-                generate(leftNode, jasminCode, stack);
-                System.out.println("chegou aaqui tambem");
-                String r = stack.pop();
-                System.out.printf("chegou aqui aqui tambem");
-                generate(rightNode, jasminCode, stack);
-                System.out.printf("chegou aqui aqui aqui tambem");
-                stack.push(r);
-            }
-
-            else{
-                System.out.println("else");
-                swapTopElements(stack);
-
-                generate(rightNode, jasminCode, stack);
-                String r = stack.pop();
-                generate(leftNode, jasminCode, stack);
-                stack.push(r);
-
-                swapTopElements(stack);
-            }
-        }else{
-            System.out.println("entrei no else");
-        }
-
 
     }
 

@@ -10,7 +10,7 @@ public class PutFieldInstructionHandler implements IntructionHandler{
     }
 
     @Override
-    public String handleInstruction() {
+    public String handleInstruction(Method method) {
         return "\tputfield";
     }
 

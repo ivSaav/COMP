@@ -11,34 +11,34 @@ public class InstructionAllocator {
     public String allocateAndHandle(Instruction instruction, Method method){
         switch (instruction.getInstType()){
             case CALL:
-                return new CallInstructionHandler(instruction).handleInstruction();
+                return new CallInstructionHandler(instruction).handleInstruction(method);
             case RETURN:
-                return new ReturnInstructionHandler(instruction, method.getReturnType().getTypeOfElement()).handleInstruction();
+                return new ReturnInstructionHandler(instruction).handleInstruction(method);
             case GETFIELD:
                 //TODO
-                return new GetFieldInstructionHandler(instruction).handleInstruction();
+                return new GetFieldInstructionHandler(instruction).handleInstruction(method);
             case PUTFIELD:
                 //TODO
-                return new PutFieldInstructionHandler(instruction).handleInstruction();
+                return new PutFieldInstructionHandler(instruction).handleInstruction(method);
             case ASSIGN:
                 //TODO
-                return new AssignInstructionHandler(instruction, method).handleInstruction();
+                return new AssignInstructionHandler(instruction).handleInstruction(method);
             case GOTO:
                 //TODO
-                return new GoToInstructionHandler(instruction).handleInstruction();
+                return new GoToInstructionHandler(instruction).handleInstruction(method);
             case BRANCH:
                 //TODO
-                return new BranchInstructionHandler(instruction).handleInstruction();
+                return new BranchInstructionHandler(instruction).handleInstruction(method);
             case UNARYOPER:
                 //seems to be negation etc
                 //TODO
-                return new UnaryOpInstructionHandler(instruction).handleInstruction();
+                return new UnaryOpInstructionHandler(instruction).handleInstruction(method);
             case BINARYOPER:
                 //TODO
-                return new BinaryOpInstructionHandler(instruction).handleInstruction();
+                return new BinaryOpInstructionHandler(instruction).handleInstruction(method);
             case NOPER:
                 //TODO
-                return new SingleOpInstructionHandler(instruction).handleInstruction();
+                return new SingleOpInstructionHandler(instruction).handleInstruction(method);
             default:
                 return "\t" + instruction.toString()+"\n";
 
