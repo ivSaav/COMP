@@ -33,11 +33,11 @@ public class OllirResult {
      */
     public OllirResult(JmmSemanticsResult semanticsResult, String ollirCode, List<Report> reports) {
         // TODO uncomment
-        this.ollirClass = null;
-        this.symbolTable = null;
-        this.reports = null;
-//        this(OllirUtils.parse(ollirCode), semanticsResult.getSymbolTable(),
-//                SpecsCollections.concat(semanticsResult.getReports(), reports));
+//        this.ollirClass = null;
+//        this.symbolTable = null;
+//        this.reports = null;
+        this(OllirUtils.parse(ollirCode), semanticsResult.getSymbolTable(),
+                SpecsCollections.concat(semanticsResult.getReports(), reports));
     }
 
     public ClassUnit getOllirClass() {

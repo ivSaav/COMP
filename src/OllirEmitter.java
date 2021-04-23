@@ -52,8 +52,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         if (fieldParams.length() > 0)
             fieldParams.setLength(fieldParams.length() - 1); // remove last comma
 
-        stringBuilder.append("{\n");
-        String classConstructor = "\t.constructor " + classNode.get("class") +"(" + fieldParams + ").V {\n"
+        stringBuilder.append(" {\n");
+        String classConstructor = "\t.construct " + classNode.get("class") +"(" + fieldParams + ").V {\n"
                 +       "\t\tinvokespecial(this, \"<init>\").V;\n" + inits;
 
 
@@ -233,7 +233,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         String auxExp = this.insertAuxiliarExpressions(ifBuilder, expr, true, indent);
 
-        ifBuilder.append(auxExp).append(") got to Then;\n");
+        ifBuilder.append(auxExp).append(") goto Then;\n");
 
         JmmNode elseNode = Utils.getChildOfKind(ifNode, "Else");
         ifBuilder.append(this.dealWithStatementBody(elseNode, indent + "\t"));
@@ -342,8 +342,9 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                 String t = "", ident = "";
                 if (level > 1) {
-                    ident = "t" + this.idCounter + Utils.getOllirExpReturnType(expr.getKind());
-                    t = ident + " = ";
+                    String type = Utils.getOllirExpReturnType(expr.getKind());
+                    ident = "t" + this.idCounter + type;
+                    t = ident + " :=" + type + " ";
                     this.idCounter++;
                 }
 
@@ -360,8 +361,9 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                 String t = "", ident = "";
                 if (level > 1) {
-                    ident = "t" + this.idCounter + Utils.getOllirExpReturnType(expr.getKind());
-                    t = ident + " = ";
+                    String type = Utils.getOllirExpReturnType(expr.getKind());
+                    ident = "t" + this.idCounter + type;
+                    t = ident + " :=" + type + " ";
                     this.idCounter++;
                 }
 
@@ -386,7 +388,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             this.idCounter++;
 
             List<String> auxExpr = new ArrayList<>();
-            expressions.add(varName + " =.i32 " +  this.handleMethodCall(expr, 0, auxExpr,""));
+            expressions.add(varName + " :=.i32 " +  this.handleMethodCall(expr, 0, auxExpr,""));
 
             for (int i = 0; i < auxExpr.size(); i++) {
                 expressions.add(auxExpr.get(i));
@@ -399,7 +401,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             String varName = "t" + this.idCounter + Utils.getOllirExpReturnType(expr.getKind());
             this.idCounter++;
-            expressions.add(varName + " =.i32 " +  this.resolveVariableIdentifier(expr, expressions));
+            expressions.add(varName + " :=.i32 " +  this.resolveVariableIdentifier(expr, expressions));
             return varName;
         }
         // Case the terminal is an Identifier
@@ -425,14 +427,14 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 builder.append(indent + "invokestatic(");
                 level++;
 
-                builder.append(firstChild.get("name") + ", " + methodCall.get("name") + ", " + args + ").V");
+                builder.append(firstChild.get("name") + ", \"" + methodCall.get("name") + "\", " + args + ").V");
             }
             else if (firstChild.getKind().equals("This")) { // static
 
 
                 String args = this.handleMethodParameters(arguments, auxExpressions);
 
-                String call = indent + "invokevirtual(this, " + methodCall.get("name") + ", ";
+                String call = indent + "invokevirtual(this, \"" + methodCall.get("name") + "\", ";
 
                 MethodSymbols methodSymbols = st.getMethod(methodCall.get("name"));
 
@@ -448,7 +450,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 this.idCounter++;
                 String ident = auxName + " :=." + name + " new(" + name + ")." + name;
                 auxExpressions.add(ident);
-                auxExpressions.add(indent + "invokespecial(" + auxName + ", <init>).V");
+                auxExpressions.add(indent + "invokespecial(" + auxName + ", \"<init>\").V");
 
                 level += arguments.getNumChildren();
 
@@ -460,7 +462,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                     String id = "aux" + this.idCounter + "." + Utils.getOllirType(methodSymbols.getReturnType());
                     this.idCounter++;
 
-                    String call = id + " =." + Utils.getOllirType(methodSymbols.getReturnType()) + " invokevirtual("+ auxName + ", " +  methodCall.get("name") + ", " + args + ")." + Utils.getOllirType(methodSymbols.getReturnType());
+                    String call = id + " :=." + Utils.getOllirType(methodSymbols.getReturnType()) + " invokevirtual("+ auxName + ", \"" +  methodCall.get("name") + "\", " + args + ")." + Utils.getOllirType(methodSymbols.getReturnType());
 
                     auxExpressions.add(indent + call);
                     return id;
@@ -473,7 +475,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             String ident = varName + " :=." + name + " new(" + name + ")." + name;
             this.idCounter++;
             auxExpressions.add(indent + ident);
-            auxExpressions.add(indent + "invokespecial(" + varName + ", <init>).V");
+            auxExpressions.add(indent + "invokespecial(" + varName + ", \"<init>\").V");
             builder.append(varName);
         }
         else if (methodCall.getKind().equals("Ident")) {
@@ -482,7 +484,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             String ident = varName + " :=." + name + " new(" + name + ")." + name;
             this.idCounter++;
             auxExpressions.add(indent + ident);
-            auxExpressions.add(indent + "invokespecial(" + varName + ", <init>).V");
+            auxExpressions.add(indent + "invokespecial(" + varName + ", \"<init>\").V");
             builder.append(varName);
 
             String args = this.handleMethodParameters(arguments, auxExpressions);
@@ -490,7 +492,9 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             builder.append(indent + "invokestatic(");
             level++;
 
-            builder.append(firstChild.get("name") + ", " + methodCall.get("name") + ", " + args + ").V");
+            MethodSymbols method = st.getMethod(methodCall.get("name"));
+            String ret = Utils.getOllirType(method.getReturnType());
+            builder.append(firstChild.get("name") + ", \"" + methodCall.get("name") + "\", " + args + ")." + ret);
         }
         else if (methodCall.getKind().equals("Literal")) {
             String value = methodCall.get("value");
@@ -632,9 +636,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             content.append(childResult);
         }
 
-//        String tab = "";
-//        if (node.getKind().equals("Method"))
-//            tab = "}\n";
+        if (node.getKind().equals("Class"))
+            content.append("}");
 
         return content.toString();
     }
