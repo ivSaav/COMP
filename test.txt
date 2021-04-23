@@ -2,19 +2,24 @@ import io;
 
 class Fac {
 
-    int[] a;
+    int a;
     public int ComputeFac(int num){
         int num_aux ;
 
         if (num < 1)
-            num_aux = a[1] + 2;
+            num_aux = 2;
         else
+
             num_aux = num * (this.ComputeFac(num-1));
 
         return num_aux;
     }
     public static void main(String[]args){
+
         io.println(new Fac().ComputeFac(10));//assuming the existence // of the classfile io.class
 
+        int aux;
+        a = io.println();
+        aux = this.ComputeFac(a);
     }
 }

@@ -13,7 +13,7 @@ import pt.up.fe.specs.util.SpecsCheck;
 public class OllirEmitter extends AJmmVisitor<String, String> {
 
     private SymbolsTable st;
-    private int counter = 0;
+    private int idCounter = 0;
 
     public OllirEmitter(SymbolsTable st) {
         this.st = st;
@@ -175,7 +175,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             case "MethodCall": // In the case of a call to a method
                 List<String> auxExpressions = new ArrayList<>();
 
-                String methodCall = this.handleMethodCall(rhs, 0, auxExpressions, 0, "");
+                String methodCall = this.handleMethodCall(rhs, 0, auxExpressions, "");
 
                 for (String aux : auxExpressions)
                     builder.insert(0, aux + ";\n");
@@ -290,7 +290,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                     List<String> auxExpressions = new ArrayList<>();
 
                     StringBuilder methodBuilder = new StringBuilder();
-                    methodBuilder.append(this.handleMethodCall(child, 0, auxExpressions, 1, indent));
+                    methodBuilder.append(this.handleMethodCall(child, 0, auxExpressions, indent));
 
                     String aux = "";
                     for (int i = 0; i < auxExpressions.size(); i++) {
@@ -329,9 +329,9 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                 String t = "", ident = "";
                 if (level > 1) {
-                    ident = "t" + this.counter + Utils.getOllirExpReturnType(expr.getKind());
+                    ident = "t" + this.idCounter + Utils.getOllirExpReturnType(expr.getKind());
                     t = ident + " = ";
-                    this.counter++;
+                    this.idCounter++;
                 }
 
                 expressions.add(t + Utils.getOllirOp(expr.getKind()) + " " + innerNegation); // TODO reverse expression
@@ -347,9 +347,9 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                 String t = "", ident = "";
                 if (level > 1) {
-                    ident = "t" + this.counter + Utils.getOllirExpReturnType(expr.getKind());
+                    ident = "t" + this.idCounter + Utils.getOllirExpReturnType(expr.getKind());
                     t = ident + " = ";
-                    this.counter++;
+                    this.idCounter++;
                 }
 
                 expressions.add(t + lhsExpr + " " + Utils.getOllirOp(expr.getKind()) + " " + rhsExpr);
@@ -369,11 +369,11 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             MethodSymbols methodSymbols = st.getMethod(expr.get("name"));
             methodSymbols.getReturnType();
 
-            String varName = "t" + this.counter + "." + Utils.getOllirType(methodSymbols.getReturnType());
-            this.counter++;
+            String varName = "t" + this.idCounter + "." + Utils.getOllirType(methodSymbols.getReturnType());
+            this.idCounter++;
 
             List<String> auxExpr = new ArrayList<>();
-            expressions.add(varName + " =.i32 " +  this.handleMethodCall(expr, 0, auxExpr, 1, ""));
+            expressions.add(varName + " =.i32 " +  this.handleMethodCall(expr, 0, auxExpr,""));
 
             for (int i = 0; i < auxExpr.size(); i++) {
                 expressions.add(auxExpr.get(i));
@@ -384,8 +384,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         // Case the terminal is an Array
         else if (expr.getKind().equals("Array")) {
 
-            String varName = "t" + this.counter + Utils.getOllirExpReturnType(expr.getKind());
-            this.counter++;
+            String varName = "t" + this.idCounter + Utils.getOllirExpReturnType(expr.getKind());
+            this.idCounter++;
             expressions.add(varName + " =.i32 " +  this.resolveVariableIdentifier(expr));
             return varName;
         }
@@ -395,7 +395,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         }
     }
 
-    private String handleMethodCall(JmmNode methodCall, int level, List<String> auxExpressions, int counter, String indent) {
+    private String handleMethodCall(JmmNode methodCall, int level, List<String> auxExpressions, String indent) {
 
         JmmNode firstChild = null;
         JmmNode arguments = null;
@@ -419,9 +419,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                 String args = this.handleMethodParameters(arguments, auxExpressions);
 
-                System.out.println("PARAMETERS: " + args);
-                System.out.println("EXPR: " + auxExpressions);
-
                 String call = indent + "invokevirtual(this, " + methodCall.get("name") + ", ";
 
                 MethodSymbols methodSymbols = st.getMethod(methodCall.get("name"));
@@ -434,9 +431,9 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                 builder.append(indent + "invokespecial").append(firstChild.get("name"));
                 String name = firstChild.get("name");
-                String auxName = "aux" + counter + "." + name;
+                String auxName = "aux" + this.idCounter + "." + name;
+                this.idCounter++;
                 String ident = auxName + " :=." + name + " new(" + name + ")." + name;
-                counter++;
                 auxExpressions.add(ident);
                 auxExpressions.add(indent + "invokespecial(" + auxName + ", <init>).V");
 
@@ -447,24 +444,40 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 if (level > 0) {
                     MethodSymbols methodSymbols = st.getMethod(methodCall.get("name"));
 
-                    String id = "aux" + counter + "." + Utils.getOllirType(methodSymbols.getReturnType());
+                    String id = "aux" + this.idCounter + "." + Utils.getOllirType(methodSymbols.getReturnType());
+                    this.idCounter++;
 
                     String call = id + " =." + Utils.getOllirType(methodSymbols.getReturnType()) + " invokevirtual("+ auxName + ", " +  methodCall.get("name") + ", " + args + ")." + Utils.getOllirType(methodSymbols.getReturnType());
 
                     auxExpressions.add(indent + call);
-                    counter++;
                     return id;
                 }
             }
         }
         else if (methodCall.getKind().equals("New")) {
             String name = methodCall.get("name");
-            String varName = "aux" + counter + "." + name;
+            String varName = "aux" + this.idCounter + "." + name;
             String ident = varName + " :=." + name + " new(" + name + ")." + name;
-            counter++;
+            this.idCounter++;
             auxExpressions.add(indent + ident);
             auxExpressions.add(indent + "invokespecial(" + varName + ", <init>).V");
             builder.append(varName);
+        }
+        else if (methodCall.getKind().equals("Ident")) {
+            String name = methodCall.get("name");
+            String varName = "aux" + this.idCounter + "." + name;
+            String ident = varName + " :=." + name + " new(" + name + ")." + name;
+            this.idCounter++;
+            auxExpressions.add(indent + ident);
+            auxExpressions.add(indent + "invokespecial(" + varName + ", <init>).V");
+            builder.append(varName);
+
+            String args = this.handleMethodParameters(arguments, auxExpressions);
+
+            builder.append(indent + "invokestatic(");
+            level++;
+
+            builder.append(firstChild.get("name") + ", " + methodCall.get("name") + ", " + args + ").V");
         }
         else if (methodCall.getKind().equals("Literal")) {
             String value = methodCall.get("value");
@@ -483,7 +496,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             String param = "";
             if (child.getKind().equals("MethodCall") || child.getKind().equals("New")) {
-                param = this.handleMethodCall(child, 0, expr, 0, "");
+                param = this.handleMethodCall(child, 0, expr, "");
             }
             else
                 param = this.dealWithExpression(child, 1, expr, "");
