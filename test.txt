@@ -2,16 +2,16 @@ import io;
 
 class Fac {
 
-    int a;
+    int[] a;
     public int ComputeFac(int num){
         int num_aux ;
 
-        if (num < 1)
+        if (num < a.length)
             num_aux = 2;
         else
 
-            num_aux = num * (this.ComputeFac(num-1));
-
+            num_aux = a.length;
+        a[0] = 1;
         return num_aux;
     }
     public static void main(String[]args){

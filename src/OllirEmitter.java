@@ -13,7 +13,7 @@ import pt.up.fe.specs.util.SpecsCheck;
 public class OllirEmitter extends AJmmVisitor<String, String> {
 
     private SymbolsTable st;
-    private int idCounter = 0;
+    private int idCounter = 1;
 
     public OllirEmitter(SymbolsTable st) {
         this.st = st;
@@ -72,6 +72,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
      * @return
      */
     private String dealWithMethod(JmmNode methodNode, String indent) {
+
+        this.idCounter = 1;
 
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -140,7 +142,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         JmmNode rhs = equalNode.getChildren().get(1);
 
         // For the variable that stores the value
-        assign.append(indent + this.resolveVariableIdentifier(lhs));
+        assign.append(indent + this.resolveVariableIdentifier(lhs, null));
 
         String assignmentType = ".i32 "; // special case where destination is array access
         if (!lhs.getKind().equals("Array")) {
@@ -164,16 +166,17 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     private String handleRhsAssign(JmmNode rhs, StringBuilder builder, String indent) {
         StringBuilder rhsBuilder = new StringBuilder();
 
+        List<String> auxExpressions = new ArrayList<>();
         switch (rhs.getKind()) {
             case "Literal":
                 rhsBuilder.append(Utils.getOllirLiteral(rhs));
                 break;
             case "Ident":
             case "Array":
-                rhsBuilder.append(this.resolveVariableIdentifier(rhs));
+                rhsBuilder.append(this.resolveVariableIdentifier(rhs, auxExpressions));
                 break;
             case "MethodCall": // In the case of a call to a method
-                List<String> auxExpressions = new ArrayList<>();
+                
 
                 String methodCall = this.handleMethodCall(rhs, 0, auxExpressions, "");
 
@@ -194,11 +197,19 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 rhsBuilder.append(ident).append(invoke);
                 break;
 
+            case "Length":
+                String auxId = "t" + this.idCounter++ + ".i32";
+                String lengthExpr = auxId + " :=.i32 arraylength("+ this.resolveVariableIdentifier(rhs.getChildren().get(0), auxExpressions) + ").i32;\n";
+                builder.insert(0, lengthExpr);
+                rhsBuilder.append(auxId);
+
+                break;
+
             default:
                 // In the case it is an expression
                 if (Utils.isOperator(rhs)) {
                     List<String> expr = new ArrayList<>();
-                    String rhsExpr =  this.dealWithExpression(rhs, 0, expr, "");
+                    String rhsExpr =  this.dealWithExpression(rhs, 0, expr, indent);
 
                     rhsExpr = this.insertAuxiliarExpressions(builder, expr, true, indent);
 
@@ -222,13 +233,15 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         String auxExp = this.insertAuxiliarExpressions(ifBuilder, expr, true, indent);
 
-        ifBuilder.append(auxExp).append(") got to else;\n");
-
-        ifBuilder.append(this.dealWithStatementBody(ifNode.getChildren().get(1), indent + "\t"));
+        ifBuilder.append(auxExp).append(") got to Then;\n");
 
         JmmNode elseNode = Utils.getChildOfKind(ifNode, "Else");
-        ifBuilder.append(indent + "else:\n");
         ifBuilder.append(this.dealWithStatementBody(elseNode, indent + "\t"));
+
+        ifBuilder.append(indent + "Then:\n");
+        ifBuilder.append(this.dealWithStatementBody(ifNode.getChildren().get(1), indent + "\t"));
+        
+        ifBuilder.append(indent + "endif:\n");
         // TODO endif
         return ifBuilder.toString();
     }
@@ -386,12 +399,12 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             String varName = "t" + this.idCounter + Utils.getOllirExpReturnType(expr.getKind());
             this.idCounter++;
-            expressions.add(varName + " =.i32 " +  this.resolveVariableIdentifier(expr));
+            expressions.add(varName + " =.i32 " +  this.resolveVariableIdentifier(expr, expressions));
             return varName;
         }
         // Case the terminal is an Identifier
         else {
-            return resolveVariableIdentifier(expr);
+            return resolveVariableIdentifier(expr, expressions);
         }
     }
 
@@ -528,7 +541,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
      * @param node - variable node
      * @return ollir version of variable
      */
-    private String resolveVariableIdentifier(JmmNode node) {
+    private String resolveVariableIdentifier(JmmNode node, List<String> auxExpr) {
         StringBuilder identBuilder = new StringBuilder();
         Symbol identSymbol = null;
         boolean isArrayAccess = node.getKind().equals("Array");
@@ -536,8 +549,17 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             JmmNode arrayIdent = node.getChildren().get(0);
             identSymbol = this.st.getVariableSymbol(arrayIdent);
         }
-        else // node is identifier
+        else { // node is identifier
+            if (auxExpr != null && node.getKind().equals("Length")) {
+                String auxId = "t" + this.idCounter++ + ".i32";
+                String lengthExpr = auxId + " :=.i32 arraylength("+ this.resolveVariableIdentifier(node.getChildren().get(0), auxExpr) + ").i32";
+                auxExpr.add(lengthExpr);
+
+                return auxId;
+            }
+
             identSymbol = this.st.getVariableSymbol(node);
+        }
         // TODO handle getfield calls here with auxiliary variable
 
         // checking if variable is a parameter variable
@@ -554,7 +576,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             if (accessNode.getKind().equals("Literal")) // A[0]
                 innerAccess += accessNode.get("value") + ".i32";
             else // array access is an identifier A[b]
-                innerAccess += resolveVariableIdentifier(accessNode);
+                innerAccess += resolveVariableIdentifier(accessNode, auxExpr);
             innerAccess += "].i32";
 
             identBuilder.append(innerAccess);
