@@ -20,18 +20,27 @@ public class CallInstructionHandler implements IntructionHandler{
         Operand classOperand = (Operand) callInstruction.getFirstArg();
         String className = classOperand.getName();
 
-        LiteralElement methodLiteral = (LiteralElement) callInstruction.getSecondArg();
-        String methodName = methodLiteral.getLiteral().substring(1, methodLiteral.getLiteral().length()-1);
 
         if(className.equals("this"))
             className = "java/lang/Object";
+        if (callInstruction.getSecondArg()!= null) {
 
-        string.append("\t"+ OllirAccesser.getCallInvocation(callInstruction) + " " + className+"/" +methodName+ "(");
+            LiteralElement methodLiteral = (LiteralElement) callInstruction.getSecondArg();
+            String methodName = methodLiteral.getLiteral().substring(1, methodLiteral.getLiteral().length() - 1);
+            string.append("\t"+ OllirAccesser.getCallInvocation(callInstruction) + " " + className+"/" +methodName+ "(");
+        }
+
 
         for(Element element: callInstruction.getListOfOperands()){
-            Operand operand1 = (Operand) element;
+            if (element.isLiteral()){
+                string.append("literal");
 
-            string.append(JasminUtils.parseType(operand1.getType().getTypeOfElement()));
+            }
+            else {
+                Operand operand1 = (Operand) element;
+
+                string.append(JasminUtils.parseType(operand1.getType().getTypeOfElement()));
+            }
         }
 
 

@@ -234,63 +234,7 @@ public class BackendStage implements JasminBackend {
 
 
 
-    public String parseOperationType(OperationType type){
-        switch (type){
 
-            /**
-             * COND BRANCH OPERATIONS
-             */
-
-            case LTH:
-            case LTHI32:
-                return "lt";
-            case GTH:
-            case GTHI32:
-                return "gt";
-            case EQ:
-            case EQI32:
-                return "eq";
-            case NEQ:
-            case NEQI32:
-                return "ne";
-            case LTE:
-            case LTEI32:
-                return "le";
-            case GTE:
-            case GTEI32:
-               return "ge";
-
-
-
-            /*case MUL:
-
-            case DIV:
-                        SHR,
-                        SHL,
-                        SHRR,
-                        XOR,
-                        AND,
-                        OR,
-
-                        ADDI32,
-                        SUBI32,
-                        MULI32,
-                        DIVI32,
-                        SHRI32,
-                        SHLI32,
-                        SHRRI32,
-                        XORI32,
-
-
-
-                        ANDB,  // boolean
-                        ORB, // boolean
-                        NOTB, // boolean
-                        case NOT:*/
-        }
-        return null;
-
-    }
 
 
 

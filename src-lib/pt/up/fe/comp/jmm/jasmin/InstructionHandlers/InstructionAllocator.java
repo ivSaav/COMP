@@ -22,7 +22,7 @@ public class InstructionAllocator {
                 return new PutFieldInstructionHandler(instruction).handleInstruction();
             case ASSIGN:
                 //TODO
-                return new AssignInstructionHandler(instruction).handleInstruction();
+                return new AssignInstructionHandler(instruction, method).handleInstruction();
             case GOTO:
                 //TODO
                 return new GoToInstructionHandler(instruction).handleInstruction();
