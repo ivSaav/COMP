@@ -133,16 +133,17 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
      * @return the identifier of the created expression and the created expression
      */
     private String[] handleGetFieldCall(JmmNode varNode, List<String> auxExpressions) {
-        Symbol varSymbol = null;// st.getGlobalVariable(varNode.get("name"));
-        String varType = ""; // Utils.getOllirType(varSymbol.getType());
+        String varType = "";
 
         String varName = "";
-        if (varNode.getKind().equals("Array")) //array access
-            varName = this.handleArrayAccess(varNode);
-        else
+        if (varNode.getKind().equals("Array")) {//array access
+            varName = "a.array.i32";//this.handleArrayAccess(varNode);
+            varType = "array.i32";
+        }
+        else {
             varName = this.resolveVariableIdentifier(varNode, false);
-
-        varType = varName.substring(varName.indexOf(".")+1);
+            varType = varName.substring(varName.indexOf(".")+1);
+        }
 
         String auxId = "t" + this.idCounter++ + "." + varType;
 
@@ -218,6 +219,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             case "Ident":
             case "Array":
                 rhsBuilder.append(this.handleVariable(rhs, auxExpressions));
+                this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
                 break;
             case "MethodCall": // In the case of a call to a method
                 String methodCall = this.handleMethodCall(rhs, 0, auxExpressions, "");
@@ -429,7 +431,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             // Get the return type from the method
             MethodSymbols methodSymbols = st.getMethod(expr.get("name"));
-            methodSymbols.getReturnType();
 
             String varName = "t" + this.idCounter + "." + Utils.getOllirType(methodSymbols.getReturnType());
             this.idCounter++;
@@ -437,9 +438,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             List<String> auxExpr = new ArrayList<>();
             expressions.add(varName + " :=.i32 " +  this.handleMethodCall(expr, 0, auxExpr,""));
 
-            for (int i = 0; i < auxExpr.size(); i++) {
-                expressions.add(auxExpr.get(i));
-            }
+            expressions.addAll(auxExpr);
 
             return varName;
         }
@@ -448,7 +447,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             String varName = "t" + this.idCounter + Utils.getOllirExpReturnType(expr.getKind());
             this.idCounter++;
-            expressions.add(varName + " :=.i32 " +  this.handleArrayAccess(expr));
+            expressions.add(varName + " :=.i32 " +  this.handleArrayAccess(expr, expressions));
             return varName;
         }
         // Case the terminal is an Identifier
@@ -566,11 +565,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 param = this.dealWithExpression(child, 1, expr, "");
 
             if (!expr.isEmpty()) {
-
-                for (int i = 0; i < expr.size(); i++) {
-                    String aux = expr.get(i);
-                    auxExpressions.add(aux);
-                }
+                auxExpressions.addAll(expr);
             }
             paramsBuilder.append(param).append(", "); // TODO get last
         }
@@ -590,16 +585,19 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         switch (kind) {
             case "Array":
-                String arrayIdent =  this.handleArrayAccess(varNode);
+                String arrayIdent =  this.handleArrayAccess(varNode, auxExpr);
                 JmmNode identNode = varNode.getChildren().get(0);
                 if (st.isGlobalVar(identNode)) {
+                    System.out.println("HEEEEEEEERRRRRRRRREEEEEEEE");
                     String[] res = this.handleGetFieldCall(varNode, auxExpr);
-                    auxExpr.add(res[1]);
+
+                    auxExpr.add(res[1]); // t3.array.i32 :=.array.i32 getfield(this, a.array.i32).array.i32;
+
+                    String auxVarName = res[0];
+
                     return res[0];
                 }
-                else {
-                    return arrayIdent;
-                }
+                return arrayIdent; // array is not a class field
             case "Ident":
                 String varIdent = this.resolveVariableIdentifier(varNode, false);
                 if (st.isGlobalVar(varNode)) {
@@ -614,15 +612,19 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         return "";
     }
 
-    private String handleArrayAccess(JmmNode arrayNode) {
+    private String handleArrayAccess(JmmNode arrayNode, List<String> auxExpressions) {
         JmmNode arrayIdent = arrayNode.getChildren().get(0);
 
         String arrayName = resolveVariableIdentifier(arrayIdent, true);
         String innerAccess = "[";
         JmmNode accessNode = arrayNode.getChildren().get(1);
 
-        if (accessNode.getKind().equals("Literal")) // A[0]
-            innerAccess += accessNode.get("value") + ".i32";
+        if (accessNode.getKind().equals("Literal")) {// A[0]
+            String auxVar = "t" + this.idCounter++ + ".i32";
+            String auxExpr = String.format("%s :=.i32 %s.i32", auxVar, accessNode.get("value"));
+            auxExpressions.add(auxExpr);
+            innerAccess += auxVar;
+        }
         else // array access is an identifier A[b]
             innerAccess += resolveVariableIdentifier(accessNode, false);
         innerAccess += "].i32";
@@ -673,11 +675,12 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         String lastExpr = "";
         if (!auxExpressions.isEmpty()) {
 
-            System.out.println("AUXXXXXXX" + auxExpressions);
             StringBuilder auxiliary = new StringBuilder();
-            for (int i = 0; i < auxExpressions.size() -1 ; i++) {
-                auxiliary.append(indent).append(auxExpressions.get(i)).append(";\n");
 
+            int j = auxExpressions.size() > 1 ? auxExpressions.size()-1 : 1;
+
+            for (int i = 0; i < j ; i++) {
+                auxiliary.append(indent).append(auxExpressions.get(i)).append(";\n");
             }
 
             builder.insert(0, auxiliary);

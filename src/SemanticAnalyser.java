@@ -547,6 +547,9 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                 if (methodType != null)
                     types.add(methodType);
             }
+            else if (children.getKind().equals("Array")) { // array access
+                types.add(new Type("int", false));
+            }
 
         }
     }
