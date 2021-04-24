@@ -1,13 +1,15 @@
 import io;
 class Fac {
     int a;
-    int[] b;
-    public int compFac(int num){
+    public int compFac(int[] num){
         int num_aux;
-        if (num < a)
-            a = b[0];
+        int[] b;
+        int i;
+        if (num[i] < a)
+            a = b[i];
         else
-            num_aux = num * (this.compFac(num-1));
+            num_aux = num[i];
+        a = a + b[i] + 1;
         return num_aux;
     }
 
