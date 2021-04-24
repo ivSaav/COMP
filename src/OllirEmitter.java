@@ -134,7 +134,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
      */
     private String[] handleGetFieldCall(JmmNode varNode, List<String> auxExpressions) {
         String varType = "";
-
         String varName = "";
         if (varNode.getKind().equals("Array")) {//array access
             varName = "a.array.i32";//this.handleArrayAccess(varNode);
@@ -154,21 +153,29 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
     /**
      * Called when the value of a class field variable is needed
-     * @param varNode
+     * @param destNode
      * @return the identifier of the created expression and the created expression
      */
-    private String[] handlePutFieldCall(JmmNode varNode, String rhsVar) {
-        Symbol varSymbol = st.getGlobalVariable(varNode.get("name"));
-        String varType = Utils.getOllirType(varSymbol.getType());
+    private String handlePutFieldCall(JmmNode destNode, JmmNode rhsExpr, String indent) {
+        String varType = "", varName = "";
 
-        String auxId = "t" + this.idCounter++ + "." + varType;
+        if (destNode.getKind().equals("Array")) {
+            varName = "a.array.i32";
+        }
+        else {
+            varName = this.resolveVariableIdentifier(destNode, false);
+            varType = varName.substring(varName.indexOf(".")+1);
+        }
+        StringBuilder builder = new StringBuilder();
 
-        String getField = String.format("%s :=.%s putfield(this, %s).%s",
-                auxId, varType, rhsVar, varType);
-        return new String[] {auxId, getField};
+        String rhsVarName = this.handleRhsAssign(rhsExpr, builder, indent, false);
+        String putField = String.format(indent + "putfield(this, %s, %s).V;\n",
+                varName, rhsVarName);
+        builder.append(putField);
+        return builder.toString();
     }
 
-    /**a
+    /**
      * Pass the content of when an assignment is made to Ollir's notation
      * @param equalNode node to visit referring an assignment
      * @param indent
@@ -181,6 +188,10 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         JmmNode lhs = equalNode.getChildren().get(0);
         JmmNode rhs = equalNode.getChildren().get(1);
+
+        if (st.isGlobalVar(lhs)) {
+            return this.handlePutFieldCall(lhs, rhs, indent);
+        }
 
         // For the variable that stores the value
         assign.append(indent + this.resolveVariableIdentifier(lhs, false));
@@ -197,7 +208,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         assign.append(" :=").append(assignmentType);
 
         // For the value to be saved
-        assign.append(this.handleRhsAssign(rhs, assign, indent)).append(";\n");
+        assign.append(this.handleRhsAssign(rhs, assign, indent, true)).append(";\n");
 
         return assign.toString();
     }
@@ -208,7 +219,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
      * @param builder an object to add content with Ollir's notation
      * @return
      */
-    private String handleRhsAssign(JmmNode rhs, StringBuilder builder, String indent) {
+    private String handleRhsAssign(JmmNode rhs, StringBuilder builder, String indent, boolean allowComplexExpr) {
         StringBuilder rhsBuilder = new StringBuilder();
 
         List<String> auxExpressions = new ArrayList<>();
@@ -257,9 +268,17 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 // In the case it is an expression
                 if (Utils.isOperator(rhs)) {
                     List<String> expr = new ArrayList<>();
-                    String rhsExpr =  this.dealWithExpression(rhs, 0, expr, indent);
 
-                    rhsExpr = this.insertAuxiliarExpressions(builder, expr, true, indent);
+                    // level determines the kind o expression which is created
+                    // level 0 --> a + b
+                    // level > 0 ---> t1 = a + b
+                    int level = allowComplexExpr ? 0 : 1;
+                    String rhsExpr =  this.dealWithExpression(rhs, level, expr, indent);
+
+                    if (allowComplexExpr)
+                        rhsExpr = this.insertAuxiliarExpressions(builder, expr, true, indent);
+                    else
+                        this.insertAuxiliarExpressions(builder, expr, false, indent);
 
                     rhsBuilder.append(rhsExpr);
                 }
@@ -374,7 +393,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
      * @return
      */
     private String dealWithExpression(JmmNode expr, int level, List<String> expressions, String indent) {
-
+        System.out.println("CENASASE " + expr + level);
 
         if (Utils.isOperator(expr)) {
 
@@ -408,6 +427,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                 String t = "", ident = "";
                 if (level > 1) {
+                    System.out.println("AQUIIII");
                     String type = Utils.getOllirExpReturnType(expr.getKind());
                     ident = "t" + this.idCounter + type;
                     t = ident + " :=" + type + " ";

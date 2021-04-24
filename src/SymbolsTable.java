@@ -143,7 +143,15 @@ public class SymbolsTable implements SymbolTable {
         return this.fields.containsKey(varIdent);
     }
     public boolean isGlobalVar(JmmNode varNode) {
-        return this.fields.containsKey(varNode.get("name"));
+        String varName = "";
+        if (varNode.getKind().equals("Array")) {
+            JmmNode arrayIdent = varNode.getChildren().get(0);
+            varName = arrayIdent.get("name");
+        }
+        else
+            varName = varNode.get("name");
+
+        return this.fields.containsKey(varName);
     }
 
     @Override
