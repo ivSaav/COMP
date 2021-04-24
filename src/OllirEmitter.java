@@ -181,6 +181,13 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         return builder.toString();
     }
 
+    private String createLengthExpression(JmmNode lengthNode, List<String> auxExpr) {
+        String auxId = "t" + this.idCounter++ + ".i32";
+        String lengthExpr = auxId + " :=.i32 arraylength("+ this.resolveVariableIdentifier(lengthNode.getChildren().get(0), false) + ").i32";
+        auxExpr.add(lengthExpr);
+        return auxId;
+    }
+
     /**
      * Pass the content of when an assignment is made to Ollir's notation
      * @param equalNode node to visit referring an assignment
@@ -256,10 +263,9 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 break;
 
             case "Length":
-//                String auxId = "t" + this.idCounter++ + ".i32";
-//                String lengthExpr = auxId + " :=.i32 arraylength("+ this.resolveVariableIdentifier(rhs.getChildren().get(0), auxExpressions) + ").i32;\n";
-//                builder.insert(0, indent + lengthExpr);
-//                rhsBuilder.append(auxId);
+                String lengthIdent = this.createLengthExpression(rhs, auxExpressions);
+                this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
+                rhsBuilder.append(lengthIdent);
                 break;
 
             case "NewArray":
@@ -322,7 +328,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         JmmNode elseNode = Utils.getChildOfKind(ifNode, "Else");
         ifBuilder.append(this.dealWithStatementBody(elseNode, indent + "\t"));
-
+        ifBuilder.append(indent + "\tgoto endif;\n");
         ifBuilder.append(indent + "Then:\n");
         ifBuilder.append(this.dealWithStatementBody(ifNode.getChildren().get(1), indent + "\t"));
         
@@ -411,7 +417,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
      * @return
      */
     private String dealWithExpression(JmmNode expr, int level, List<String> expressions, String indent) {
-        System.out.println("CENASASE " + expr + level);
 
         if (Utils.isOperator(expr)) {
 
@@ -475,6 +480,9 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             expressions.addAll(auxExpr);
             expressions.add(methodCall);
             return varName;
+        }
+        else if (expr.getKind().equals("Length")) {
+            return this.createLengthExpression(expr, expressions);
         }
         // Case the terminal is an Identifier
         else {
