@@ -450,7 +450,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                 String t = "", ident = "";
                 if (level > 1) {
-                    System.out.println("AQUIIII");
                     String type = Utils.getOllirExpReturnType(expr.getKind());
                     ident = "t" + this.idCounter + type;
                     t = ident + " :=" + type + " ";
@@ -723,7 +722,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             StringBuilder auxiliary = new StringBuilder();
 
             int j = removeAssign ? auxExpressions.size()-1 : auxExpressions.size();
-            System.out.println("AUUUUUUUUXXXXXXXXX " + auxExpressions + j);
 
             for (int i = 0; i < j ; i++) {
                 auxiliary.append(indent).append(auxExpressions.get(i)).append(";\n");
