@@ -157,16 +157,22 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
      * @return the identifier of the created expression and the created expression
      */
     private String handlePutFieldCall(JmmNode destNode, JmmNode rhsExpr, String indent) {
-        String varType = "", varName = "";
+        String varName = "";
+        StringBuilder builder = new StringBuilder();
 
+        // TODO not sure if it's supposed to be like this
+        // save value in an array class field
+        // getfield --> array
+        // t --> array access
+        // putfield(this, t, value)
         if (destNode.getKind().equals("Array")) {
-            varName = "a.array.i32";
+            List<String> auxExpr = new ArrayList<>();
+            varName = this.handleVariable(destNode, auxExpr);
+            this.insertAuxiliarExpressions(builder, auxExpr, false, indent);
         }
         else {
             varName = this.resolveVariableIdentifier(destNode, false);
-            varType = varName.substring(varName.indexOf(".")+1);
         }
-        StringBuilder builder = new StringBuilder();
 
         String rhsVarName = this.handleRhsAssign(rhsExpr, builder, indent, false);
         String putField = String.format(indent + "putfield(this, %s, %s).V;\n",
@@ -257,10 +263,22 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 break;
 
             case "NewArray":
-                String id = "new(array, " + this.handleMethodParameters(rhs, auxExpressions) + ").array.i32";
+                String id = "";
+                String varName = "";
+
+                String newInit = "new(array, " + this.handleMethodParameters(rhs, auxExpressions) + ").array.i32";
+                if (!allowComplexExpr) { // create auxiliary variable
+                    varName = "t" + this.idCounter++ + ".array.i32";
+                    id = varName;
+                    auxExpressions.add(varName + ":=.array.i32 " + newInit);
+                }
+                else // put whole expression
+                    id = newInit;
+
                 for (int i = 0; i < auxExpressions.size(); i++) {
                     builder.insert(0, indent + auxExpressions.get(i) + ";\n");
                 }
+
                 rhsBuilder.append(id);
                 break;
 

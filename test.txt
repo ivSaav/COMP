@@ -1,12 +1,12 @@
 import io;
 class Fac {
-    int a;
+    int[] a;
     public int compFac(int num){
         int num_aux;
         int i;
-        a = num +1 ;
-        if (num < a)
-            i = a;
+        a = new int[10];
+        if (num < a[0])
+            a[0] = 1 + i;
         else
             num_aux = num;
 
