@@ -189,6 +189,10 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             Symbol lhsSymbol = this.st.getVariableSymbol(lhs);
             assignmentType = "." +  Utils.getOllirType(lhsSymbol.getType()) + " "; // if not array access, then fetch type
         }
+
+        if(rhs.getKind().equals("NewArray")) {
+            assignmentType = ".array.i32 ";
+        }
         assign.append(" :=").append(assignmentType);
 
         // For the value to be saved
@@ -235,12 +239,20 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 break;
 
             case "Length":
-                // TODO
 //                String auxId = "t" + this.idCounter++ + ".i32";
 //                String lengthExpr = auxId + " :=.i32 arraylength("+ this.resolveVariableIdentifier(rhs.getChildren().get(0), auxExpressions) + ").i32;\n";
-//                builder.insert(0, lengthExpr);
+//                builder.insert(0, indent + lengthExpr);
 //                rhsBuilder.append(auxId);
                 break;
+
+            case "NewArray":
+                String id = "new(array, " + this.handleMethodParameters(rhs, auxExpressions) + ").array.i32";
+                for (int i = 0; i < auxExpressions.size(); i++) {
+                    builder.insert(0, indent + auxExpressions.get(i) + ";\n");
+                }
+                rhsBuilder.append(id);
+                break;
+
             default:
                 // In the case it is an expression
                 if (Utils.isOperator(rhs)) {
@@ -572,55 +584,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         return paramsBuilder.toString();
 
     }
-
-//    /**
-//     * Receives a variable identifier Node
-//     * Determines if it is an array access an array or an identifier
-//     * Checks if variable is part of a method's parameters
-//     * @param node - variable node
-//     * @return ollir version of variable
-//     */
-//    private String resolveVariableIdentifier(JmmNode node, List<String> auxExpr) {
-//        StringBuilder identBuilder = new StringBuilder();
-//        Symbol identSymbol = null;
-//        boolean isArrayAccess = node.getKind().equals("Array");
-//        if (isArrayAccess) {
-//            JmmNode arrayIdent = node.getChildren().get(0);
-//            identSymbol = this.st.getVariableSymbol(arrayIdent);
-//        }
-//        else { // node is identifier
-//            if (auxExpr != null && node.getKind().equals("Length")) { // array.length
-//                String auxId = "t" + this.idCounter++ + ".i32";
-//                String lengthExpr = auxId + " :=.i32 arraylength("+ this.resolveVariableIdentifier(node.getChildren().get(0), auxExpr) + ").i32";
-//                auxExpr.add(lengthExpr);
-//                return auxId;
-//            }
-//
-//            identSymbol = this.st.getVariableSymbol(node);
-//        }
-//        // TODO handle getfield calls here with auxiliary variable
-//
-//        // checking if variable is a parameter variable
-//        int paramIndex = this.getArgVariableIndex(node, identSymbol);
-//        if (paramIndex != -1)
-//            identBuilder.append("$").append(paramIndex).append("."); // assignment with parameter variable
-//
-//        identBuilder.append(Utils.getOllirVar(identSymbol, isArrayAccess)); // append ollir version of variable
-//
-//        if (isArrayAccess) {
-//            String innerAccess = "[";
-//            JmmNode accessNode = node.getChildren().get(1);
-//
-//            if (accessNode.getKind().equals("Literal")) // A[0]
-//                innerAccess += accessNode.get("value") + ".i32";
-//            else // array access is an identifier A[b]
-//                innerAccess += resolveVariableIdentifier(accessNode, auxExpr);
-//            innerAccess += "].i32";
-//
-//            identBuilder.append(innerAccess);
-//        }
-//        return identBuilder.toString();
-//    }
 
     private String handleVariable(JmmNode varNode, List<String> auxExpr) {
         String kind = varNode.getKind();
