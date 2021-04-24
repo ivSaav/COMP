@@ -220,14 +220,12 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             case "Array":
                 rhsBuilder.append(this.handleVariable(rhs, auxExpressions));
                 this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
+
                 break;
             case "MethodCall": // In the case of a call to a method
                 String methodCall = this.handleMethodCall(rhs, 0, auxExpressions, "");
-
-                for (String aux : auxExpressions)
-                    builder.insert(0, aux + ";\n");
-
                 rhsBuilder.append(methodCall);
+                this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
                 break;
             case "New":
                 String ident = "new(" + rhs.get("name") + ")." + rhs.get("name") + ";\n";
@@ -432,22 +430,12 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             // Get the return type from the method
             MethodSymbols methodSymbols = st.getMethod(expr.get("name"));
 
-            String varName = "t" + this.idCounter + "." + Utils.getOllirType(methodSymbols.getReturnType());
-            this.idCounter++;
+            String varName = "t" + this.idCounter++ + "." + Utils.getOllirType(methodSymbols.getReturnType());
 
             List<String> auxExpr = new ArrayList<>();
-            expressions.add(varName + " :=.i32 " +  this.handleMethodCall(expr, 0, auxExpr,""));
-
+            String methodCall = varName + " :=.i32 " +  this.handleMethodCall(expr, 0, auxExpr,"");
             expressions.addAll(auxExpr);
-
-            return varName;
-        }
-        // Case the terminal is an Array
-        else if (expr.getKind().equals("Array")) {
-
-            String varName = "t" + this.idCounter + Utils.getOllirExpReturnType(expr.getKind());
-            this.idCounter++;
-            expressions.add(varName + " :=.i32 " +  this.handleArrayAccess(expr, expressions));
+            expressions.add(methodCall);
             return varName;
         }
         // Case the terminal is an Identifier
@@ -585,19 +573,25 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         switch (kind) {
             case "Array":
-                String arrayIdent =  this.handleArrayAccess(varNode, auxExpr);
                 JmmNode identNode = varNode.getChildren().get(0);
                 if (st.isGlobalVar(identNode)) {
-                    System.out.println("HEEEEEEEERRRRRRRRREEEEEEEE");
+                    String auxVarName = "t" + this.idCounter; // t3
                     String[] res = this.handleGetFieldCall(varNode, auxExpr);
 
                     auxExpr.add(res[1]); // t3.array.i32 :=.array.i32 getfield(this, a.array.i32).array.i32;
 
-                    String auxVarName = res[0];
+                    String newVarName = "t" + this.idCounter++ + ".i32"; // t4.32
 
-                    return res[0];
+                    JmmNode accessNode = varNode.getChildren().get(1);
+                    // handle inner access of array
+                    // if literal creates a new auxiliary expression
+                    String inner = this.handleInnerAcess(accessNode, auxExpr);
+                    String arrayAccessExpr = String.format("%s :=.i32 %s%s", newVarName, auxVarName, inner); // t4.i32 :=.i32 t3[i.i32].i32.i32;
+                    auxExpr.add(arrayAccessExpr);
+
+                    return newVarName;
                 }
-                return arrayIdent; // array is not a class field
+                return this.handleArrayAccess(varNode, auxExpr); // array is not a class field
             case "Ident":
                 String varIdent = this.resolveVariableIdentifier(varNode, false);
                 if (st.isGlobalVar(varNode)) {
@@ -616,9 +610,15 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         JmmNode arrayIdent = arrayNode.getChildren().get(0);
 
         String arrayName = resolveVariableIdentifier(arrayIdent, true);
-        String innerAccess = "[";
-        JmmNode accessNode = arrayNode.getChildren().get(1);
 
+        JmmNode accessNode = arrayNode.getChildren().get(1);
+        String innerAccess = this.handleInnerAcess(accessNode, auxExpressions);
+
+        return arrayName + innerAccess;
+    }
+
+    private String handleInnerAcess(JmmNode accessNode, List<String> auxExpressions) {
+        String innerAccess = "[";
         if (accessNode.getKind().equals("Literal")) {// A[0]
             String auxVar = "t" + this.idCounter++ + ".i32";
             String auxExpr = String.format("%s :=.i32 %s.i32", auxVar, accessNode.get("value"));
@@ -628,8 +628,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         else // array access is an identifier A[b]
             innerAccess += resolveVariableIdentifier(accessNode, false);
         innerAccess += "].i32";
-
-        return arrayName + innerAccess;
+        return innerAccess;
     }
 
     /**
@@ -677,7 +676,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             StringBuilder auxiliary = new StringBuilder();
 
-            int j = auxExpressions.size() > 1 ? auxExpressions.size()-1 : 1;
+            int j = removeAssign ? auxExpressions.size()-1 : auxExpressions.size();
+            System.out.println("AUUUUUUUUXXXXXXXXX " + auxExpressions + j);
 
             for (int i = 0; i < j ; i++) {
                 auxiliary.append(indent).append(auxExpressions.get(i)).append(";\n");

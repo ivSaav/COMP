@@ -4,11 +4,13 @@ class Fac {
     public int compFac(int[] num){
         int num_aux;
         int i;
+        a = new int[20];
         if (num[i] < a[0])
-            i = a[i];
+            i = a[0];
         else
             num_aux = num[i];
 
+        i = num_aux + this.compFac(num_aux - 1);
         return num_aux;
     }
 
