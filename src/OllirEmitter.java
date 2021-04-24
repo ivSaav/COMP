@@ -182,6 +182,10 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             Symbol lhsSymbol = this.st.getVariableSymbol(lhs);
             assignmentType = "." +  Utils.getOllirType(lhsSymbol.getType()) + " "; // if not array access, then fetch type
         }
+
+        if(rhs.getKind().equals("NewArray")) {
+            assignmentType = ".array.i32 ";
+        }
         assign.append(" :=").append(assignmentType);
 
         // For the value to be saved
@@ -245,9 +249,18 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             case "Length":
                 String auxId = "t" + this.idCounter++ + ".i32";
                 String lengthExpr = auxId + " :=.i32 arraylength("+ this.resolveVariableIdentifier(rhs.getChildren().get(0), auxExpressions) + ").i32;\n";
-                builder.insert(0, lengthExpr);
+                builder.insert(0, indent + lengthExpr);
                 rhsBuilder.append(auxId);
                 break;
+
+            case "NewArray":
+                String id = "new(array, " + this.handleMethodParameters(rhs, auxExpressions) + ").array.i32";
+                for (int i = 0; i < auxExpressions.size(); i++) {
+                    builder.insert(0, indent + auxExpressions.get(i) + ";\n");
+                }
+                rhsBuilder.append(id);
+                break;
+
             default:
                 // In the case it is an expression
                 if (Utils.isOperator(rhs)) {
@@ -449,11 +462,11 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         // Case the terminal is an Identifier
         else {
             // variable needs a getfield auxiliary function
-            if (st.isGlobalVar(expr)) {
+            /*if (st.isGlobalVar(expr)) {
                 String[] res = this.handleGetFieldCall(expr);
                 expressions.add(res[1]);
                 return res[0];
-            }
+            }*/
             // resolve local variable
             return resolveVariableIdentifier(expr, expressions);
         }
