@@ -90,33 +90,48 @@ public class SemanticTest {
     /* ==================== FAILURE TESTS ==================== */
 
     @Test
-    public void testWhiles() {
-        testFile("public/fail/syntactical/LengthError.jmm", true);
+    public void testArrayIndex() {
+        testFile("public/fail/semantic/arr_index_not_int.jmm", true);
     }
 
     @Test
-    public void testBlowUp() {
-        testFile("public/fail/syntactical/BlowUp.jmm", true);
+    public void testArraySize() {
+        testFile("public/fail/semantic/arr_size_not_int.jmm", true);
     }
 
     @Test
-    public void testLengthError() {
-        testFile("public/fail/syntactical/LengthError.jmm", true);
+    public void testArguments() {
+        testFile("public/fail/semantic/badArguments.jmm", true);
     }
 
     @Test
-    public void testMissingRightPair() {
-        testFile("public/fail/syntactical/MissingRightPar.jmm", true);
+    public void testIncompatibleOperations() {
+        testFile("public/fail/semantic/binop_incomp.jmm", true);
     }
 
     @Test
-    public void testMultipleSequential() {
-        testFile("public/fail/syntactical/MultipleSequential.jmm", true);
+    public void testFunction() {
+        testFile("public/fail/semantic/funcNotFound.jmm", true);
     }
 
     @Test
-    public void testNestedLoop() {
-        testFile("public/fail/syntactical/NestedLoop.jmm", true);
+    public void testSimpleLength() {
+        testFile("public/fail/semantic/simple_length.jmm", true);
+    }
+
+    @Test
+    public void testVarExpression() {
+        testFile("public/fail/semantic/var_exp_incomp.jmm", true);
+    }
+
+    @Test
+    public void testVarLiteral() {
+        testFile("public/fail/semantic/var_lit_incomp.jmm", true);
+    }
+
+    @Test
+    public void testVarUndefined() {
+        testFile("public/fail/semantic/var_undef.jmm", true);
     }
 
 }
