@@ -77,7 +77,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         StringBuilder stringBuilder = new StringBuilder();
 
         // Get the contents of the method from SymbolsTable
-        MethodSymbols methodSymbols = this.st.getMethod(methodNode.get("name"));
+        MethodSymbols methodSymbols = this.st.getMethod(methodNode);
 
         // Method declaration
         String methodDec = "\t.method public " + methodSymbols.getName();
@@ -116,7 +116,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         JmmNode methodNode = retNode.getAncestor("Method").get();
 
-        MethodSymbols method = this.st.getMethod(methodNode.get("name"));
+        MethodSymbols method = this.st.getMethod(methodNode);
         Type type = method.getReturnType();
         retBuilder.append(indent + "\t"+ "ret." + Utils.getOllirType(type) + " ");
 
@@ -470,7 +470,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         else if (expr.getKind().equals("MethodCall")) {
 
             // Get the return type from the method
-            MethodSymbols methodSymbols = st.getMethod(expr.get("name"));
+            MethodSymbols methodSymbols = st.getMethod(expr);
 
             String varName = "t" + this.idCounter++ + "." + Utils.getOllirType(methodSymbols.getReturnType());
 
@@ -515,7 +515,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                 String call = indent + "invokevirtual(this, \"" + methodCall.get("name") + "\", ";
 
-                MethodSymbols methodSymbols = st.getMethod(methodCall.get("name"));
+                MethodSymbols methodSymbols = st.getMethod(methodCall);
 
                 call += args + ")." + Utils.getOllirType(methodSymbols.getReturnType());
 
@@ -536,7 +536,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 String args = this.handleMethodParameters(arguments, auxExpressions);
 
                 if (level > 0) {
-                    MethodSymbols methodSymbols = st.getMethod(methodCall.get("name"));
+                    MethodSymbols methodSymbols = st.getMethod(methodCall);
 
                     String id = "aux" + this.idCounter + "." + Utils.getOllirType(methodSymbols.getReturnType());
                     this.idCounter++;
@@ -571,7 +571,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             builder.append(indent + "invokestatic(");
             level++;
 
-            MethodSymbols method = st.getMethod(methodCall.get("name"));
+            MethodSymbols method = st.getMethod(methodCall);
             String ret = Utils.getOllirType(method.getReturnType());
             builder.append(firstChild.get("name") + ", \"" + methodCall.get("name") + "\", " + args + ")." + ret);
         }
@@ -709,7 +709,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         Optional<JmmNode> methodOptional = varNode.getAncestor("Method");
         if (methodOptional.isPresent()) {// variable assignment inside method
             JmmNode methodNode = methodOptional.get();
-            MethodSymbols method = this.st.getMethod(methodNode.get("name"));
+            MethodSymbols method = this.st.getMethod(methodNode);
             return method.getParameterIndex(varSymbol.getName());
         }
         return -1;

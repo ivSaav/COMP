@@ -43,6 +43,11 @@ public class Utils {
                 || kind.equals("Smaller") || kind.equals("Negation") || kind.equals("And");
     }
 
+    public static boolean isConditionalOperator(JmmNode node) {
+        String kind = node.getKind();
+        return kind.equals("Smaller") || kind.equals("Negation") || kind.equals("And");
+    }
+
     public static JmmNode getChildOfKind(JmmNode node, String kind) {
         for (JmmNode child : node.getChildren()) {
             if (child.getKind().equals(kind))

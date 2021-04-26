@@ -57,6 +57,10 @@ public class MethodSymbols {
         }
     }
 
+    public int getNumParams() {
+        return this.parameters.size();
+    }
+
     public int getParameterIndex(String paramName) {
         int cnt = 1;
         for (Symbol param : this.parameters.values()) {

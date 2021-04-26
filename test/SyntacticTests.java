@@ -3,16 +3,25 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import pt.up.fe.comp.TestUtils;
-import pt.up.fe.comp.jmm.JmmParser;
 import pt.up.fe.comp.jmm.JmmParserResult;
 
-public class PublicTests {
+import java.io.File;
+import java.util.Scanner;
+
+public class SyntacticTests {
 
 
     private void testFile(String filename, boolean mustfail) {
 
         try {
-            JmmParserResult res = TestUtils.parse("test/fixtures/" + filename);//.getRootNode().getKind()
+            File testFile = new File("test/fixtures/" + filename);
+            Scanner scanner = new Scanner(testFile);
+
+            StringBuilder codeBuilder  = new StringBuilder();
+            while (scanner.hasNextLine()) {
+                codeBuilder.append(scanner.nextLine()).append("\n");
+            }
+            JmmParserResult res = TestUtils.parse(codeBuilder.toString());//.getRootNode().getKind()
             if (mustfail)
                 TestUtils.mustFail(res.getReports());
             else
@@ -20,6 +29,7 @@ public class PublicTests {
         }
         catch (Exception e) {
             System.out.println("Test Failed =================================");
+            System.out.println("Test File: " + filename);
             e.printStackTrace();
             fail();
         }
@@ -70,7 +80,7 @@ public class PublicTests {
 
     @Test
     public void testWhiles() {
-        testFile("public/fail/syntactical/LengthError.jmm", true);
+        testFile("public/fail/semantic/LengthError.jmm", true);
     }
 
     @Test
