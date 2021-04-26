@@ -524,7 +524,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             variables = st.getVariables(scope.get("name"));
 
         for (JmmNode children : opChildren) {
-
+            
             if (Utils.isOperator(children))
                 getExpressionTypes(children, types, reports);;
 
