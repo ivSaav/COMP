@@ -203,14 +203,27 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         // checking if it's not a defined method in this class or in one of the imports
         if (method == null && !this.st.getImports().contains(methodName)) {
 
-            JmmNode tmp = node.getChildren().get(0);
+            JmmNode methodIdent = node.getChildren().get(0);
 
             // class identifier
-            String nodeKind = tmp.getKind();
-            if (nodeKind.equals("Ident")) {
-                if (!st.getImports().contains(tmp.get("name")) && st.getSuper().isBlank())
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, tmp, "Couldn't resolve method call: " + methodName));
+            String nodeKind = methodIdent.getKind();
+            switch (nodeKind) {
+                case "Ident":
+                    if (!st.getImports().contains(methodIdent.get("name")) && st.getSuper().isBlank())
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, methodIdent, "Couldn't resolve method call: " + methodName));
+                    break;
+                case "New":  // check if class is this. or an imported one
+                    if (!st.getImports().contains(node.get("name")))
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, methodIdent, "Couldn't resolve method call: " + methodName +
+                                " from " + methodIdent.get("name")));
+                    break;
+                case "This":
+                    // verifying if method is from super class
+                    if (st.getSuper().isBlank())
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, methodIdent, "Couldn't resolve method call: " + methodName));
+                    break;
             }
+
         }else {
             //CHECKS
 
@@ -250,8 +263,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
             //System.out.println("METHOD:" + );
 
         }
-
-
         return null;
     }
 

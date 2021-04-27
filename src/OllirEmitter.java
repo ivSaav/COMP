@@ -536,6 +536,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 String args = this.handleMethodParameters(arguments, auxExpressions);
 
                 if (level > 0) {
+                    System.out.println("METHOD " + methodCall);
                     MethodSymbols methodSymbols = st.getMethod(methodCall);
 
                     String id = "aux" + this.idCounter + "." + Utils.getOllirType(methodSymbols.getReturnType());

@@ -80,7 +80,7 @@ public class SyntacticTests {
 
     @Test
     public void testWhiles() {
-        testFile("public/fail/semantic/LengthError.jmm", true);
+        testFile("public/fail/syntactical/LengthError.jmm", true);
     }
 
     @Test

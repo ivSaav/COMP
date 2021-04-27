@@ -1,23 +1,15 @@
 import io;
 class Fac {
 
-    public boolean coisas() {
-        c = true;
-        return c;
+   int[] a;
+
+    public int teste(int b){
+        a[0] = 1;
+        return b;
     }
 
-    public int teste(int a, int b){
-        y = 4;
-
-        if ( y < y ) {
-
-        if (num < a.length)
-            i = a.length;
-        else
-            num_aux = num;
-
-        }
-        return y  + y  < y;
+    public int compFac(int b) {
+        return b;
     }
 
     public static void main(String[]args){
