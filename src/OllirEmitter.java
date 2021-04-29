@@ -108,6 +108,9 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         bodyBuilder.append(this.dealWithStatementBody(methodBody, "\t\t"));
         stringBuilder.append(methodDec).append(methodParam).append(methodRet).append(bodyBuilder);
 
+        if (retType.getName().equals("void"))
+            stringBuilder.append("\t ret.V void.V;\n");
+
         stringBuilder.append("\t}\n");
 
         return stringBuilder.toString();
@@ -251,7 +254,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                 break;
             case "MethodCall": // In the case of a call to a method
-                String methodCall = this.handleMethodCall(rhs, 0, auxExpressions, "");
+                String methodCall = this.handleMethodCall(rhs, 1, auxExpressions, "");
                 rhsBuilder.append(methodCall);
                 this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
                 break;
@@ -329,7 +332,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         if (!expr.isEmpty())
             auxExp = this.insertAuxiliarExpressions(ifBuilder, expr, true, indent);
         else
-            auxExp += " &&.bool " + auxExp;
+            auxExp += " &&.bool true.bool";
 
         ifBuilder.append(auxExp).append(") goto Then;\n");
 
@@ -349,16 +352,12 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         List<String> expr = new ArrayList<>();
 
         StringBuilder conditionBuilder = new StringBuilder(indent + "\t" + "if (");
-        this.dealWithExpression(whileNode.getChildren().get(0), 0, expr, "");
+        String auxExp = this.dealWithExpression(whileNode.getChildren().get(0), 0, expr, "");
 
-        String aux = "";
-        for (int i = 0; i < expr.size()-1; i++) {
-            aux += indent +"\t" + expr.get(i) + ";\n";
-        }
-
-        conditionBuilder.insert(0, aux);
-
-        String auxExp = expr.get(expr.size()-1);
+        if (!expr.isEmpty())
+            auxExp = this.insertAuxiliarExpressions(whileBuilder, expr, true, indent);
+        else
+            auxExp += " &&.bool true.bool";
 
         conditionBuilder.append(auxExp).append(") goto Body;\n").append(indent).append(indent + "goto EndLoop;\n");
 
@@ -369,11 +368,12 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         bodyBuilder.append(this.dealWithStatementBody(whileNode.getChildren().get(1), indent + "\t"));
 
         whileBuilder.append(bodyBuilder);
-
+        whileBuilder.append(indent).append("\tgoto Loop;\n");
         whileBuilder.append(indent + "EndLoop:\n");
 
         return whileBuilder.toString();
     }
+
 
     private String dealWithStatementBody(JmmNode statement, String indent) {
         StringBuilder stmBuilder = new StringBuilder();
@@ -525,16 +525,25 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             }
             else if (firstChild.getKind().equals("This")) { // static
-
+                String retType = this.determineMethodReturnType(methodCall);
 
                 String args = this.handleMethodParameters(arguments, auxExpressions);
 
-                String call = indent + "invokevirtual(this, \"" + methodCall.get("name") + "\"";
+                String auxExpr = indent + "invokevirtual(this, \"" + methodCall.get("name") + "\"";
 
 
-                call += args + ")." + this.determineMethodReturnType(methodCall);
+                auxExpr += args + ")." + retType;
 
-                builder.append(call);
+                builder.append(auxExpr);
+
+                if (level > 0) {
+                    String id = "aux" + this.idCounter + "." + retType;
+                    this.idCounter++;
+
+                    String call = String.format("%s :=.%s %s", id, retType, builder);
+                    auxExpressions.add(call);
+                    return id;
+                }
             }
             else if (firstChild.getKind().equals("New")) {
 
@@ -711,6 +720,13 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             String auxExpr = String.format("%s :=.i32 %s.i32", auxVar, accessNode.get("value"));
             auxExpressions.add(auxExpr);
             innerAccess += auxVar;
+        }
+        else if (accessNode.getKind().equals("Array")) {
+
+            String arrayExpr = this.handleArrayAccess(accessNode, auxExpressions);
+
+            String auxExpr = String.format("t%d :=.i32 %s", this.idCounter++, arrayExpr);
+
         }
         else // array access is an identifier A[b]
             innerAccess += resolveVariableIdentifier(accessNode, false);
