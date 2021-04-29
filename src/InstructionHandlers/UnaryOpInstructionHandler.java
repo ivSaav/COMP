@@ -1,9 +1,10 @@
-package pt.up.fe.comp.jmm.jasmin.InstructionHandlers;
+package InstructionHandlers;
 
 import org.specs.comp.ollir.*;
 import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 
 import java.util.HashMap;
+import java.util.Locale;
 
 public class UnaryOpInstructionHandler implements IntructionHandler{
     private UnaryOpInstruction unaryOpInstruction;
@@ -15,7 +16,7 @@ public class UnaryOpInstructionHandler implements IntructionHandler{
     }
 
 
-    public String handleInstruction(Method method) {
+    public String handleInstruction(String className, Method method) {
         StringBuilder string = new StringBuilder();
 
         Element rop = unaryOpInstruction.getRightOperand();
@@ -34,9 +35,11 @@ public class UnaryOpInstructionHandler implements IntructionHandler{
             string.append("load " + d.getVirtualReg() + "\n");
         }
 
-        string.append("\nTYPE:\n"+unaryOpInstruction.getUnaryOperation().getOpType());
+        //string.append("\nTYPE:\n"+unaryOpInstruction.getUnaryOperation().getOpType());
 
-        //string.append(JasminUtils.parseType(rop.getType().getTypeOfElement())+JasminUtils.parseOperationType(unaryOpInstruction.getUnaryOperation().getOpType())+"\n");
+        string.append("\t"+ JasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+        string.append(JasminUtils.parseOperationType(unaryOpInstruction.getUnaryOperation().getOpType())+"\n");
+
 
         return string.toString();
     }

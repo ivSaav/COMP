@@ -135,7 +135,7 @@ public class JasminUtils {
             case THIS:
                 return "T";
             case STRING:
-                return "S";
+                return "Ljava/lang/String";
             case VOID:
                 return "V";
             default:

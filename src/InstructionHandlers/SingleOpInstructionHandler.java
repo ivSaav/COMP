@@ -1,9 +1,8 @@
-package pt.up.fe.comp.jmm.jasmin.InstructionHandlers;
+package InstructionHandlers;
 
 import org.specs.comp.ollir.*;
 
 import org.specs.comp.ollir.Instruction;
-import org.specs.comp.ollir.UnaryOpInstruction;
 import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 
 import java.util.HashMap;
@@ -18,7 +17,7 @@ public class SingleOpInstructionHandler implements IntructionHandler{
         this.singleOpInstruction = (SingleOpInstruction) single;
     }
 
-    public String handleInstruction(Method method) {
+    public String handleInstruction(String className, Method method) {
         StringBuilder string = new StringBuilder();
         Element op = singleOpInstruction.getSingleOperand();
 
@@ -28,7 +27,7 @@ public class SingleOpInstructionHandler implements IntructionHandler{
 
         }else{
             HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
-            string.append(JasminUtils.parseType(op.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+            string.append("\t"+JasminUtils.parseType(op.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
             Operand variable = (Operand) op;
             Descriptor d = vars.get(variable.getName());
             string.append("load "+ d.getVirtualReg()+"\n");

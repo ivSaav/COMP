@@ -1,4 +1,4 @@
-package pt.up.fe.comp.jmm.jasmin.InstructionHandlers;
+package InstructionHandlers;
 
 import org.specs.comp.ollir.*;
 import pt.up.fe.comp.jmm.jasmin.JasminUtils;
@@ -17,15 +17,16 @@ public class AssignInstructionHandler implements IntructionHandler{
     }
 
     @Override
-    public String handleInstruction(Method method) {
+    public String handleInstruction(String className, Method method) {
         StringBuilder string = new StringBuilder();
         //instruction.show();
 
         //this part is fine
         InstructionAllocator rhs = new InstructionAllocator();
 
-        String rhss= rhs.allocateAndHandle(instruction.getRhs(),method );
+        String rhss= rhs.allocateAndHandle(instruction.getRhs(),className,method);
         string.append(rhss);
+
 
 
         HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);

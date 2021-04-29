@@ -1,4 +1,4 @@
-package pt.up.fe.comp.jmm.jasmin.InstructionHandlers;
+package InstructionHandlers;
 
 import org.specs.comp.ollir.ElementType;
 import org.specs.comp.ollir.Instruction;
@@ -17,7 +17,7 @@ public class ReturnInstructionHandler implements IntructionHandler {
     }
 
     @Override
-    public String handleInstruction(Method method) {
+    public String handleInstruction(String className, Method method) {
 
         StringBuffer string = new StringBuffer();
 
