@@ -80,6 +80,8 @@ public class Utils {
         Type type = symbol.getType();
         String name = symbol.getName();
 
+        name = name.replace("$", "_S_"); // replacing every $ with _S_ because of argument variables
+
         String t = getOllirType(type);
 
         String ret = "";
