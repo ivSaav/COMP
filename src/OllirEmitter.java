@@ -37,28 +37,18 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     private String dealWithClass(JmmNode classNode, String indent) {
         StringBuilder stringBuilder = new StringBuilder(classNode.get("class"));
 
+        stringBuilder.append(" {\n");
+
         // handling class fields
-        StringBuilder fieldParams = new StringBuilder();
-        StringBuilder inits = new StringBuilder();
-        int cnt = 1;
         for (Symbol field : st.getFields()) {
             String varType = Utils.getOllirType(field.getType());
-            String paramName = "f" + cnt + "." + varType; // constructor arguments
-            fieldParams.append(paramName).append(",");
-            inits.append("\t\t" + "putfield(this, ").append(field.getName()).append(".").append(varType).append(",").append(paramName).append(").V;\n");
-            cnt++;
+            String paramName = "\t.field private " + field.getName() + "." + varType + ";\n"; // constructor arguments
+            stringBuilder.append(paramName);
         }
 
-        if (fieldParams.length() > 0)
-            fieldParams.setLength(fieldParams.length() - 1); // remove last comma
-
-        stringBuilder.append(" {\n");
-        String classConstructor = "\t.construct " + classNode.get("class") +"(" + fieldParams + ").V {\n"
-                +       "\t\tinvokespecial(this, \"<init>\").V;\n" + inits;
-
-
+        String classConstructor = "\n\t.construct " + classNode.get("class") +"().V {\n"
+                +       "\t\tinvokespecial(this, \"<init>\").V;\n" + "\t}\n";
         stringBuilder.append(classConstructor);
-        stringBuilder.append( "\t}");
 
         return stringBuilder.toString();
     }
