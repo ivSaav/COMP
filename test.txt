@@ -1,18 +1,11 @@
 import io;
 class Fac {
 
-   int[] a;
+   int a;
+   int b;
 
-    public int teste(int b){
-        a[0] = 1;
-        return b;
-    }
-
-    public int compFac(int b) {
-        return b;
-    }
-
-    public static void main(String[]args){
-        io.println(new Fac().compFac(10));
+    public int teste(int c){
+        a = b + c + 1;
+      return 1 + 2 +3;
     }
 }

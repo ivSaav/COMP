@@ -31,7 +31,10 @@ public class UnaryOpInstructionHandler implements IntructionHandler{
             HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
             Operand variable = (Operand) rop;
             Descriptor d = vars.get(variable.getName());
-            string.append("\t"+JasminUtils.parseType(rop.getType().getTypeOfElement()));
+            if (rop.getType().getTypeOfElement() == ElementType.OBJECTREF)
+                string.append("\t a");
+            else
+                string.append("\t"+JasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
             string.append("load " + d.getVirtualReg() + "\n");
         }
 

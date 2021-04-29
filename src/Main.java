@@ -52,6 +52,9 @@ public class Main implements JmmParser {
 
 		OptimizationStage optimization = new OptimizationStage();
 		OllirResult ollirResult = optimization.toOllir(semanticResult);
+
+		BackendStage backendStage = new BackendStage();
+		backendStage.toJasmin(ollirResult);
 		
 		System.out.println(ollirResult.getReports());
     }

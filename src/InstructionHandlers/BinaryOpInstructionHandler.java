@@ -28,7 +28,12 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
             string.append("\tldc "+ literal.getLiteral()+"\n");
 
         }else{
-            string.append("\t"+JasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+
+            if (rop.getType().getTypeOfElement() == ElementType.OBJECTREF) {
+                string.append("\t a");
+            }
+            else
+                string.append("\t"+JasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
             Operand variable = (Operand) instruction.getRightOperand();
             Descriptor d = vars.get(variable.getName());
             string.append("load "+ d.getVirtualReg()+"\n");
@@ -39,7 +44,11 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
             string.append("\tldc "+ literal.getLiteral() +"\n");
             //string.append(op.);
         }else{
-            string.append("\t"+JasminUtils.parseType(lop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+            if (lop.getType().getTypeOfElement() == ElementType.OBJECTREF) {
+                string.append("\t a");
+            }
+            else
+                string.append("\t"+JasminUtils.parseType(lop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
             Operand variable = (Operand) lop;
             Descriptor d = vars.get(variable.getName());
             string.append("load "+ d.getVirtualReg()+"\n");

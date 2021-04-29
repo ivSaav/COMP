@@ -27,7 +27,13 @@ public class SingleOpInstructionHandler implements IntructionHandler{
 
         }else{
             HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
-            string.append("\t"+JasminUtils.parseType(op.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+
+            if (op.getType().getTypeOfElement() == ElementType.OBJECTREF) {
+                string.append("\t a");
+            }
+            else
+                string.append("\t"+JasminUtils.parseType(op.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+
             Operand variable = (Operand) op;
             Descriptor d = vars.get(variable.getName());
             string.append("load "+ d.getVirtualReg()+"\n");
