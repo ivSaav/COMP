@@ -3,7 +3,7 @@ import java.util.*;
 import org.specs.comp.ollir.*;
 
 import org.specs.comp.ollir.Node;
-import pt.up.fe.comp.jmm.jasmin.InstructionHandlers.*;
+import InstructionHandlers.*;
 import pt.up.fe.comp.jmm.jasmin.JasminBackend;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.jasmin.JasminUtils;
@@ -86,7 +86,7 @@ public class BackendStage implements JasminBackend {
                 }jasminCode.append("\n");
 
 
-                handleInstructions(jasminCode, method, varTable);
+                handleInstructions(jasminCode, ollirClass.getClassName(), method, varTable);
 
                 jasminCode.append(".end method \n\n");
 
@@ -109,12 +109,12 @@ public class BackendStage implements JasminBackend {
 
     }
 
-    private void handleInstructions(StringBuilder jasminCode, Method method, HashMap<String, Descriptor> varTable) {
+    private void handleInstructions(StringBuilder jasminCode, String className,Method method, HashMap<String, Descriptor> varTable) {
 
         InstructionAllocator instructionAllocator = new InstructionAllocator();
 
         for (Instruction instruction : method.getInstructions()) {
-            jasminCode.append(instructionAllocator.allocateAndHandle(instruction, method));
+            jasminCode.append(instructionAllocator.allocateAndHandle(instruction, className,method));
         }
 
     }

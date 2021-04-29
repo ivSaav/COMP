@@ -1,4 +1,4 @@
-package pt.up.fe.comp.jmm.jasmin.InstructionHandlers;
+package InstructionHandlers;
 
 import org.specs.comp.ollir.*;
 import pt.up.fe.comp.jmm.jasmin.JasminUtils;
@@ -16,7 +16,7 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
 
 
     @Override
-    public String handleInstruction(Method method) {
+    public String handleInstruction(String className,Method method) {
         StringBuilder string = new StringBuilder();
         HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
 
@@ -41,11 +41,13 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
         }else{
             string.append("\t"+JasminUtils.parseType(lop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
             Operand variable = (Operand) lop;
-            Descriptor d = vars.get(variable.getName()); //d is null?
+            Descriptor d = vars.get(variable.getName());
             string.append("load "+ d.getVirtualReg()+"\n");
         }
 
-        string.append("OP:" + instruction.getUnaryOperation().getOpType() + "\n");
+        string.append("\t"+ JasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+        string.append(JasminUtils.parseOperationType(instruction.getUnaryOperation().getOpType())+"\n");
+
 
 
 
