@@ -1,42 +1,18 @@
 import io;
-class Fac extends Class {
-    int[] b;
-    boolean c;
-    int y;
+class Fac {
 
-    public boolean coisas() {
-        c = true;
-        return c;
+   int[] a;
+
+    public int teste(int b){
+        a[0] = 1;
+        return b;
     }
 
-    public int teste(int a, int b){
-        y = 4;
-
-        if ( y < y ) {
-
-        }
-        else {
-
-        }
-        return y  + y  < y;
+    public int compFac(int b) {
+        return b;
     }
 
     public static void main(String[]args){
-        int[] d;
-        //d = a + b;
-
-
-        int j;
-        j = 2;
-        int l;
-        l = 1;
-        boolean k;
-        k = true;
-
-        j = Cenas.teste(j, l);
-
-
-        // of the classfile io.class
-       }
-
+        io.println(new Fac().compFac(10));
+    }
 }

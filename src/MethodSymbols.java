@@ -2,10 +2,7 @@ import pt.up.fe.comp.jmm.JmmNode;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MethodSymbols {
     private final String name;
@@ -16,7 +13,7 @@ public class MethodSymbols {
     public MethodSymbols(String name, Type returnType) {
         this.name = name;
         this.returnType = returnType;
-        this.parameters = new HashMap<>();
+        this.parameters = new LinkedHashMap<>(); // maintains order of insertion
         this.localVars = new HashMap<>();
     }
 
@@ -32,7 +29,7 @@ public class MethodSymbols {
         return new ArrayList<Symbol>(this.parameters.values());
     }
 
-    public Map<String, Symbol> getParameter() { return this.parameters; }
+    public Map<String, Symbol> getParameterMap() { return this.parameters; }
 
     public List<Symbol> getLocalVars() {
         return new ArrayList<Symbol>(this.localVars.values());
@@ -60,12 +57,28 @@ public class MethodSymbols {
         }
     }
 
+    public int getNumParams() {
+        return this.parameters.size();
+    }
+
+    public int getParameterIndex(String paramName) {
+        int cnt = 1;
+        for (Symbol param : this.parameters.values()) {
+            if (param.getName().equals(paramName))
+                return cnt;
+            cnt++;
+
+        }
+        return -1;
+    }
+
     public boolean containsVariable(String varName) {
         return this.localVars.containsKey(varName);
     }
 
     public Symbol getVariable(String varName) {
-        return this.localVars.get(varName);
+        Symbol symbol = this.localVars.get(varName);
+        return symbol == null ? this.parameters.get(varName) : symbol;
     }
 
     @Override

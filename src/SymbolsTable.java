@@ -72,16 +72,20 @@ public class SymbolsTable implements SymbolTable {
         return this.fields.get(varName);
     }
 
-    public MethodSymbols getMethod(String methodName) {
-        return methods.get(methodName);
+    public MethodSymbols getMethod(JmmNode methodNode) {
+        String key = this.createMethodKey(methodNode);
+        return methods.get(key);
     }
+
+
 
     public void setClassName(String className) {
         this.className = className;
     }
 
     public void addMethod(MethodSymbols symbols) {
-        this.methods.put(symbols.getName(), symbols);
+        String key = symbols.getName() + symbols.getNumParams();
+        this.methods.put(key, symbols);
     }
 
     public void setSuperclass(String superclass) {
@@ -97,23 +101,70 @@ public class SymbolsTable implements SymbolTable {
         if (parent.getKind().equals("Class"))
             this.fields.put(name, symbol);
         else if (parent.getKind().equals("Method")){
-            MethodSymbols symbols = this.methods.get(parent.get("name"));
+
+            MethodSymbols symbols = this.methods.get(this.createMethodKey(parent));
             symbols.addLocalVar(name, symbol);
         }
     }
 
-    public Map<String, Symbol> getVariables(String method) {
+    public Map<String, Symbol> getVariables(JmmNode method) {
+
+        String key = this.createMethodKey(method);
         Map<String, Symbol> allVariables = new HashMap<>();
 
         // Put all global variables
         allVariables.putAll(this.fields);
 
         // Put all local variables from the method
-        MethodSymbols methodSymbols = this.methods.get(method);
+        MethodSymbols methodSymbols = this.methods.get(key);
         allVariables.putAll(methodSymbols.getLocalVar());
-        allVariables.putAll(methodSymbols.getParameter());
+        allVariables.putAll(methodSymbols.getParameterMap());
 
         return allVariables;
+    }
+
+    public String createMethodKey(JmmNode method) {
+        JmmNode params = Utils.getChildOfKind(method, "Parameters");
+        if (params == null)
+            params = Utils.getChildOfKind(method, "Arguments");
+
+        return method.get("name") + params.getNumChildren();
+    }
+
+    /**
+     * Fetches variable's symbol from local or global variables
+     * @param var
+     * @return
+     */
+    public Symbol getVariableSymbol(JmmNode var) {
+        String name = var.get("name");
+
+        // Check in global variables
+        Symbol varSymbol = this.getGlobalVariable(name);
+
+        // Wasn't in global variables
+        if (varSymbol == null) {
+            JmmNode scope = Utils.findScope(var); // determine method where variable is declared
+            if (scope != null) // fetch symbol from method (local or in parameters)
+                varSymbol = this.getMethod(scope).getVariable(var.get("name"));
+        }
+
+        return varSymbol;
+    }
+
+    public boolean isGlobalVar(String varIdent) {
+        return this.fields.containsKey(varIdent);
+    }
+    public boolean isGlobalVar(JmmNode varNode) {
+        String varName = "";
+        if (varNode.getKind().equals("Array")) {
+            JmmNode arrayIdent = varNode.getChildren().get(0);
+            varName = arrayIdent.get("name");
+        }
+        else
+            varName = varNode.get("name");
+
+        return this.fields.containsKey(varName);
     }
 
     @Override

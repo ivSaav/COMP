@@ -7,17 +7,15 @@ import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.specs.util.SpecsCheck;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Map;
+import java.net.URI;
+import java.util.*;
 
-public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
+public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
 
     private final SymbolsTable st;
 
-    private final Set<String> visitedVariables;
+
+    private final Set<String> visitedVariables; // temporary method vars
 
     public SemanticAnalyser(SymbolsTable st) {
         this.st = st;
@@ -38,36 +36,41 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         addVisit("MethodCall", this::dealWithMethodCall);
         addVisit("Array", this::dealWithArrayAccess);
         addVisit("NewArray", this::dealWithArrayInit);
+        addVisit("Method", this::dealWithMethod);
+        addVisit("Length", this::dealWithLength);
 
         setDefaultVisit(this::defaultVisit);
-
     }
-    /**
-     * Fetches variable's symbol from local or global variables
-     * @param var
-     * @return
-     */
-    private Symbol getVariableSymbol(JmmNode var) {
-        String name = var.get("name");
 
-        // Check in global variables
-        Symbol varSymbol = st.getGlobalVariable(name);
+    private Void dealWithLength(JmmNode node, List<Report> reports) {
+        JmmNode child = node.getChildren().get(0);
 
-        // Wasn't in global variables
-        if (varSymbol == null) {
-            JmmNode scope = Utils.findScope(var); // determine method there variable is declared
-            if (scope != null)
-                varSymbol = st.getMethod(scope.get("name")).getVariable(var.get("name"));
+        if (child.getKind().equals("Ident")) {
+            Symbol symbol = st.getVariableSymbol(child);
+
+            if (symbol == null)
+                return null;
+            Type type = symbol.getType();
+
+            if (!type.isArray())
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Variable isn't an array"));
         }
+        else {
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Variable isn't an array"));
+        }
+        return null;
+    }
 
-        return varSymbol;
+    private Void dealWithMethod(JmmNode jmmNode, List<Report> reports) {
+        this.visitedVariables.clear();
+        return null;
     }
 
 
-    private List<Report> dealWithReturn(JmmNode node, List <Report> reports){
+    private Void dealWithReturn(JmmNode node, List <Report> reports){
 
         JmmNode scope = Utils.findScope(node);
-        MethodSymbols method = this.st.getMethod(scope.get("name"));
+        MethodSymbols method = this.st.getMethod(scope);
 
         String methodType = method.getReturnType().getName();
         String methodName = method.getName();
@@ -76,23 +79,24 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
         switch (returnNode.getKind()){
             case "Ident":
-                if (getVariableSymbol(returnNode) != null) {
-                    if (!getVariableSymbol(returnNode).getType().getName().equals(methodType)) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unmatched return types at method " + methodName));
+                if (st.getVariableSymbol(returnNode) != null) {
+                    if (!st.getVariableSymbol(returnNode).getType().getName().equals(methodType)) {
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unmatched return types at method " + methodName));
                     }
                     break;
                 } else {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable at method " + methodName));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Undeclared variable: " + returnNode.get("name")));
                 }
+                break;
             case "Literal":
                 if(!returnNode.get("type").equals(methodType))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unmatched return types at method " + methodName));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unmatched return types at method " + methodName));
                 break;
             case "And":
             case "Smaller":
             case "Negation":
                 if (!methodType.equals("boolean")){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unmatched return types at method " + methodName));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unmatched return types at method " + methodName));
                 }
                 break;
             case "Plus":
@@ -100,7 +104,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             case "Mult":
             case "Div":
                 if (!methodType.equals("int")){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unmatching return types" ));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unmatched return types" ));
                 }
                 break;
 
@@ -111,13 +115,35 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
 
 
-    private List<Report> dealWithArrayInit(JmmNode arrayNode, List<Report> reports) {
-        JmmNode literal = Utils.getChildOfKind(arrayNode, "Literal");
+    private Void dealWithArrayInit(JmmNode arrayNode, List<Report> reports) {
+        JmmNode firstChild = arrayNode.getChildren().get(0);
 
-        if (literal == null || !literal.get("type").equals("int"))
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1,
-                    "Invalid array initialization size: " +
-                            (literal == null ? "" : literal.get("value"))));
+        String kind = firstChild.getKind();
+        if (kind.equals("Literal") ) {
+           if (!firstChild.get("type").equals("int")) {
+               reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode,
+                       "Invalid array initialization size: " + firstChild.get("value")));
+           }
+        }
+        else if (kind.equals("Ident")) {
+            Symbol symbol = st.getVariableSymbol(firstChild);
+            if (symbol == null)
+                return null;
+            Type t = symbol.getType();
+            if (!(t.getName().equals("int") && !t.isArray())) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode,
+                        "Invalid array initialization size: " + firstChild.get("value")));
+            }
+        }
+        else if(kind.equals("Length")) {
+            JmmNode lengthChild = firstChild.getChildren().get(0);
+            Symbol symbol = st.getVariableSymbol(lengthChild);
+            Type type = symbol.getType();
+            if (!type.isArray()) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode,
+                        "Invalid array initialization size: " + firstChild.get("value")));
+            }
+        }
         return null;
     }
 
@@ -127,7 +153,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
      * @param reports list of existing reports
      * @return list of reports with possible added reports, if necessary
      */
-    private List<Report> dealWithArrayAccess(JmmNode arrayNode, List<Report> reports) {
+    private Void dealWithArrayAccess(JmmNode arrayNode, List<Report> reports) {
 
         if (arrayNode.getKind().equals("Array")) {
 
@@ -135,57 +161,69 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             JmmNode firstChild = arrayNode.getChildren().get(0);
             if (firstChild.getKind().equals("Ident")) {
 
-                if (!this.visitedVariables.contains(firstChild.get("name"))){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + firstChild.get("name")));
+                Symbol symbolArrayDec = st.getVariableSymbol(firstChild);
+                if (symbolArrayDec == null){
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode, "Undeclared variable: " + firstChild.get("name")));
                     return null;
                 }
-                Symbol symbolArrayDec = this.getVariableSymbol(firstChild);
 
                 if (!symbolArrayDec.getType().isArray()) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to non-array variable"));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode, "Access on non-array variable"));
                 }
             }
             else {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to non-array variable"));
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode, "Access on non-array variable"));
             }
 
             // Verify if the index of the access array is an integer
             JmmNode secondChild = arrayNode.getChildren().get(1);
             if (secondChild.getKind().equals("Ident")) {
-
-                if (!this.visitedVariables.contains(secondChild.get("name"))){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + secondChild.get("name")));
+                Symbol symbolArrayInd = st.getVariableSymbol(secondChild);
+                if (symbolArrayInd == null){
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, secondChild, "Undeclared variable: " + secondChild.get("name")));
                     return null;
                 }
-                Symbol symbolArrayInd = this.getVariableSymbol(secondChild);
 
                 if (!symbolArrayInd.getType().getName().equals("int")) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to an array with a non-integer"));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, secondChild, "Access to an array with a non-integer"));
                 }
             }
             else if (secondChild.getKind().equals("Literal")) {
                 if (!secondChild.get("type").equals("int"))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Access to an array with a non-integer"));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, secondChild, "Access to an array with a non-integer"));
             }
         }
         return null;
     }
 
-    private List<Report> dealWithMethodCall(JmmNode node, List<Report> reports) {
+    private Void dealWithMethodCall(JmmNode node, List<Report> reports) {
         String methodName = node.get("name");
-        MethodSymbols method = this.st.getMethod(methodName);
+        MethodSymbols method = this.st.getMethod(node);
 
         // checking if it's not a defined method in this class or in one of the imports
         if (method == null && !this.st.getImports().contains(methodName)) {
 
-            JmmNode tmp = node.getChildren().get(0);
+            JmmNode methodIdent = node.getChildren().get(0);
 
             // class identifier
-            String nodeKind = tmp.getKind();
-            if (nodeKind.equals("Ident")) {
-                if (!st.getImports().contains(tmp.get("name")))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Couldn't resolve method call: " + methodName));
+            String nodeKind = methodIdent.getKind();
+            switch (nodeKind) {
+                case "Ident":
+                    if (!st.getImports().contains(methodIdent.get("name")) && st.getSuper().isBlank())
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, methodIdent, "Couldn't resolve method call: " + methodName));
+                    break;
+                case "New":  // check if class is this. or an imported one
+                    if (!st.getImports().contains(node.get("name")))
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, methodIdent, "Couldn't resolve method call: " + methodName +
+                                " from " + methodIdent.get("name")));
+                    break;
+                case "This":
+                    // verifying if method is from super class
+                    if (st.getSuper().isBlank())
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, methodIdent, "Couldn't resolve method call: " + methodName));
+                    break;
             }
+
         }else {
             //CHECKS
 
@@ -193,7 +231,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             List<JmmNode> args = node.getChildren().get(1).getChildren();
 
             if (parameters.size() != args.size()) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arguments doesn't not match paramenters in method " + methodName));
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Arguments don't match parameters in method: " + methodName));
                 return null;
             } else {
 
@@ -202,13 +240,13 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
                     switch (args.get(i).getKind()) {
                         case "Ident":
-                            if (getVariableSymbol(args.get(i)) != null) {
-                                if (!getVariableSymbol(args.get(i)).getType().getName().equals(parameters.get(i).getType().getName())) {
-                                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arguments type don't match in method " + methodName));
+                            if (st.getVariableSymbol(args.get(i)) != null) {
+                                if (!st.getVariableSymbol(args.get(i)).getType().getName().equals(parameters.get(i).getType().getName())) {
+                                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Arguments type don't match in method " + methodName));
                                 }
                                 break;
                             } else {
-                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable at " + methodName));
+                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "No declaration available for variable at " + methodName));
                             }
                         case "Literal":
                             break;
@@ -225,19 +263,17 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             //System.out.println("METHOD:" + );
 
         }
-
-
         return null;
     }
 
 
-    private List<Report> dealWithIfWhileStatement (JmmNode node, List<Report> reports){
+    private Void dealWithIfWhileStatement (JmmNode node, List<Report> reports){
 
         JmmNode scope = Utils.findScope(node);
 
         JmmNode mustbool = node.getChildren().get(0);
         String nodeName = node.getKind();
-        Map<String, Symbol> variables = st.getVariables(scope.get("name"));
+        Map<String, Symbol> variables = st.getVariables(scope);
 
         String varKind = mustbool.getKind();
         switch(varKind){
@@ -247,113 +283,108 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
                 break;
             case "Literal":
                 if (!mustbool.get("type").equals("boolean")){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable at " + nodeName + " is of wrong type"));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Variable at " + nodeName + " is of wrong type"));
 
                 }
                 break;
             case "Ident":
-
-
                 if (variables.get(mustbool.get("name")) == null){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable " + mustbool.getKind() ));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "No declaration available for variable " + mustbool.getKind() ));
 
                 }
-                else if (!getVariableSymbol(mustbool).getType().getName().equals("boolean")){
+                else if (!st.getVariableSymbol(mustbool).getType().getName().equals("boolean")){
 
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable at " + nodeName + " statement is of wrong type"));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Variable at " + nodeName + " statement is of wrong type"));
                 }
                 break;
             case "MethodCall":
-                MethodSymbols method = st.getMethod(mustbool.get("name"));
+                MethodSymbols method = st.getMethod(mustbool);
 
                 if(!method.getReturnType().getName().equals("boolean")) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Method return at "+ nodeName+" is of wrong type"));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Method return at "+ nodeName+" is of wrong type"));
                 }
                 break;
 
             default:
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, nodeName+ " statement is not of type boolean" ));
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, nodeName+ " statement is not of type boolean" ));
 
         }
 
         return null;
     }
 
-    private List<Report> dealWithBool (JmmNode node, List<Report> reports){
+    private Void dealWithBool (JmmNode node, List<Report> reports){
 
         //for ! and &&
-
         JmmNode scope = Utils.findScope(node);
         List<JmmNode> opChildren = node.getChildren();
         JmmNode child;
 
         switch (node.getKind()){
             case "Negation":
-                    child = opChildren.get(0);
+                child = opChildren.get(0);
+                switch (child.getKind()){
+                    case "LiteralBool":
+                        break;
+                    case "Ident":
+                        Map<String, Symbol> getVariables = st.getVariables(scope);
 
-                    switch (child.getKind()){
-                        case "LiteralBool":
-                            break;
-                        case "Ident":
-                            Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
+                        if (getVariables.get(child.get("name")) == null){
+                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, child, "Undeclared variable: " + child.getKind() ));
 
-                            if (getVariables.get(child.get("name")) == null){
-                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable " + child.getKind() ));
+                        }
+                        else if(!getVariables.get(child.get("name")).getType().getName().equals("boolean")){
+                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, child, "Negation done with wrong type"));
+                        }
+                        break;
+                    case "MethodCall":
+                        MethodSymbols method = st.getMethod(child);
 
-                            }
+                        if(!method.getReturnType().getName().equals("boolean")) {
 
-                            else if(!getVariables.get(child.get("name")).getType().getName().equals("boolean")){
-                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Negation done with wrong type"));
-                            }
-                            break;
-                        case "MethodCall":
-                            MethodSymbols method = st.getMethod(child.get("name"));
-
-                            if(!method.getReturnType().getName().equals("boolean")) {
-
-                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Invalid method call at negation"));
-                            }
-                            break;
-                        default:
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Invalid method call at negation"));
-                            break;
-                    }
+                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, child, "Invalid method call at negation"));
+                        }
+                        break;
+                    default:
+                        if (!Utils.isConditionalOperator(child))
+                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, child, "Invalid conditional expression at negation"));
+                        break;
+                }
 
                 break;
             case "And":
                 for(JmmNode currentChild : opChildren){
 
                     if (currentChild.getKind().equals("Ident")) {
-                        Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
+                        Map<String, Symbol> getVariables = st.getVariables(scope);
+                        // Check if variable IDENTIFIER is declared
                         if (getVariables.get(currentChild.get("name")) == null){
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "No declaration available for variable " + currentChild.getKind() ));
-
+                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, currentChild, "No declaration available for variable " + currentChild.getKind()));
                         }
+                        // Check if variable IDENTIFIER is a boolean
                         else if (!getVariables.get(currentChild.get("name")).getType().getName().equals("boolean")) {
-
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "logic AND done with wrong type"));
+                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, currentChild, "logic AND done with wrong type"));
                             break;
                         }
-                    } else if(currentChild.getKind().equals("MethodCall")){
-
-                            MethodSymbols method = st.getMethod(currentChild.get("name"));
-
-                            if(!method.getReturnType().getName().equals("boolean")){
-                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Invalid method call at negation"));
-                                break;
-                            }
                     }
-                    else if (currentChild.getKind().equals("Negation") || currentChild.getKind().equals("And")){
+                    else if(currentChild.getKind().equals("MethodCall")){
+                        MethodSymbols method = st.getMethod(currentChild);
+
+                        // Check if the return type of the METHODCALL is boolean
+                        if(!method.getReturnType().getName().equals("boolean")){
+                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, currentChild, "Invalid method call at negation"));
+                            break;
+                        }
                     }
                     else if (currentChild.getKind().equals("Literal")){
+                        // Check if LITERAL is an boolean
                         if (!currentChild.get("type").equals("boolean")){
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "logic AND done with wrong type"));
+                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, currentChild, "logic AND done with wrong type"));
                             break;
                         }
                     }
-
-                    else{
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "logic AND done with wrong type"));
+                    else if (!Utils.isConditionalOperator(node)) {
+                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, currentChild, "logic AND done with wrong type"));
                         break;
                     }
                 }
@@ -361,12 +392,11 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
             default:
                 break;
         }
-                return null;
+        return null;
     }
 
 
-
-    private List<Report> dealWithAssignment(JmmNode node, List<Report> reports) {
+    private Void dealWithAssignment(JmmNode node, List<Report> reports) {
         JmmNode lhs = node.getChildren().get(0);
         JmmNode rhs = node.getChildren().get(1);
 
@@ -378,11 +408,11 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         }
         else {
             // Checking if destination has been declared before assignment
-            if (!this.visitedVariables.contains(lhs.get("name"))){
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable: " + lhs.get("name")));
+            lhsSymb = st.getVariableSymbol(lhs);
+            if (lhsSymb  == null){
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Undeclared variable: " + lhs.get("name")));
                 return null;
             }
-            lhsSymb = this.getVariableSymbol(lhs);
             lhsType = lhsSymb.getType();
         }
 
@@ -399,28 +429,29 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         String kind = expr.getKind();
 
         if (kind.equals("Ident")) {
-            if (!this.visitedVariables.contains(expr.get("name"))) // variable wasn't declared
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Undeclared variable " + expr.get("name")));
+            Symbol rhsSymbol = st.getVariableSymbol(expr);
+            if (rhsSymbol == null) // variable wasn't declared
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, expr, "Undeclared variable " + expr.get("name")));
             else {
-                Symbol rhsSymbol = this.getVariableSymbol(expr);
+
                 Type rhsType = rhsSymbol.getType();
 
                 if (!lhsType.equals(rhsType))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unmatched data types in assignment: "  + lhsType.getName() + " and " + rhsType.getName()));
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, expr, "Unmatched data types in assignment: "  + lhsType.getName() + " and " + rhsType.getName()));
             }
         }
         else if (kind.equals("Literal")) { // int or boolean
 
             // checking lhs and rhs have the same data type
             if (!lhsType.getName().equals(expr.get("type")) || lhsType.isArray())
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1,
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, expr,
                             "Unmatched data types in assignment: "
                                     + lhsType.getName() + (lhsType.isArray() ? "[]" : "")
                                     + " and " + expr.get("type")));
         }
         else if (kind.equals("Array")) {
             JmmNode arrayIdent = Utils.getChildOfKind(expr, "Ident");
-            Symbol rhsSymbol = this.getVariableSymbol(arrayIdent);
+            Symbol rhsSymbol = st.getVariableSymbol(arrayIdent);
 
             // variable wasn't declared (handled in another function)
             if (rhsSymbol == null)
@@ -428,7 +459,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
 
             Type rhsType = rhsSymbol.getType();
             if (!lhsType.getName().equals(rhsType.getName())) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1,
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayIdent,
                             "Unmatched data types in assignment: "  + lhsType.getName() + " and " + rhsType.getName()));
             }
         }
@@ -436,11 +467,11 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
            Type t = findOperationReturnType(expr);
 
            if (t == null)
-               reports.add(new Report(ReportType.WARNING, Stage.SEMANTIC, -1,
+               reports.add(new Report(ReportType.WARNING, Stage.SEMANTIC, expr,
                        "Couldn't determine expression result type "));
            else {
                if (!lhsType.equals(t))
-                   reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1,
+                   reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, expr,
                            "Unmatched data types in assignment after expression: "  + lhsType.getName() + " and " + t.getName()));
            }
 
@@ -448,14 +479,24 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         else if (kind.equals("NewArray")) {
             // assuming right side is correct (validated elsewhere)
             if (!lhsType.isArray())
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1,
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, expr,
                         "Invalid variable assignment: "  + lhsType.getName() + " = int[]"));
         }
+        else if (kind.equals("Length")) {
+
+            if (!(lhsType.getName().equals("int") && !lhsType.isArray())) {
+                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, expr,
+                        "Unmatched data types in assignment after expression: "  + lhsType.getName() + " and int"));
+            }
+        }
+
         return reports;
     }
 
 
-
+    public JmmNode getClassNode(JmmNode origin) {
+        return origin.getAncestor("Class").get();
+    }
     /**
      * Determines the return type of an expression
      * (Assumes operation is correct)
@@ -465,19 +506,40 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
     public Type findOperationReturnType(JmmNode oper) {
         for (JmmNode child : oper.getChildren()) {
             if (!Utils.isOperator(child)) {
-                if (child.getKind().equals("Literal")) {
-                    if (child.get("type").equals("int"))
-                        return new Type("int", false);
-                    return new Type("boolean", false);
-                }
+                if (child.getKind().equals("Literal"))
+                    return new Type(child.get("type"), false);
                 else if (child.getKind().equals("Ident")){
-                    Symbol symb = getVariableSymbol(child);
+                    Symbol symb = st.getVariableSymbol(child);
                     return symb == null ? null : symb.getType();
                 }
                 else if (child.getKind().equals("Array")) {
                     return new Type("int", false); // assuming it's correct
                 }
+                else if (child.getKind().equals("MethodCall"))
+                    return this.determineMethodReturnType(child, null);
             }
+        }
+        return null;
+    }
+
+    /**
+     * Receives a "MethodCall" node and determines it's return type
+     * Looks for locally declared methods and imported ones
+     * If the method does not exist in this scope adds a new report
+     * @param methodNode - "MethodCall" node
+     * @param reports - list with reports
+     * @return Type - method's return type
+     */
+    public Type determineMethodReturnType(JmmNode methodNode, List<Report> reports) {
+        MethodSymbols method = this.st.getMethod(methodNode);
+
+        if (method != null)
+            return method.getReturnType();
+        else { // method is not declared in this class
+            if (!this.st.getImports().contains(methodNode.get("name"))) // method is not in one of the imports
+                if (reports != null)
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, methodNode,
+                        "Couldn't determine method return type for " + methodNode.get("name") +" in operation"));
         }
         return null;
     }
@@ -489,79 +551,81 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
      * @param reports list of existing reports
      * @return list of reports with possible added reports, if necessary
      */
-    private List<Report> dealWithOperations(JmmNode node, List<Report> reports) {
-        JmmNode scope = Utils.findScope(node);
-        List<JmmNode> opChildren = node.getChildren();
+    private Void dealWithOperations(JmmNode node, List<Report> reports) {
+        
         List<Type> types = new ArrayList<>();
-
-        // If the operation comes from the class
-        if (scope.getKind().equals("Class")) {
-            Map<String, Symbol> fields = st.getField();
-            for (JmmNode children : opChildren) {
-
-                if (Utils.isOperator(children))
-                    continue;
-
-                if (children.getKind().equals("Literal")) {
-                    types.add(new Type(children.get("type"), false));
-                    continue;
-                }
-
-                Symbol symbol = fields.get(children.get("name"));
-
-                if (symbol == null) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable " + children.get("name") + " not declared"));
-                    continue;
-                }
-                types.add(symbol.getType());
-            }
-        }
-
-        // If the operation comes from a method
-        else if (scope.getKind().equals("Method")) {
-            Map<String, Symbol> getVariables = st.getVariables(scope.get("name"));
-            for (JmmNode children : opChildren) {
-
-                if (Utils.isOperator(children))
-                    continue;
-
-                if (children.getKind().equals("Literal")) {
-                    types.add(new Type(children.get("type"), false));
-                    continue;
-                }
-
-                Symbol symbol = getVariables.get(children.get("name"));
-
-                if (symbol == null) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable " + children.get("name") + " not declared"));
-                    continue;
-                }
-                types.add(symbol.getType());
-            }
-        }
+        this.getExpressionTypes(node, types, reports);
 
         // Verify if operation is made by operator with the same type
         if (!verifySameTypes(types)) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arithmetic Operation made by variables with different types"));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Arithmetic Operation made by variables with different types"));
             return null;
         }
 
         // Verify if the type of the List<Type> is of arrays
         if (types.get(0).isArray())
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arithmetic Operation invalid with arrays"));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Arithmetic Operation invalid with arrays"));
         if(types.get(0).getName().equals("boolean"))
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Arithmetic Operation invalid with boolean"));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Arithmetic Operation invalid with boolean"));
 
         return null;
     }
 
-    private List<Report> dealWithVarDecl(JmmNode node, List<Report> reports) {
+    /**
+     * Get all types of operands
+     * @param operNode visited node to evaluate
+     * @param types list of existing type
+     * @param reports list of existing reports
+     */
+    private void getExpressionTypes(JmmNode operNode, List<Type> types, List<Report> reports) {
+        List<JmmNode> opChildren = operNode.getChildren();
+        JmmNode scope = Utils.findScope(operNode);
+
+        Map<String, Symbol> variables;
+        if (scope.getKind().equals("Class"))
+            variables = st.getField();
+        else
+            variables = st.getVariables(scope);
+
+        for (JmmNode children : opChildren) {
+            
+            if (Utils.isOperator(children))
+                getExpressionTypes(children, types, reports);;
+
+            if (children.getKind().equals("Literal")) {
+                types.add(new Type(children.get("type"), false));
+                continue;
+            }
+            else if (children.getKind().equals("Ident")) {
+                Symbol symbol = variables.get(children.get("name"));
+
+                if (symbol == null) {
+                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC,  children, "Variable " + children.get("name") + " not declared"));
+                    continue;
+                }
+                types.add(symbol.getType());
+            }
+            else if (children.getKind().equals("MethodCall")) {
+                Type methodType = this.determineMethodReturnType(children, reports);
+
+                if (methodType != null)
+                    types.add(methodType);
+            }
+            else if (children.getKind().equals("Array")) { // array access
+                types.add(new Type("int", false));
+            }
+
+        }
+    }
+
+    private Void dealWithVarDecl(JmmNode node, List<Report> reports) {
         //int i =0;
         String varName = node.get("name");
-
         // Verify if variable was already declared
-        if (!node.getParent().getKind().equals("Parameters") && visitedVariables.contains(varName) )
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Variable " + varName + " already declared"));
+        if (!node.getParent().getKind().equals("Parameters") && visitedVariables.contains(varName)) {
+            System.out.println(visitedVariables);
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Variable " + varName + " already declared"));
+        }
         else
             visitedVariables.add(varName);
 
@@ -570,7 +634,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         String type = varChild.get("type");
 
         if (!verifyType(type))
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, -1, "Unrecognized type " + type));
+            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unrecognized type " + type));
 
         return null;
     }
@@ -600,12 +664,12 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         return true;
     }
 
-    private List<Report> defaultVisit(JmmNode node, List<Report> reports) {
+    private Void defaultVisit(JmmNode node, List<Report> reports) {
         return null;
     }
 
     @Override
-    public List<Report> visit(JmmNode jmmNode, List<Report> reports) {
+    public Void visit(JmmNode jmmNode, List<Report> reports) {
         SpecsCheck.checkNotNull(jmmNode, () -> "Node should not be null");
 
         var visit = getVisit(jmmNode.getKind());
@@ -618,7 +682,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, List<Report>> {
         // Postorder: then, visit the node
         var nodeResult = visit.apply(jmmNode, reports);
 
-        return reports;
+        return null;
     }
 
 }

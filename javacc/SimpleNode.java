@@ -9,97 +9,97 @@ import java.util.*;
 public
 class SimpleNode implements Node, JmmNode {
     Map<String, String> attributes = new HashMap<String, String>();
-  protected Node parent;
-  protected Node[] children;
-  protected int id;
-  protected Object value;
-  protected Parser parser;
+    protected Node parent;
+    protected Node[] children;
+    protected int id;
+    protected Object value;
+    protected Parser parser;
 
     // added
     public int val;
     public Operator op = null;
 
-  public SimpleNode(int i) {
-    id = i;
-  }
+    public SimpleNode(int i) {
+        id = i;
+    }
 
-  public SimpleNode(Parser p, int i) {
-    this(i);
-    parser = p;
-  }
+    public SimpleNode(Parser p, int i) {
+        this(i);
+        parser = p;
+    }
 
 
-  public String getKind() {
-	  return toString();
-  }
-  
-  public List<String> getAttributes() {
-	return new ArrayList<String>(attributes.keySet());
-  }
+    public String getKind() {
+        return toString();
+    }
 
-  public void put(String attribute, String value) {
-	this.attributes.put(attribute, value);
-  }
+    public List<String> getAttributes() {
+        return new ArrayList<String>(attributes.keySet());
+    }
 
-  public String get(String attribute) {
-	return this.attributes.get(attribute);
-  }
-  
-  public List<JmmNode> getChildren() {
+    public void put(String attribute, String value) {
+        this.attributes.put(attribute, value);
+    }
+
+    public String get(String attribute) {
+        return this.attributes.get(attribute);
+    }
+
+    public List<JmmNode> getChildren() {
 //    return (children == null) ? new ArrayList<>() : Arrays.asList((JmmNode[])children);
 
-    List a = new ArrayList<JmmNode>();
-    for (int i = 0; i < getNumChildren(); i++) {
-      a.add((JmmNode) jjtGetChild(i));
+        List a = new ArrayList<JmmNode>();
+        for (int i = 0; i < getNumChildren(); i++) {
+            a.add((JmmNode) jjtGetChild(i));
+        }
+
+        return a;
     }
 
-    return a;
-  }
-  
-  public int getNumChildren() {
-    return jjtGetNumChildren();
-  }
-  
-  public void add(JmmNode child, int index) {
-    if(!(child instanceof Node)) {
-
-  	throw new RuntimeException("Node not supported: " + child.getClass());  
+    public int getNumChildren() {
+        return jjtGetNumChildren();
     }
-	  
-	jjtAddChild((Node) child, index);
-  }
 
+    public void add(JmmNode child, int index) {
+        if(!(child instanceof Node)) {
 
-  public void jjtOpen() {
-  }
+            throw new RuntimeException("Node not supported: " + child.getClass());
+        }
 
-  public void jjtClose() {
-  }
-
-  public void jjtSetParent(Node n) { parent = n; }
-  public Node jjtGetParent() { return parent; }
-
-  public void jjtAddChild(Node n, int i) {
-    if (children == null) {
-      children = new Node[i + 1];
-    } else if (i >= children.length) {
-      Node c[] = new Node[i + 1];
-      System.arraycopy(children, 0, c, 0, children.length);
-      children = c;
+        jjtAddChild((Node) child, index);
     }
-    children[i] = n;
-  }
 
-  public Node jjtGetChild(int i) {
-    return children[i];
-  }
 
-  public int jjtGetNumChildren() {
-    return (children == null) ? 0 : children.length;
-  }
+    public void jjtOpen() {
+    }
 
-  public void jjtSetValue(Object value) { this.value = value; }
-  public Object jjtGetValue() { return value; }
+    public void jjtClose() {
+    }
+
+    public void jjtSetParent(Node n) { parent = n; }
+    public Node jjtGetParent() { return parent; }
+
+    public void jjtAddChild(Node n, int i) {
+        if (children == null) {
+            children = new Node[i + 1];
+        } else if (i >= children.length) {
+            Node c[] = new Node[i + 1];
+            System.arraycopy(children, 0, c, 0, children.length);
+            children = c;
+        }
+        children[i] = n;
+    }
+
+    public Node jjtGetChild(int i) {
+        return children[i];
+    }
+
+    public int jjtGetNumChildren() {
+        return (children == null) ? 0 : children.length;
+    }
+
+    public void jjtSetValue(Object value) { this.value = value; }
+    public Object jjtGetValue() { return value; }
 
   /* You can override these two methods in subclasses of SimpleNode to
      customize the way the node appears when the tree is dumped.  If
@@ -107,37 +107,37 @@ class SimpleNode implements Node, JmmNode {
      toString(String), otherwise overriding toString() is probably all
      you need to do. */
 
-  public String toString() {
-    return ParserTreeConstants.jjtNodeName[id];
-  }
-  public String toString(String prefix) { return prefix + toString(); }
+    public String toString() {
+        return ParserTreeConstants.jjtNodeName[id];
+    }
+    public String toString(String prefix) { return prefix + toString(); }
 
   /* Override this method if you want to customize how the node dumps
      out its children. */
 
-  public void dump(String prefix) {
+    public void dump(String prefix) {
 
-    String val = prefix + " " + this.getKind();
+        String val = prefix + " " + this.getKind();
 
-    if (!this.attributes.isEmpty()){
-      val += attributes.toString();
-    }
-
-    System.out.println(val);
-
-    if (children != null) {
-      for (int i = 0; i < children.length; ++i) {
-        SimpleNode n = (SimpleNode)children[i];
-        if (n != null) {
-          n.dump(prefix + " ");
+        if (!this.attributes.isEmpty()){
+            val += attributes.toString();
         }
-      }
-    }
-  }
 
-  public int getId() {
-    return id;
-  }
+        System.out.println(val);
+
+        if (children != null) {
+            for (int i = 0; i < children.length; ++i) {
+                SimpleNode n = (SimpleNode)children[i];
+                if (n != null) {
+                    n.dump(prefix + " ");
+                }
+            }
+        }
+    }
+
+    public int getId() {
+        return id;
+    }
 }
 
 /* JavaCC - OriginalChecksum=d33fdb2b8063d5de3474649324d5d160 (do not edit this line) */

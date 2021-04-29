@@ -24,4 +24,22 @@ public class OptimizeTest {
         var result = TestUtils.optimize(SpecsIo.getResource("fixtures/public/HelloWorld.jmm"));
         TestUtils.noErrors(result.getReports());
     }
+
+    @Test
+    public void testFindMaximum() {
+        var result = TestUtils.optimize(SpecsIo.getResource("fixtures/public/FindMaximum.jmm"));
+        TestUtils.noErrors(result.getReports());
+    }
+
+    @Test
+    public void testLazySort() {
+        var result = TestUtils.optimize(SpecsIo.getResource("fixtures/public/LazySort.jmm"));
+        TestUtils.noErrors(result.getReports());
+    }
+
+//    @Test
+//    public void testLife() {
+//        var result = TestUtils.optimize(SpecsIo.getResource("fixtures/public/Life.jmm"));
+//        TestUtils.noErrors(result.getReports());
+//    }
 }
