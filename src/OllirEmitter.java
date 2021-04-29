@@ -53,7 +53,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         return stringBuilder.toString();
     }
 
-
     /**
      * Pass the content of the method to Ollir's notation
      * @param methodNode node to visit referring a method
@@ -116,7 +115,9 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         retBuilder.append(indent + "\t"+ "ret." + Utils.getOllirType(type) + " ");
 
         List<String> expressions = new ArrayList<>();
-        retBuilder.append(this.dealWithExpression(retNode.getChildren().get(0), 0, expressions, indent) + ";\n");
+        retBuilder.append(this.dealWithExpression(retNode.getChildren().get(0), 1, expressions, indent) + ";\n");
+
+        this.insertAuxiliarExpressions(retBuilder, expressions, false, indent);
 
         return retBuilder.toString();
     }
