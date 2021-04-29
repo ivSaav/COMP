@@ -41,8 +41,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         // handling class fields
         for (Symbol field : st.getFields()) {
-            String varType = Utils.getOllirType(field.getType());
-            String paramName = "\t.field private " + field.getName() + "." + varType + ";\n"; // constructor arguments
+            String fieldVar = Utils.getOllirVar(field);
+            String paramName = "\t.field private " + fieldVar + ";\n"; // constructor arguments
             stringBuilder.append(paramName);
         }
 
