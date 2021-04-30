@@ -1,11 +1,17 @@
 import io;
 class Fac {
 
-   int a;
+   int[] test_arr;
    int b;
+   int a;
 
-    public int teste(int c){
-        a = b + c + 1;
-      return a ;
+    public int[] teste(int c){
+
+        a = 1 + b +c;
+        return test_arr.length;
+    }
+
+    public static void main(String[] args) {
+        a = 2;
     }
 }
