@@ -259,7 +259,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
                 break;
             case "MethodCall": // In the case of a call to a method
-                String methodCall = this.handleMethodCall(rhs, 1, auxExpressions, "");
+                String methodCall = this.handleMethodCall(rhs, false, auxExpressions, "");
                 rhsBuilder.append(methodCall);
                 this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
                 break;
@@ -407,7 +407,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                     List<String> auxExpressions = new ArrayList<>();
 
                     StringBuilder methodBuilder = new StringBuilder();
-                    methodBuilder.append(this.handleMethodCall(child, 0, auxExpressions, indent));
+                    methodBuilder.append(this.handleMethodCall(child, true, auxExpressions, indent));
 
                     StringBuilder aux = new StringBuilder();
                     for (String auxExpression : auxExpressions) {
@@ -478,7 +478,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             String varName = "t" + this.idCounter++ + "." + Utils.getOllirType(methodSymbols.getReturnType());
 
             List<String> auxExpr = new ArrayList<>();
-            String methodCall = varName + " :=.i32 " +  this.handleMethodCall(expr, 0, auxExpr,"");
+            String methodCall = varName + " :=.i32 " +  this.handleMethodCall(expr, true, auxExpr,"");
             expressions.addAll(auxExpr);
             expressions.add(methodCall);
             return varName;
@@ -492,117 +492,113 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         }
     }
 
-    private String handleMethodCall(JmmNode methodCall, int level, List<String> auxExpressions, String indent) {
+    private String handleMethodCall(JmmNode methodCall, boolean allowComplex, List<String> auxExpressions, String indent) {
 
         JmmNode firstChild = null;
-        JmmNode arguments = null;
+        JmmNode arguments;
         StringBuilder builder = new StringBuilder();
 
         switch (methodCall.getKind()) {
             case "MethodCall" -> {
                 firstChild = methodCall.getChildren().get(0);
                 arguments = methodCall.getChildren().get(1);
-                if (firstChild.getKind().equals("Ident")) { // static
+                switch (firstChild.getKind()) {
+                    case "Ident" -> { // static
 
-                    String args = this.handleMethodParameters(arguments, auxExpressions);
+                        String args = this.handleMethodParameters(arguments, auxExpressions);
 
-                    builder.append(indent).append("invokestatic(");
-                    String retType = this.determineMethodReturnType(methodCall);
-                    builder.append(firstChild.get("name") + ", \"" + methodCall.get("name") + "\"" + args + ").").append(retType); // TODO not always void
+                        String retType = this.determineMethodReturnType(methodCall);
+                        String stMethod = String.format("invokestatic(%s, \"%s\"%s).%s", firstChild.get("name"), methodCall.get("name"), args, retType);
+                        builder.append(stMethod);
 
-                    if (level > 0) {
-                        String id = "aux" + this.idCounter + "." + retType;
-                        this.idCounter++;
-
-                        String call = String.format("%s :=.%s %s", id, retType, builder);
-                        auxExpressions.add(call);
-                        return id;
+                        if (!allowComplex) {
+                            String id = "aux" + this.idCounter++ + "." + retType;
+                            String call = String.format("%s :=.%s %s", id, retType, builder);
+                            auxExpressions.add(call);
+                            return id;
+                        }
                     }
+                    case "This" -> { // static
+                        String retType = this.determineMethodReturnType(methodCall);
 
-                } else if (firstChild.getKind().equals("This")) { // static
-                    String retType = this.determineMethodReturnType(methodCall);
+                        String args = this.handleMethodParameters(arguments, auxExpressions);
 
-                    String args = this.handleMethodParameters(arguments, auxExpressions);
+                        String auxExpr = indent + "invokevirtual(this, \"" + methodCall.get("name") + "\"";
+                        auxExpr += args + ")." + retType;
 
-                    String auxExpr = indent + "invokevirtual(this, \"" + methodCall.get("name") + "\"";
+                        builder.append(auxExpr);
 
-
-                    auxExpr += args + ")." + retType;
-
-                    builder.append(auxExpr);
-
-                    if (level > 0) {
-                        String id = "aux" + this.idCounter + "." + retType;
-                        this.idCounter++;
-
-                        String call = String.format("%s :=.%s %s", id, retType, builder);
-                        auxExpressions.add(call);
-                        return id;
+                        if (!allowComplex) {
+                            String id = "aux" + this.idCounter++ + "." + retType;
+                            String call = String.format("%s :=.%s %s", id, retType, builder);
+                            auxExpressions.add(call);
+                            return id;
+                        }
                     }
-                } else if (firstChild.getKind().equals("New")) {
+                    case "New" -> {
 
-                    builder.append(indent + "invokespecial").append(firstChild.get("name"));
-                    String name = firstChild.get("name");
-                    String auxName = "aux" + this.idCounter + "." + name;
-                    this.idCounter++;
-                    String ident = auxName + " :=." + name + " new(" + name + ")." + name;
-                    auxExpressions.add(ident);
-                    auxExpressions.add(indent + "invokespecial(" + auxName + ", \"<init>\").V");
-
-                    level += arguments.getNumChildren();
-
-                    String args = this.handleMethodParameters(arguments, auxExpressions);
-
-                    if (level > 0) {
-                        System.out.println("METHOD " + methodCall);
-                        MethodSymbols methodSymbols = st.getMethod(methodCall);
-
-                        String id = "aux" + this.idCounter + "." + Utils.getOllirType(methodSymbols.getReturnType());
+                        builder.append(indent).append("invokespecial").append(firstChild.get("name"));
+                        String name = firstChild.get("name");
+                        String auxName = "aux" + this.idCounter + "." + name;
                         this.idCounter++;
+                        String ident = auxName + " :=." + name + " new(" + name + ")." + name;
+                        auxExpressions.add(ident);
+                        auxExpressions.add(indent + "invokespecial(" + auxName + ", \"<init>\").V");
 
-                        String call = id + " :=." + Utils.getOllirType(methodSymbols.getReturnType()) + " invokevirtual(" + auxName + ", \"" + methodCall.get("name") + "\"" + args + ")." + Utils.getOllirType(methodSymbols.getReturnType());
+                        allowComplex &= arguments.getNumChildren() <= 0;
+                        String args = this.handleMethodParameters(arguments, auxExpressions);
+                        if (!allowComplex) {
+                            System.out.println("METHOD " + methodCall);
+                            MethodSymbols methodSymbols = st.getMethod(methodCall);
 
-                        auxExpressions.add(indent + call);
-                        return id;
+                            String id = "aux" + this.idCounter + "." + Utils.getOllirType(methodSymbols.getReturnType());
+                            this.idCounter++;
+
+                            String retType = Utils.getOllirType(methodSymbols.getReturnType());
+
+                            String call = String.format("%s :=.%s invokevirtual(%s, \"%s\"%s).%s",
+                                                        id, retType, auxName, methodCall.get("name"), args, retType);
+                            auxExpressions.add(indent + call);
+                            return id;
+                        }
                     }
                 }
             }
             case "New" -> {
-                String name = methodCall.get("name");
-                String varName = "aux" + this.idCounter + "." + name;
-                String ident = varName + " :=." + name + " new(" + name + ")." + name;
-                this.idCounter++;
-                auxExpressions.add(indent + ident);
-                auxExpressions.add(indent + "invokespecial(" + varName + ", \"<init>\").V");
-                builder.append(varName);
-                break;
+                builder.append(this.createInitExpression(methodCall, auxExpressions, indent));
             }
             case "Ident" -> {
-                String name = methodCall.get("name");
-                String varName = "aux" + this.idCounter + "." + name;
-                String ident = varName + " :=." + name + " new(" + name + ")." + name;
-                this.idCounter++;
-                auxExpressions.add(indent + ident);
-                auxExpressions.add(indent + "invokespecial(" + varName + ", \"<init>\").V");
-                builder.append(varName);
-
+                builder.append(this.createInitExpression(methodCall, auxExpressions, indent));
+                arguments = methodCall.getChildren().get(1);
                 String args = this.handleMethodParameters(arguments, auxExpressions);
-
-                builder.append(indent + "invokestatic(");
-                level++;
-
                 MethodSymbols method = st.getMethod(methodCall);
                 String ret = Utils.getOllirType(method.getReturnType());
-                builder.append(firstChild.get("name") + ", \"" + methodCall.get("name") + "\"" + args + ")." + ret);
-                break;
+                String call = String.format("invokestatic(%s, \"%s\"%s).%s",
+                                                firstChild.get("name"), methodCall.get("name"), args, ret);
+                builder.append(call);
             }
             case "Literal" -> {
                 String value = methodCall.get("value");
                 builder.append(value);
             }
         }
-
         return builder.toString();
+    }
+
+    /**
+     * Creates an auxiliary "new" expression for object initialization
+     * @param methodCall "new" method call
+     * @param auxExpressions list of auxiliary expressions
+     * @param indent indentation level
+     * @return String auxiliary variable identifier
+     */
+    private String createInitExpression(JmmNode methodCall, List<String> auxExpressions, String indent) {
+        String name = methodCall.get("name");
+        String varName = "aux" + this.idCounter++ + "." + name;
+        String ident = varName + " :=." + name + " new(" + name + ")." + name;
+        auxExpressions.add(indent + ident);
+        auxExpressions.add(indent + "invokespecial(" + varName + ", \"<init>\").V");
+        return varName;
     }
 
     private String determineMethodReturnType(JmmNode methodNode) {
@@ -623,6 +619,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                     Symbol varSymb = this.st.getVariableSymbol(lhs);
                     return Utils.getOllirType(varSymb.getType());
 
+                    // TODO more cases
+
             }
            return "i32"; // TODO recursively determine parent's type
         }
@@ -639,14 +637,12 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             String param = "";
             if (child.getKind().equals("MethodCall") || child.getKind().equals("New")) {
-                param = this.handleMethodCall(child, 1, expr, "");
+                param = this.handleMethodCall(child, false, expr, "");
             }
             else
                 param = this.handleExpression(child, false, expr);
 
-
             auxExpressions.addAll(expr);
-
             paramsBuilder.append(", ").append(param);
         }
 
@@ -657,7 +653,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         }
 
         return paramsBuilder.toString();
-
     }
 
     private String handleVariable(JmmNode varNode, List<String> auxExpr) {
@@ -826,7 +821,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         for (var child : jmmNode.getChildren()) {
             childrenResults.add(visit(child));
         }
-
         return reduce(jmmNode, nodeResult, childrenResults);
     }
 }
