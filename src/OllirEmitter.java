@@ -307,7 +307,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                     // level determines the kind o expression which is created
                     // level 0 --> a + b
                     // level > 0 ---> t1 = a + b
-//                    int level = allowComplexExpr ? 0 : 1;
                     String rhsExpr =  this.handleExpression(rhs, allowComplexExpr, expr);
 
                     if (allowComplexExpr)
