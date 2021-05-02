@@ -176,18 +176,10 @@ public class Utils {
 
     public static String getOllirExpReturnType(String operator) {
 
-        String op = "";
-        switch (operator) {
-            case "Smaller":
-            case "And":
-            case "Negation":
-                op = ".bool";
-                break;
-            default:
-                op = ".i32";
-                break;
-        }
-        return op;
+        return switch (operator) {
+            case "Smaller", "And", "Negation" -> ".bool";
+            default -> ".i32";
+        };
         
     }
 
