@@ -507,7 +507,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                         String args = this.handleMethodParameters(arguments, auxExpressions);
 
                         String retType = this.determineMethodReturnType(methodCall);
-                        String stMethod = String.format("invokestatic(%s, \"%s\"%s).%s", firstChild.get("name"), methodCall.get("name"), args, retType);
+                        String stMethod = String.format(indent + "invokestatic(%s, \"%s\"%s).%s", firstChild.get("name"), methodCall.get("name"), args, retType);
                         builder.append(stMethod);
 
                         if (!allowComplex) {
