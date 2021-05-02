@@ -618,10 +618,10 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                     Symbol varSymb = this.st.getVariableSymbol(lhs);
                     return Utils.getOllirType(varSymb.getType());
 
-                    // TODO more cases
+                    // TODO more cases (Parameters ,Arguments ...)
 
             }
-           return "i32"; // TODO recursively determine parent's type
+           return "V"; // TODO recursively determine parent's type
         }
         else
             return Utils.getOllirType(methodSymb.getReturnType());
