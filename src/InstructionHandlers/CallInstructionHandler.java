@@ -31,7 +31,15 @@ public class CallInstructionHandler implements IntructionHandler{
 
 
         if(first.equals("this"))
-            first = className;
+            if (method.isConstructMethod()){
+
+                first = "java/lang/Object>";
+                //invokespecial java/lang/Object.init<>()V
+            }else{
+                first = className;
+            }
+
+
 
 
         string.append("\t"+ OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT) + " " + first);
@@ -41,6 +49,7 @@ public class CallInstructionHandler implements IntructionHandler{
             LiteralElement methodLiteral = (LiteralElement) callInstruction.getSecondArg();
             String methodName = methodLiteral.getLiteral().substring(1, methodLiteral.getLiteral().length() - 1);
             string.append("/" +methodName);
+
         }
 
 
@@ -61,7 +70,7 @@ public class CallInstructionHandler implements IntructionHandler{
 
             }
         }
-        if (build.isEmpty()){
+        if (build.toString().equals("")){
             if (OllirAccesser.getCallInvocation(callInstruction) != CallType.NEW){
                 string.append("()");
             }

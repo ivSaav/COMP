@@ -28,8 +28,16 @@ public class BackendTest {
 
     @Test
     public void testHelloWorld() {
+        /*
         var result = TestUtils.backend(new OllirResult(OllirUtils.parse(SpecsIo.getResource("fixtures/public/ollir/Fac.ollir")), null,new ArrayList<>()));
         //TestUtils.noErrors(result.getReports());
+
+        var output = result.run();
+        assertEquals("Hello, World!", output.trim());
+
+         */
+        var result = TestUtils.backend(SpecsIo.getResource("fixtures/public/HelloWorld.jmm"));
+        TestUtils.noErrors(result.getReports());
 
         var output = result.run();
         assertEquals("Hello, World!", output.trim());

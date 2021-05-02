@@ -79,6 +79,8 @@ public class BackendStage implements JasminBackend {
                     for(Map.Entry<String, Descriptor> variable : varTable.entrySet()){
                         if (variable.getValue().getScope().equals(VarScope.LOCAL))
                             localVariables++;
+                        if (variable.getValue().getScope().equals(VarScope.PARAMETER))
+                            localVariables++;
                     }
                     jasminCode.append("\n\t"+ ".limit locals " + localVariables);
                     jasminCode.append("\n\t" + ".limit stack 99");

@@ -26,6 +26,10 @@ public class ReturnInstructionHandler implements IntructionHandler {
         if(returnType != null && returnType!=ElementType.VOID){
             string.append("\t" + JasminUtils.parseType(returnType).toLowerCase(Locale.ROOT));
         }
+        else{
+            string.append("\t");
+
+        }
 
         string.append("return ");
         string.append("\n");
