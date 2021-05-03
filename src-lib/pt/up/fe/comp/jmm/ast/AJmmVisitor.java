@@ -43,13 +43,13 @@ public abstract class AJmmVisitor<D, R> implements JmmVisitor<D, R> {
         this.defaultVisit = defaultVisit;
     }
 
-    // protected R visitDefault(JmmNode jmmNode, D data) {
-    // if (defaultVisit == null) {
-    // throw new RuntimeException("No default visitor is set, could not visit node " + jmmNode);
-    // }
-    //
-    // return defaultVisit.apply(jmmNode, data);
-    // }
+     protected R visitDefault(JmmNode jmmNode, D data) {
+         if (defaultVisit == null) {
+            throw new RuntimeException("No default visitor is set, could not visit node " + jmmNode);
+         }
+
+         return defaultVisit.apply(jmmNode, data);
+     }
 
     /**
      * 

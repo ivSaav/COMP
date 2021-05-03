@@ -2,6 +2,7 @@ options
 {
     LOOKAHEAD=1;
     DEBUG_PARSER = false;
+    NODE_SCOPE_HOOK = true;
 }
 
 PARSER_BEGIN(Parser)
@@ -21,6 +22,14 @@ public class Parser
 
     }
 
+    private void jjtreeOpenNodeScope(Node n) {
+        SimpleNode sn = (SimpleNode) n;
+        Token t = getToken(1);
+        sn.put("line", Integer.toString(t.beginLine));
+        sn.put("col", Integer.toString(t.beginColumn));
+    }
+
+    private void jjtreeCloseNodeScope(Node n) {}
     public int getErrorCnt() {return this.errorCnt;}
     public ArrayList<Report> getReports() { return this.reports; }
 }
@@ -89,7 +98,7 @@ void Main() #void : {}
 
 void Statement() #void: {}
 {
-    (<LBRACE> (Statement())* <RBRACE> #Body)
+    (<LBRACE> (Statement())* <RBRACE>)
     | IfStatement()
     | WhileStatement()
     | ExpressionDeclaration() [Attribution()] <PVIRG>
@@ -99,7 +108,7 @@ void Statement() #void: {}
 void IfStatement() #If: {}
 {
     <IF> <LPAR> ExpressionDeclaration() <RPAR>
-        Statement()
+        Statement() #Body
     <ELSE>
         Statement() #Else
 }
@@ -134,7 +143,7 @@ void WhileStatement() #While : {}
 
         this.errorCnt++;
     }
-        Statement()
+        Statement() #Body
 }
 
 void Attribution() #void:{}
@@ -183,7 +192,7 @@ void PriorityExpressions() #void : {Token t;}
 {
     Terminals()
     (
-        <LSBRACE>  ExpressionDeclaration() <RSBRACE>
+        <LSBRACE>  ExpressionDeclaration() <RSBRACE> #Array(2)
         |
         <FSTOP> ((<LENGTH> #Length(1)) | MethodCall())
     )*
@@ -199,9 +208,8 @@ void MethodCall() #MethodCall(2): {Token t;}
 
 void Terminals() #void : {Token t;}
 {
-
-    t = <INTEGER> { jjtThis.put("int", t.image); }#Int  // literal -> type: int; value = token.image
-    | t = <LITERALBOOL> { jjtThis.put("boolean", t.image); } #LiteralBool  //literal_boolean
+    t = <INTEGER> { jjtThis.put("type", "int"); jjtThis.put("value", t.image); }#Literal  // literal -> type: int; value = token.image
+    | t = <LITERALBOOL> { jjtThis.put("type", "boolean"); jjtThis.put("value", t.image); } #Literal  //literal_boolean
     | t=<IDENTIFIER>{jjtThis.put("name", t.image);} #Ident
     | <THIS> #This
     | NewDeclaration()
@@ -213,19 +221,17 @@ void NewDeclaration() #void : {Token t;}
 {
     <NEW>
     (
-        <INT> <LSBRACE> ExpressionDeclaration() <RSBRACE>
+        <INT> <LSBRACE> ExpressionDeclaration() <RSBRACE> #NewArray(1)
     |
       t = <IDENTIFIER> {jjtThis.put("name", t.image);} #New <LPAR> <RPAR>
     )
+
 }
 
 /*IMPORT DECLARATION*/
 void ImportDeclaration() #ImportDec: {String s;}
 {
-    <IMPORT> 
-        s=Module()
-            {jjtThis.put("class",s);}
-    <PVIRG>
+    <IMPORT> s=Module() {jjtThis.put("class",s);} <PVIRG>
 }
 
 String Module() #Module: {Token t;String s;}
@@ -248,9 +254,9 @@ void ClassMethod() #Method: {Token t;}
         MethodBody()
     <RBRACE>
 }
-void MainDeclaration() #MainMethod: {Token t;}
+void MainDeclaration() #Method: {Token t; Token main;}
 {
-   <STATIC> <VOID> <MAIN> <LPAR> <STRING> ((Array() t = <IDENTIFIER> {jjtThis.put("name", t.image); } #Ident) #Parameters)<RPAR>
+   <STATIC> <VOID> main = <MAIN> {jjtThis.put("name", main.image);} <LPAR> <STRING> (Array() t = <IDENTIFIER> {jjtThis.put("name", t.image); } #Ident) #Parameters<RPAR>
    <LBRACE >
           MethodBody()
    <RBRACE>
@@ -285,11 +291,9 @@ void VarDecl() #VarDecl:{Token t;}{
 
 void Type() #Type : {Token t;boolean isArray = false;}
 {
-    ( 
-      t = <INT> [Array() {isArray=true;}] { jjtThis.put("type", t.image);  jjtThis.put("isArray", ""+isArray); }
-    | t = <BOOLEAN> { jjtThis.put("type", t.image); }
-    | t = <IDENTIFIER> { jjtThis.put("type", t.image); }
-    )
+    t = <INT> [Array() {isArray=true;}] { jjtThis.put("type", t.image);  jjtThis.put("isArray", ""+isArray); }
+  | t = <BOOLEAN> { jjtThis.put("type", t.image); jjtThis.put("isArray", "false");}
+  | t = <IDENTIFIER> { jjtThis.put("type", t.image); jjtThis.put("isArray", "false");}
 }
 
 void Identifier() #void: {Token t;}

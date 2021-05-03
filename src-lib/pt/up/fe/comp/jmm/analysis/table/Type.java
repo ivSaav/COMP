@@ -1,5 +1,7 @@
 package pt.up.fe.comp.jmm.analysis.table;
 
+import java.util.Objects;
+
 public class Type {
     private final String name;
     private final boolean isArray;
@@ -55,5 +57,6 @@ public class Type {
             return false;
         return true;
     }
+
 
 }

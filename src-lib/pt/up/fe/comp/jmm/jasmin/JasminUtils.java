@@ -9,8 +9,10 @@ import java.io.InputStreamReader;
 
 import jas.jasError;
 import jasmin.ClassFile;
+import org.specs.comp.ollir.ElementType;
+import org.specs.comp.ollir.OperationType;
 
-class JasminUtils {
+public class JasminUtils {
     /**
 	 * Extracted from Jasmin code
 	 */
@@ -19,7 +21,7 @@ class JasminUtils {
         try (FileInputStream fs = new FileInputStream(inputFile);
             InputStreamReader ir = new InputStreamReader(fs);
             BufferedReader inp = new BufferedReader(ir);) {
-            
+
             ClassFile classFile = new ClassFile();
             classFile.readJasmin(inp, inputFile.getName(), true);
 
@@ -113,5 +115,108 @@ class JasminUtils {
             }
         }
         return new String(tmp);
+    }
+
+
+
+
+    public static String parseType(ElementType type){
+        switch (type){
+            case INT32:
+                return "I";
+            case BOOLEAN:
+                return "B";
+            case ARRAYREF:
+                return "[I";
+            case OBJECTREF:
+                return "Ljava/lang/Object";
+            case CLASS:
+                return "C";
+            case THIS:
+                return "T";
+            case STRING:
+                return "Ljava/lang/String";
+            case VOID:
+                return "V";
+            default:
+                return null;
+        }
+
+    }
+
+    public static String parseOperationType(OperationType type){
+        switch (type){
+
+
+
+            case LTH:
+            case LTHI32:
+                return "lt";
+            case GTH:
+            case GTHI32:
+                return "gt";
+            case EQ:
+            case EQI32:
+                return "eq";
+            case NEQ:
+            case NEQI32:
+                return "ne";
+            case LTE:
+            case LTEI32:
+                return "le";
+            case GTE:
+            case GTEI32:
+                return "ge";
+
+
+
+            case MUL:
+            case MULI32:
+                return "mul";
+
+            case DIV:
+            case DIVI32:
+                return "div";
+
+            case ADD:
+            case ADDI32:
+                return "add";
+
+            case SUB:
+            case SUBI32:
+                return "sub";
+
+            case AND:
+            case ANDB:
+            case ANDI32:
+                return "and";
+
+            case OR:
+            case ORB:
+                return "or";
+
+            case NOT:
+            case NOTB:
+                return "not";
+
+            case XOR:
+            case XORI32:
+                return "xor";
+
+            case SHL:
+            case SHR:
+            case SHRR:
+            case ORI32:
+            case SHLI32:
+            case SHRI32:
+            case SHRRI32:
+            default:
+                return "another";
+
+
+
+        }
+        //return null;
+
     }
 }

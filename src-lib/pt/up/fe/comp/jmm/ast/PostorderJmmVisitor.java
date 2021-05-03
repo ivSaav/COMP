@@ -30,6 +30,8 @@ public class PostorderJmmVisitor<D, R> extends AJmmVisitor<D, R> {
 
     private final BiFunction<R, List<R>, R> reduce;
 
+//    private final BiFunction<List<R>, List<R>, List<R>> reduce;
+
     /**
      * 
      * @param reduce

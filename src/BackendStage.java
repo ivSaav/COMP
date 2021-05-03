@@ -1,16 +1,15 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
-import org.specs.comp.ollir.ClassUnit;
-import org.specs.comp.ollir.OllirErrorException;
+import org.specs.comp.ollir.*;
 
+import org.specs.comp.ollir.Node;
+import InstructionHandlers.*;
 import pt.up.fe.comp.jmm.jasmin.JasminBackend;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
+import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
-import pt.up.fe.specs.util.SpecsIo;
 
 /**
  * Copyright 2021 SPeCS.
@@ -29,6 +28,7 @@ public class BackendStage implements JasminBackend {
 
     @Override
     public JasminResult toJasmin(OllirResult ollirResult) {
+
         ClassUnit ollirClass = ollirResult.getOllirClass();
 
         try {
@@ -38,15 +38,71 @@ public class BackendStage implements JasminBackend {
             ollirClass.buildCFGs(); // build the CFG of each method
             ollirClass.outputCFGs(); // output to .dot files the CFGs, one per method
             ollirClass.buildVarTables(); // build the table of variables for each method
-            ollirClass.show(); // print to console main information about the input OLLIR
+            //ollirClass.show(); // print to console main information about the input OLLIR
 
             // Convert the OLLIR to a String containing the equivalent Jasmin code
-            String jasminCode = ""; // Convert node ...
+            StringBuilder jasminCode = new StringBuilder(); // Convert node ...
+
+            handleClass(ollirClass, jasminCode);
+            handleFields(ollirClass, jasminCode);
+
+
+            for(Method method : ollirClass.getMethods()){
+                HashMap<String, Descriptor> varTable = OllirAccesser.getVarTable(method);
+
+                jasminCode.append(".method public ");
+                if(method.isStaticMethod()) jasminCode.append("static ");
+                if(method.isFinalMethod()) jasminCode.append("final ");
+                if(method.isConstructMethod()){
+                    jasminCode.append("<init>(");
+                    parseMethodParameters(method.getParams(), jasminCode);
+                    jasminCode.append(")V\n");
+                    jasminCode.append("\taload_0");
+                }else{
+
+                    String methodName = method.getMethodName();
+
+                    jasminCode.append(methodName + "(");
+                    if (methodName.equals("main")){
+                        jasminCode.append("[Ljava/lang/String;");
+
+                    }else{
+                        parseMethodParameters(method.getParams(), jasminCode);
+                    }
+                    jasminCode.append(")"+ JasminUtils.parseType(method.getReturnType().getTypeOfElement()));
+
+
+                    //LIMITS
+
+                    int localVariables = 0;
+
+                    for(Map.Entry<String, Descriptor> variable : varTable.entrySet()){
+                        if (variable.getValue().getScope().equals(VarScope.LOCAL))
+                            localVariables++;
+                        if (variable.getValue().getScope().equals(VarScope.PARAMETER))
+                            localVariables++;
+                    }
+                    jasminCode.append("\n\t"+ ".limit locals " + localVariables);
+                    jasminCode.append("\n\t" + ".limit stack 99");
+
+                }jasminCode.append("\n");
+
+
+                handleInstructions(jasminCode, ollirClass.getClassName(), method, varTable);
+
+                jasminCode.append(".end method \n\n");
+
+            }
+
+            System.out.println("JASMIN CODE\n" + jasminCode.toString());
+
+
 
             // More reports from this stage
             List<Report> reports = new ArrayList<>();
+            //jasminCode=SpecsIo.getResource("fixtures/public/jasmin/Greeter.j");
 
-            return new JasminResult(ollirResult, jasminCode, reports);
+            return new JasminResult(ollirResult, jasminCode.toString(), reports);
 
         } catch (OllirErrorException e) {
             return new JasminResult(ollirClass.getClassName(), null,
@@ -55,4 +111,85 @@ public class BackendStage implements JasminBackend {
 
     }
 
+    private void handleInstructions(StringBuilder jasminCode, String className,Method method, HashMap<String, Descriptor> varTable) {
+
+        InstructionAllocator instructionAllocator = new InstructionAllocator();
+
+        for (Instruction instruction : method.getInstructions()) {
+            jasminCode.append(instructionAllocator.allocateAndHandle(instruction, className,method));
+        }
+
+    }
+
+    private int genrs(Node n ){
+
+        if (n.getSucc2() != null)return  2;
+        if (n.getSucc1()!= null)return 1;
+        return 0;
+    }
+
+
+    private void swapTopElements(Stack<String> stack){
+        String first = stack.pop();
+        String second = stack.pop();
+        stack.push(first);
+        stack.push(second);
+    }
+
+    private void handleClass(ClassUnit ollirClass, StringBuilder jasminCode) {
+        jasminCode.append(".class public ");
+        AccessModifiers accessModifiers = ollirClass.getClassAccessModifier();
+        if(!accessModifiers.equals(AccessModifiers.DEFAULT)) jasminCode.append(ollirClass.getClassAccessModifier()+ " ");
+        if(ollirClass.isFinalClass()) jasminCode.append("final ");
+        if(ollirClass.isStaticClass()) jasminCode.append("static ");
+        jasminCode.append(ollirClass.getClassName());
+        if (ollirClass.getPackage()==null){
+            jasminCode.append("\n.super java/lang/Object\n\n");
+        }
+
+    }
+
+    private void handleFields(ClassUnit ollirClass, StringBuilder jasminCode) {
+        //.field <access-spec> <field-name> <signature> [ = <value> ]
+        for(Field field : ollirClass.getFields()){
+
+            jasminCode.append(".field ");
+            if(field.isStaticField()) jasminCode.append("static ");
+            jasminCode.append(field.getFieldName()+" ");
+            jasminCode.append(JasminUtils.parseType(field.getFieldType().getTypeOfElement()));
+
+            if(field.isInitialized()){
+                jasminCode.append(" = ");
+                jasminCode.append(field.getInitialValue());
+            }
+
+            jasminCode.append("\n");
+
+        }
+        jasminCode.append("\n");
+    }
+
+
+    public void parseMethodParameters(ArrayList<Element> paramList, StringBuilder jasminCode){
+
+        int paramListSize = paramList.size();
+
+        for(int i=0; i < paramListSize; i++){
+            jasminCode.append(JasminUtils.parseType(paramList.get(i).getType().getTypeOfElement()));
+            if(i!=paramListSize-1){
+                jasminCode.append(";");
+            }
+        }
+
+    }
+
+
+
+
+
+
+
+
 }
+
+

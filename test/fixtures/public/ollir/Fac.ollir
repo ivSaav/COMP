@@ -1,4 +1,7 @@
 Fac {
+
+    .field private a.i32;
+
 	.construct Fac().V {
 		invokespecial(this, "<init>").V;
 	}
