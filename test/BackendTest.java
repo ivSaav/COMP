@@ -46,5 +46,6 @@ public class BackendTest {
 
         var output = result.run();
         System.out.println(output);
+        assertEquals("30", output.trim());
     }
 }

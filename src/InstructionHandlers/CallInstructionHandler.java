@@ -30,10 +30,15 @@ public class CallInstructionHandler implements IntructionHandler{
             Operand classOperand = (Operand) callInstruction.getFirstArg();
             first = classOperand.getName();
 
-            if (callInstruction.getInvocationType() == CallType.invokespecial || callInstruction.getInvocationType() == CallType.invokevirtual)
+            if (callInstruction.getInvocationType() == CallType.invokespecial || callInstruction.getInvocationType() == CallType.invokevirtual) {
                 string.append("\taload ").append(vars.get(first).getVirtualReg()).append("\n");
+                first = ((ClassType) callInstruction.getFirstArg().getType()).getName();
+            }
+            else{
+                first = ((Operand) callInstruction.getFirstArg()).getName();
+            }
 
-            first = ((ClassType) callInstruction.getFirstArg().getType()).getName();
+
             if(classOperand.getName().equals("this")) {
                 if (method.isConstructMethod()) {
                     first = "java/lang/Object"; // TODO
@@ -41,6 +46,8 @@ public class CallInstructionHandler implements IntructionHandler{
                     first = ((ClassType) callInstruction.getFirstArg().getType()).getName();
                 }
             }
+
+
         }
 
 
