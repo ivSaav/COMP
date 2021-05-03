@@ -3,6 +3,7 @@ package InstructionHandlers;
 import org.specs.comp.ollir.*;
 import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 
+import java.util.HashMap;
 import java.util.Locale;
 
 public class CallInstructionHandler implements IntructionHandler{
@@ -18,6 +19,7 @@ public class CallInstructionHandler implements IntructionHandler{
     public String handleInstruction(String className,Method method) {
 
         StringBuilder string = new StringBuilder();
+        HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
 
         String first = "";
         if (callInstruction.getFirstArg().isLiteral()){
@@ -27,14 +29,57 @@ public class CallInstructionHandler implements IntructionHandler{
         else {
             Operand classOperand = (Operand) callInstruction.getFirstArg();
             first = classOperand.getName();
+
+            if (callInstruction.getInvocationType() == CallType.invokespecial || callInstruction.getInvocationType() == CallType.invokevirtual) {
+                string.append("\taload ").append(vars.get(first).getVirtualReg()).append("\n");
+                first = ((ClassType) callInstruction.getFirstArg().getType()).getName();
+            }
+            else{
+                first = ((Operand) callInstruction.getFirstArg()).getName();
+            }
+
+
+            if(classOperand.getName().equals("this")) {
+                if (method.isConstructMethod()) {
+                    first = "java/lang/Object"; // TODO
+                } else {
+                    first = ((ClassType) callInstruction.getFirstArg().getType()).getName();
+                }
+            }
+
+
         }
 
-        if(first.equals("this"))
-            if (method.isConstructMethod()){
-                first = "java/lang/Object";
-            }else{
-                first = className;
+
+
+        StringBuilder build = new StringBuilder();
+        if (callInstruction.getListOfOperands()!=null) {
+            int count = 0;
+
+            for (Element element : callInstruction.getListOfOperands()) {
+
+                if (element.isLiteral()) {
+                    LiteralElement literal = (LiteralElement) element;
+                    string.append("\tldc "+literal.getLiteral()+" \n");
+                    build.append(((LiteralElement) element).getLiteral());
+                } else {
+
+                    if (element.getType().getTypeOfElement() == ElementType.OBJECTREF) {
+                        string.append("\t a");
+                    }
+                    else
+                        string.append("\t"+JasminUtils.parseType(element.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+
+                    Operand variable = (Operand) element;
+                    Descriptor d = vars.get(variable.getName());
+                    string.append("load "+ d.getVirtualReg()+"\n");
+
+                    build.append(JasminUtils.parseType(variable.getType().getTypeOfElement()));
+                }
+                count++;
+
             }
+        }
 
         string.append("\t"+ OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT) + " " + first);
 
@@ -45,23 +90,6 @@ public class CallInstructionHandler implements IntructionHandler{
         }
 
 
-        StringBuilder build = new StringBuilder();
-        if (callInstruction.getListOfOperands()!=null) {
-            int count = 0;
-
-            for (Element element : callInstruction.getListOfOperands()) {
-                if (count!=0){build.append(";");}
-
-                if (element.isLiteral()) {
-                    build.append(((LiteralElement) element).getLiteral());
-                } else {
-                    Operand operand1 = (Operand) element;
-                    build.append(JasminUtils.parseType(operand1.getType().getTypeOfElement()));
-                }
-                count++;
-
-            }
-        }
         if (build.toString().equals("")){
             if (OllirAccesser.getCallInvocation(callInstruction) != CallType.NEW){
                 string.append("()");
