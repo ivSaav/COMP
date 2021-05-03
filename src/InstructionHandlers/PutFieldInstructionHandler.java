@@ -29,7 +29,6 @@ public class PutFieldInstructionHandler implements IntructionHandler{
 
         }
 
-
         string.append("\tputfield ");
 
         String first = "";
@@ -51,8 +50,6 @@ public class PutFieldInstructionHandler implements IntructionHandler{
             Operand op1= (Operand) put.getSecondOperand();
             second = op1.getName();
         }
-
-
 
         string.append(first +"/"+second +" "+ JasminUtils.parseType(put.getSecondOperand().getType().getTypeOfElement()));
 

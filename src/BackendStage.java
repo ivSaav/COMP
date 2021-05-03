@@ -137,7 +137,7 @@ public class BackendStage implements JasminBackend {
     }
 
     private void handleClass(ClassUnit ollirClass, StringBuilder jasminCode) {
-        jasminCode.append(".class ");
+        jasminCode.append(".class public ");
         AccessModifiers accessModifiers = ollirClass.getClassAccessModifier();
         if(!accessModifiers.equals(AccessModifiers.DEFAULT)) jasminCode.append(ollirClass.getClassAccessModifier()+ " ");
         if(ollirClass.isFinalClass()) jasminCode.append("final ");

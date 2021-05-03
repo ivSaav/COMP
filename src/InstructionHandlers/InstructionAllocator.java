@@ -17,7 +17,6 @@ public class InstructionAllocator {
             case GETFIELD:
                 return new GetFieldInstructionHandler(instruction).handleInstruction(className,method);
             case PUTFIELD:
-                //TODO
                 return new PutFieldInstructionHandler(instruction).handleInstruction(className,method);
             case GOTO:
                 return new GoToInstructionHandler(instruction).handleInstruction(className,method);
@@ -31,7 +30,6 @@ public class InstructionAllocator {
                 return new SingleOpInstructionHandler(instruction).handleInstruction(className, method);
             default:
                 return "\t" + instruction.toString()+"\n";
-
         }
     }
 

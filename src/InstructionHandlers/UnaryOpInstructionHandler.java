@@ -10,18 +10,12 @@ public class UnaryOpInstructionHandler implements IntructionHandler{
     private UnaryOpInstruction unaryOpInstruction;
 
     public UnaryOpInstructionHandler(Instruction unary) {
-
         this.unaryOpInstruction = (UnaryOpInstruction) unary;
-
     }
-
 
     public String handleInstruction(String className, Method method) {
         StringBuilder string = new StringBuilder();
-
         Element rop = unaryOpInstruction.getRightOperand();
-
-
         HashMap<String, Descriptor> varTable = OllirAccesser.getVarTable(method);
 
         if (rop.isLiteral()){
@@ -38,11 +32,8 @@ public class UnaryOpInstructionHandler implements IntructionHandler{
             string.append("load " + d.getVirtualReg() + "\n");
         }
 
-        //string.append("\nTYPE:\n"+unaryOpInstruction.getUnaryOperation().getOpType());
-
         string.append("\t"+ JasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
         string.append(JasminUtils.parseOperationType(unaryOpInstruction.getUnaryOperation().getOpType())+"\n");
-
 
         return string.toString();
     }

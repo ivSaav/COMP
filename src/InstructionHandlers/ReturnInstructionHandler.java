@@ -28,7 +28,6 @@ public class ReturnInstructionHandler implements IntructionHandler {
         }
         else{
             string.append("\t");
-
         }
 
         string.append("return ");

@@ -14,7 +14,6 @@ public class CondBranchInstructionHandler implements IntructionHandler{
         this.condBranchInstruction = (CondBranchInstruction) branchInstruction;
     }
 
-
     public String handleInstruction(String className, Method method) {
         HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
         String label=condBranchInstruction.getLabel();
@@ -37,11 +36,10 @@ public class CondBranchInstructionHandler implements IntructionHandler{
         if (lop.isLiteral()){
             LiteralElement literal = (LiteralElement) lop;
             string.append("\tldc "+ literal.getLiteral() +"\n");
-            //string.append(op.);
         }else{
             string.append("\t"+JasminUtils.parseType(lop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
             Operand variable = (Operand) lop;
-            Descriptor d = vars.get(variable.getName()); //d is null?
+            Descriptor d = vars.get(variable.getName());
             string.append("load "+ d.getVirtualReg()+"\n");
         }
 
@@ -51,25 +49,9 @@ public class CondBranchInstructionHandler implements IntructionHandler{
            string.append("\t"+JasminUtils.parseType(lop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT)+"cmp\n");
         }
 
-
         string.append("\tif");
         string.append(JasminUtils.parseOperationType(condBranchInstruction.getCondOperation().getOpType()));
         string.append(" "+ label +"\n");
-
-        /* not sure how this plays but yup e isso
-        Node node = (Node) condBranchInstruction;
-        string.append("HERE\n");
-        InstructionAllocator instructionAllocator = new InstructionAllocator();
-        instructionAllocator.allocateAndHandle((Instruction) node.getSucc1(),className, method);
-        string.append("HERE\n");
-
-         */
-
-
-
-
-
-
 
         return string.toString();
     }

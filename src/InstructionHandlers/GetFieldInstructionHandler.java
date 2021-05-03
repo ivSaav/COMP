@@ -15,9 +15,7 @@ public class GetFieldInstructionHandler implements IntructionHandler{
 
     public String handleInstruction(String className,Method method) {
         StringBuilder string = new StringBuilder();
-
         getFieldInstruction.getFirstOperand();
-
 
         string.append("\tgetfield ");
 

@@ -29,27 +29,19 @@ public class CallInstructionHandler implements IntructionHandler{
             first = classOperand.getName();
         }
 
-
         if(first.equals("this"))
             if (method.isConstructMethod()){
-
-                first = "java/lang/Object>";
-                //invokespecial java/lang/Object.init<>()V
+                first = "java/lang/Object";
             }else{
                 first = className;
             }
 
-
-
-
         string.append("\t"+ OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT) + " " + first);
 
         if (callInstruction.getSecondArg()!= null) {
-
             LiteralElement methodLiteral = (LiteralElement) callInstruction.getSecondArg();
             String methodName = methodLiteral.getLiteral().substring(1, methodLiteral.getLiteral().length() - 1);
             string.append("/" +methodName);
-
         }
 
 
@@ -81,10 +73,8 @@ public class CallInstructionHandler implements IntructionHandler{
             string.append(")");
         }
 
-
         if (OllirAccesser.getCallInvocation(callInstruction) != CallType.NEW)
             string.append(JasminUtils.parseType(callInstruction.getReturnType().getTypeOfElement()));
-
 
         return string.toString()+"\n";
     }

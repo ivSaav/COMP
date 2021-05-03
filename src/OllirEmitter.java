@@ -45,7 +45,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         }
 
         String classConstructor = "\n\t.construct " + classNode.get("class") +"().V {\n"
-                +       "\t\tinvokespecial(this, \"<init>\").V;\n" + "\t}\n";
+                +       "\t\tinvokespecial(this, \"<init>\").V;\n" + "\tret.V;} \n";
         stringBuilder.append(classConstructor);
 
         return stringBuilder.toString();
@@ -67,7 +67,13 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         MethodSymbols methodSymbols = this.st.getMethod(methodNode);
 
         // Method declaration
-        String methodDec = "\t.method public " + methodSymbols.getName();
+        String methodDec = "\t.method public ";
+
+        if(methodNode.get("name").equals("main")){
+            methodDec+="static ";
+        }
+
+        methodDec += methodSymbols.getName();
 
         // Method parameters
         StringBuilder methodParam = new StringBuilder("(");
@@ -645,11 +651,11 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             paramsBuilder.append(", ").append(param);
         }
 
-        if (paramsNode.getNumChildren() > 1) {
-            String aux = paramsBuilder.toString();
-            String ret = aux.substring(0, aux.length()-2);
-            return ret;
-        }
+        //if (paramsNode.getNumChildren() > 1) {
+        //    String aux = paramsBuilder.toString();
+        //    String ret = aux.substring(0, aux.length()-2);
+        //    return ret;
+        //}
 
         return paramsBuilder.toString();
     }

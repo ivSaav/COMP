@@ -16,8 +16,4 @@ public class GoToInstructionHandler implements IntructionHandler{
     public String handleInstruction(String className,Method method) {
         return "\tgoto " + instruction.getLabel()+"\n";
     }
-
-
-
-
 }
