@@ -45,5 +45,6 @@ public class BackendTest {
         TestUtils.noErrors(result.getReports());
 
         var output = result.run();
+        System.out.println(output);
     }
 }

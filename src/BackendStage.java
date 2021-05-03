@@ -57,7 +57,6 @@ public class BackendStage implements JasminBackend {
                     jasminCode.append("<init>(");
                     parseMethodParameters(method.getParams(), jasminCode);
                     jasminCode.append(")V\n");
-                    jasminCode.append("\taload_0");
                 }else{
 
                     String methodName = method.getMethodName();
@@ -81,8 +80,11 @@ public class BackendStage implements JasminBackend {
                             localVariables++;
                         if (variable.getValue().getScope().equals(VarScope.PARAMETER))
                             localVariables++;
+                        if (variable.getValue().getScope().equals(VarScope.FIELD))
+                            localVariables++;
                     }
-                    jasminCode.append("\n\t"+ ".limit locals " + localVariables);
+
+                    jasminCode.append("\n\t"+ ".limit locals " + 99);
                     jasminCode.append("\n\t" + ".limit stack 99");
 
                 }jasminCode.append("\n");
@@ -176,9 +178,9 @@ public class BackendStage implements JasminBackend {
 
         for(int i=0; i < paramListSize; i++){
             jasminCode.append(JasminUtils.parseType(paramList.get(i).getType().getTypeOfElement()));
-            if(i!=paramListSize-1){
-                jasminCode.append(";");
-            }
+//            if(i!=paramListSize-1){
+//                jasminCode.append(";");
+//            }
         }
 
     }
