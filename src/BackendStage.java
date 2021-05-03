@@ -57,7 +57,6 @@ public class BackendStage implements JasminBackend {
                     jasminCode.append("<init>(");
                     parseMethodParameters(method.getParams(), jasminCode);
                     jasminCode.append(")V\n");
-                    jasminCode.append("\taload_0");
                 }else{
 
                     String methodName = method.getMethodName();
@@ -81,8 +80,11 @@ public class BackendStage implements JasminBackend {
                             localVariables++;
                         if (variable.getValue().getScope().equals(VarScope.PARAMETER))
                             localVariables++;
+                        if (variable.getValue().getScope().equals(VarScope.FIELD))
+                            localVariables++;
                     }
-                    jasminCode.append("\n\t"+ ".limit locals " + localVariables);
+
+                    jasminCode.append("\n\t"+ ".limit locals " + ++localVariables);
                     jasminCode.append("\n\t" + ".limit stack 99");
 
                 }jasminCode.append("\n");
@@ -96,11 +98,8 @@ public class BackendStage implements JasminBackend {
 
             System.out.println("JASMIN CODE\n" + jasminCode.toString());
 
-
-
             // More reports from this stage
             List<Report> reports = new ArrayList<>();
-            //jasminCode=SpecsIo.getResource("fixtures/public/jasmin/Greeter.j");
 
             return new JasminResult(ollirResult, jasminCode.toString(), reports);
 
@@ -121,21 +120,6 @@ public class BackendStage implements JasminBackend {
 
     }
 
-    private int genrs(Node n ){
-
-        if (n.getSucc2() != null)return  2;
-        if (n.getSucc1()!= null)return 1;
-        return 0;
-    }
-
-
-    private void swapTopElements(Stack<String> stack){
-        String first = stack.pop();
-        String second = stack.pop();
-        stack.push(first);
-        stack.push(second);
-    }
-
     private void handleClass(ClassUnit ollirClass, StringBuilder jasminCode) {
         jasminCode.append(".class public ");
         AccessModifiers accessModifiers = ollirClass.getClassAccessModifier();
@@ -144,7 +128,12 @@ public class BackendStage implements JasminBackend {
         if(ollirClass.isStaticClass()) jasminCode.append("static ");
         jasminCode.append(ollirClass.getClassName());
         if (ollirClass.getPackage()==null){
-            jasminCode.append("\n.super java/lang/Object\n\n");
+            jasminCode.append("\n.super ");
+            if(ollirClass.getSuperClass() == null)
+                jasminCode.append("java/lang/Object\n\n");
+            else{
+                jasminCode.append(ollirClass.getSuperClass()+"\n\n");
+            }
         }
 
     }
@@ -166,7 +155,6 @@ public class BackendStage implements JasminBackend {
             jasminCode.append("\n");
 
         }
-        jasminCode.append("\n");
     }
 
 
@@ -176,9 +164,9 @@ public class BackendStage implements JasminBackend {
 
         for(int i=0; i < paramListSize; i++){
             jasminCode.append(JasminUtils.parseType(paramList.get(i).getType().getTypeOfElement()));
-            if(i!=paramListSize-1){
-                jasminCode.append(";");
-            }
+//            if(i!=paramListSize-1){
+//                jasminCode.append(";");
+//            }
         }
 
     }

@@ -12,6 +12,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
     private SymbolsTable st;
     private int idCounter = 1;
+    private boolean isStaticMethod = true;
 
     public OllirEmitter(SymbolsTable st) {
         this.st = st;
@@ -45,7 +46,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         }
 
         String classConstructor = "\n\t.construct " + classNode.get("class") +"().V {\n"
-                +       "\t\tinvokespecial(this, \"<init>\").V;\n" + "\tret.V;} \n";
+                +       "\t\tinvokespecial(this, \"<init>\").V;\n" + "\t" +
+                "\tret.V;\n} \n";
         stringBuilder.append(classConstructor);
 
         return stringBuilder.toString();
@@ -69,8 +71,9 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         // Method declaration
         String methodDec = "\t.method public ";
 
-        if(methodNode.get("name").equals("main")){
+        if(methodSymbols.getName().equals("main")){
             methodDec+="static ";
+            this.isStaticMethod = true;
         }
 
         methodDec += methodSymbols.getName();
@@ -265,7 +268,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
                 break;
             case "MethodCall": // In the case of a call to a method
-                String methodCall = this.handleMethodCall(rhs, false, auxExpressions, "");
+                String methodCall = this.handleMethodCall(rhs, allowComplexExpr, auxExpressions, "");
                 rhsBuilder.append(methodCall);
                 this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
                 break;
@@ -508,12 +511,22 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 firstChild = methodCall.getChildren().get(0);
                 arguments = methodCall.getChildren().get(1);
                 switch (firstChild.getKind()) {
-                    case "Ident" -> { // static
+                    case "Ident" -> { // static or virtual
 
                         String args = this.handleMethodParameters(arguments, auxExpressions);
 
                         String retType = this.determineMethodReturnType(methodCall);
-                        String stMethod = String.format(indent + "invokestatic(%s, \"%s\"%s).%s", firstChild.get("name"), methodCall.get("name"), args, retType);
+
+                        String callName = "invokestatic";
+                        String firstArg = firstChild.get("name");
+
+                        Symbol varSymb = this.st.getVariableSymbol(firstChild);
+                        if (varSymb != null) { // Obj a;   a.method();
+                            callName = "invokevirtual";
+                            firstArg += "." + Utils.getOllirType(varSymb.getType());
+                        }
+
+                        String stMethod = String.format(indent + "%s(%s, \"%s\"%s).%s", callName, firstArg, methodCall.get("name"), args, retType);
                         builder.append(stMethod);
 
                         if (!allowComplex) {
@@ -523,7 +536,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                             return id;
                         }
                     }
-                    case "This" -> { // static
+                    case "This" -> { // virtual
                         String retType = this.determineMethodReturnType(methodCall);
 
                         String args = this.handleMethodParameters(arguments, auxExpressions);

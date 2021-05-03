@@ -77,7 +77,9 @@ public class SymbolsTable implements SymbolTable {
         return methods.get(key);
     }
 
-
+    public boolean isVarIdentifier(JmmNode identNode){
+        return this.getVariableSymbol(identNode) != null;
+    }
 
     public void setClassName(String className) {
         this.className = className;
