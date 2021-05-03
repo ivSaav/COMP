@@ -82,7 +82,6 @@ public interface JmmNode {
         return Optional.empty();
     }
 
-
     /**
      * 
      * @return the children of the node or an empty list if there are no children
@@ -115,7 +114,7 @@ public interface JmmNode {
 
     default String toJson() {
         Gson gson = new GsonBuilder()
-                .excludeFieldsWithoutExposeAnnotation()
+                // .excludeFieldsWithoutExposeAnnotation()
                 .setPrettyPrinting()
                 .registerTypeAdapter(JmmNode.class, new JmmSerializer())
                 .create();
