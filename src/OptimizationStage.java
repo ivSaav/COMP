@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,8 +26,13 @@ import pt.up.fe.specs.util.SpecsIo;
 
 public class OptimizationStage implements JmmOptimization {
 
-    public OptimizationStage() {
+    private String ollirCode;
 
+    public OptimizationStage() {
+    }
+
+    public String getOllirCode() {
+        return ollirCode;
     }
 
     @Override
@@ -34,12 +42,10 @@ public class OptimizationStage implements JmmOptimization {
 
         var emitter = new OllirEmitter((SymbolsTable) semanticsResult.getSymbolTable());
         // Convert the AST to a String containing the equivalent OLLIR code
-        String ollirCode = emitter.visit(node); // Convert node ...
+        this.ollirCode = emitter.visit(node); // Convert node ..
 
         // More reports from this stage
         List<Report> reports = new ArrayList<>();
-
-        System.out.println(ollirCode);
 
         return new OllirResult(semanticsResult, ollirCode, reports);
     }
@@ -55,5 +61,7 @@ public class OptimizationStage implements JmmOptimization {
         // THIS IS JUST FOR CHECKPOINT 3
         return ollirResult;
     }
+
+
 
 }

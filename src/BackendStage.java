@@ -96,7 +96,7 @@ public class BackendStage implements JasminBackend {
 
             }
 
-            System.out.println("JASMIN CODE\n" + jasminCode.toString());
+//            System.out.println("JASMIN CODE\n" + jasminCode.toString());
 
             // More reports from this stage
             List<Report> reports = new ArrayList<>();
