@@ -50,8 +50,6 @@ public class Main implements JmmParser {
 		JmmParserResult parseResult = m.parse(fileContents);
 		System.out.println(parseResult.getReports());
 
-
-
 		AnalysisStage analysisStage = new AnalysisStage();
 		JmmSemanticsResult semanticResult = analysisStage.semanticAnalysis(parseResult);
 
@@ -61,34 +59,19 @@ public class Main implements JmmParser {
 		BackendStage backendStage = new BackendStage();
 		JasminResult jasminResult = backendStage.toJasmin(ollirResult);
 
-		System.out.println("AVEEEEEEEEEEEEEEEEEEEEEEE");
-//		try {
-//			// AST ===============
-//			File astOutput = new File("generated" + File.separator + "ast.txt");
-//			FileWriter astWriter = new FileWriter(astOutput);
-//			astWriter.write(m.root.toJson());
-//			astWriter.flush();
-//			astWriter.close();
-//
-//			// OLLIR ===========
-//			File ollirOutput = new File("generated" + File.separator + "ollir.txt");
-//			FileWriter ollirWriter = new FileWriter(ollirOutput);
-//			ollirWriter.write(optimization.getOllirCode());
-//			ollirWriter.flush();
-//			ollirWriter.close();
-//
-//			// JASMIN =========
-//			File jasminOutput = new File("generated" + File.separator + "jasmin.j");
-//			FileWriter jasminWriter = new FileWriter(jasminOutput);
-//			jasminWriter.write(jasminResult.getJasminCode());
-//			jasminWriter.flush();
-//			jasminWriter.close();
-//		}
-//		catch (IOException e) {
-//			System.out.println("Couldn't write files.");
-//			e.printStackTrace();
-//		}
+		try {
+			// AST ===============
+			File astOutput = new File("generated" + File.separator + "ast.txt");
+			FileWriter astWriter = new FileWriter(astOutput);
+			astWriter.write(m.root.toJson());
+			astWriter.flush();
+			astWriter.close();
 
+		}
+		catch (IOException e) {
+			System.out.println("Couldn't write files.");
+			e.printStackTrace();
+		}
 
 		System.out.println(ollirResult.getReports());
     }

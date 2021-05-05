@@ -101,6 +101,8 @@ public class BackendStage implements JasminBackend {
             // More reports from this stage
             List<Report> reports = new ArrayList<>();
 
+            Utils.saveContents(jasminCode.toString(), "jasmin.j");
+
             return new JasminResult(ollirResult, jasminCode.toString(), reports);
 
         } catch (OllirErrorException e) {
