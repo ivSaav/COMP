@@ -44,6 +44,8 @@ public class OptimizationStage implements JmmOptimization {
         // Convert the AST to a String containing the equivalent OLLIR code
         this.ollirCode = emitter.visit(node); // Convert node ..
 
+       Utils.saveContents(this.ollirCode, "ollir.txt");
+
         // More reports from this stage
         List<Report> reports = new ArrayList<>();
 

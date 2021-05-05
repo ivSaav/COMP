@@ -10,9 +10,9 @@ import pt.up.fe.specs.util.SpecsCheck;
 
 public class OllirEmitter extends AJmmVisitor<String, String> {
 
-    private SymbolsTable st;
+    private final SymbolsTable st;
     private int idCounter = 1;
-    private boolean isStaticMethod = true;
+    private int labelCounter = 1;
 
     public OllirEmitter(SymbolsTable st) {
         this.st = st;
@@ -25,6 +25,11 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
     public String defaultVisit(JmmNode node, String indent) {
         return "";
+    }
+
+    public void clearLocals() {
+        this.idCounter = 1;
+        this.labelCounter = 1;
     }
 
     /**
@@ -61,7 +66,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
      */
     private String handleMethod(JmmNode methodNode, String indent) {
 
-        this.idCounter = 1;
+        this.clearLocals();
 
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -71,10 +76,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         // Method declaration
         String methodDec = "\t.method public ";
 
-        if(methodSymbols.getName().equals("main")){
-            methodDec+="static ";
-            this.isStaticMethod = true;
-        }
+        if(methodSymbols.getName().equals("main"))
+            methodDec += "static ";
 
         methodDec += methodSymbols.getName();
 
@@ -120,7 +123,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
      * @return String
      */
     private String handleReturn(JmmNode retNode, String indent) {
-        StringBuilder retBuilder = new StringBuilder(indent + "End:\n");
+
+        StringBuilder retBuilder = new StringBuilder();
 
         JmmNode methodNode = retNode.getAncestor("Method").get();
 
@@ -129,8 +133,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         Type type = method.getReturnType();
 
         List<String> expressions = new ArrayList<>(); // auxiliary expressions
-        String lastExpr = this.handleExpression(retNode.getChildren().get(0), false, expressions);
-        String ret = String.format(indent + "\tret.%s %s;\n", Utils.getOllirType(type), lastExpr);
+        String lastExpr = this.handleExpression(retNode.getChildren().get(0), false, false, expressions);
+        String ret = String.format(indent + "ret.%s %s;\n", Utils.getOllirType(type), lastExpr);
         retBuilder.append(ret);
         this.insertAuxiliarExpressions(retBuilder, expressions, false, indent);
 
@@ -227,7 +231,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         // For the variable that stores the value
         assign.append(indent).append(this.handleVariable(lhs, expressions));
 
-        this.insertAuxiliarExpressions(assign, expressions, true, indent);
+        this.insertAuxiliarExpressions(assign, expressions, false, indent);
 
         String assignmentType = ".i32 "; // special case where destination is array access
         if (!lhs.getKind().equals("Array")) {
@@ -316,10 +320,10 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                     // level determines the kind o expression which is created
                     // level 0 --> a + b
                     // level > 0 ---> t1 = a + b
-                    String rhsExpr =  this.handleExpression(rhs, allowComplexExpr, expr);
+                    String rhsExpr =  this.handleExpression(rhs, allowComplexExpr, false, expr);
 
                     if (allowComplexExpr)
-                        rhsExpr = this.insertAuxiliarExpressions(builder, expr, true, indent);
+                        this.insertAuxiliarExpressions(builder, expr, false, indent);
                     else
                         this.insertAuxiliarExpressions(builder, expr, false, indent);
 
@@ -338,13 +342,15 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     private String handleIfStatement(JmmNode ifNode, String indent) {
         StringBuilder ifBuilder = new StringBuilder(indent + "if (");
 
+        JmmNode exprNode = ifNode.getChildren().get(0);
         List<String> expr = new ArrayList<>();
-        String auxExp = this.handleExpression(ifNode.getChildren().get(0), true, expr);
+        String auxExp = this.handleExpression(exprNode, true, true, expr);
 
         if (!expr.isEmpty())
-            auxExp = this.insertAuxiliarExpressions(ifBuilder, expr, true, indent);
-        else
-            auxExp += " &&.bool true.bool";
+            this.insertAuxiliarExpressions(ifBuilder, expr, false, indent);
+
+        // ollir doesn't accept unary conditional operations
+        auxExp += this.forceBinaryExpression(exprNode);
 
         ifBuilder.append(auxExp).append(") goto Then;\n");
 
@@ -363,13 +369,17 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         List<String> expr = new ArrayList<>();
 
+        JmmNode exprNode = whileNode.getChildren().get(0);
         StringBuilder conditionBuilder = new StringBuilder(indent + "\t" + "if (");
-        String auxExp = this.handleExpression(whileNode.getChildren().get(0), true, expr);
+        String auxExp = this.handleExpression(exprNode, true, false, expr);
+
+        // ollir doens't accept unary conditional operations
+        auxExp += this.forceBinaryExpression(exprNode);
 
         if (!expr.isEmpty())
-            auxExp = this.insertAuxiliarExpressions(whileBuilder, expr, true, indent);
-        else
-            auxExp += " &&.bool true.bool";
+            this.insertAuxiliarExpressions(conditionBuilder, expr, false, indent + "\t");
+
+
 
         conditionBuilder.append(auxExp).append(") goto Body;\n").append(indent).append(indent).append("goto EndLoop;\n");
 
@@ -381,6 +391,22 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         whileBuilder.append(indent).append("EndLoop:\n");
 
         return whileBuilder.toString();
+    }
+
+    private String forceBinaryExpression(JmmNode exprNode) {
+        String kind = exprNode.getKind();
+        if (kind.equals("Literal") || kind.equals("MethodCall")) {
+           return " &&.bool true.bool";
+        }
+        else if (kind.equals("Negation")) {
+            JmmNode innerExpr = exprNode.getChildren().get(0);
+            if (innerExpr.getNumChildren() < 2)
+                return " &&.bool true.bool";
+        }
+        else if (exprNode.getNumChildren() < 2)
+               return " &&.bool true.bool";
+
+       return "";
     }
 
 
@@ -438,15 +464,15 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
      * @param expressions list of strings that stores in Ollir's notation possible auxiliary variables of the main expression
      * @return
      */
-    private String handleExpression(JmmNode expr, boolean allowComplex, List<String> expressions) {
+    private String handleExpression(JmmNode expr, boolean allowComplex, boolean reverse, List<String> expressions) {
 
         if (Utils.isOperator(expr)) {
 
-            String auxExp = "", auxVar = "";
+            String expression = "", auxVar = "";
             if (!allowComplex) { // create auxiliary variable if complex expressions aren't allowed
                 String type = Utils.getOllirExpReturnType(expr.getKind());
                 auxVar = "t" + this.idCounter++ + type;
-                auxExp = auxVar + " :=" + type + " ";
+                expression = auxVar + " :=" + type + " ";
             }
 
             // Special case where operator is unary
@@ -455,20 +481,35 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 JmmNode child = expr.getChildren().get(0);
 
                 // Go to the next level in the tree
-                String innerNegation = handleExpression(child, false, expressions);
+                String innerNegation = handleExpression(child, allowComplex, false, expressions);
 
-                expressions.add(auxExp + Utils.getOllirOp(expr.getKind()) + " " + innerNegation); // TODO reverse expression
+                // negation is cancelled of inside 'if' condition
+                expression += (reverse ? "" : "!.bool ") + innerNegation;
+
+                if (allowComplex)
+                    return expression;
+
+                expressions.add(expression); // TODO reverse expression
                 return auxVar;
             }
             else {
                 JmmNode lhsNode = expr.getChildren().get(0);
                 JmmNode rhsNode = expr.getChildren().get(1);
 
-                String lhsExpr = handleExpression(lhsNode, false, expressions);
-                String rhsExpr = handleExpression(rhsNode, false, expressions);
+                String lhsExpr = handleExpression(lhsNode, false, reverse, expressions);
+                String rhsExpr = handleExpression(rhsNode, false, reverse, expressions);
 
-                expressions.add(auxExp + lhsExpr + " " + Utils.getOllirOp(expr.getKind()) + " " + rhsExpr);
+                String operator;
+                if (reverse)
+                    operator = Utils.reverseOperatorOllit(expr.getKind());
+                else
+                    operator = Utils.getOllirOp(expr.getKind());
 
+                expression += lhsExpr + " " + operator + " " + rhsExpr;
+                if (allowComplex)
+                    return expression;
+
+                expressions.add(expression);
                 return auxVar;
             }
         }
@@ -658,7 +699,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 param = this.handleMethodCall(child, false, expr, "");
             }
             else
-                param = this.handleExpression(child, false, expr);
+                param = this.handleExpression(child, false, false, expr);
 
             auxExpressions.addAll(expr);
             paramsBuilder.append(", ").append(param);
@@ -735,8 +776,12 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             String arrayExpr = this.handleArrayAccess(accessNode, auxExpressions);
 
-            String auxExpr = String.format("t%d :=.i32 %s", this.idCounter++, arrayExpr);
+            String auxVar = "t" + this.idCounter + ".i32";
 
+            String auxExpr = String.format("t%d.i32 :=.i32 %s", this.idCounter, arrayExpr);
+            auxExpressions.add(auxExpr);
+
+            return "[" + auxVar + "].i32";
         }
         else // array access is an identifier A[b]
             innerAccess += resolveVariableIdentifier(accessNode, false);
@@ -782,13 +827,13 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         return -1;
     }
 
-    private String insertAuxiliarExpressions(StringBuilder builder, List<String> auxExpressions, boolean removeAssign, String indent) {
+    private String insertAuxiliarExpressions(StringBuilder builder, List<String> auxExpressions, boolean returnLast, String indent) {
         String lastExpr = "";
         if (!auxExpressions.isEmpty()) {
 
             StringBuilder auxiliary = new StringBuilder();
 
-            int j = removeAssign ? auxExpressions.size()-1 : auxExpressions.size();
+            int j = returnLast ? auxExpressions.size()-1 : auxExpressions.size();
 
             for (int i = 0; i < j ; i++) {
                 auxiliary.append(indent).append(auxExpressions.get(i)).append(";\n");
@@ -796,7 +841,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             builder.insert(0, auxiliary);
 
-            if (removeAssign) {
+            if (returnLast) {
                 lastExpr = auxExpressions.get(auxExpressions.size()-1);
 
                 if (lastExpr.contains("="))

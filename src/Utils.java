@@ -2,9 +2,9 @@ import pt.up.fe.comp.jmm.JmmNode;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class Utils {
@@ -69,6 +69,8 @@ public class Utils {
         return name + "." + (type.isArray() ? "array." : "") + t; 
     }
 
+
+
     /**
      * Returns a string version of a variable (int b --> b.i32)
      * Takes into consideration if the variable is an array and if it's being accessed
@@ -81,6 +83,10 @@ public class Utils {
         String name = symbol.getName();
 
         name = name.replace("$", "_S_"); // replacing every $ with _S_ because of argument variables
+
+        if (name.equals("ret") || name.equals("array"))
+            name = "_" + name + "_";
+
 
         String t = getOllirType(type);
 
@@ -180,7 +186,31 @@ public class Utils {
             case "Smaller", "And", "Negation" -> ".bool";
             default -> ".i32";
         };
-        
+    }
+
+    public static String reverseOperatorOllit(String op) {
+        switch (op) {
+            case "Smaller":
+                return ">=.i32";
+            case "And":
+                return "||.bool";
+            default:
+                return "";
+        }
+    }
+
+    public static void saveContents(String contents, String filename) {
+
+        File file = new File("generated" + File.separator + filename);
+        FileWriter fileWriter = null;
+        try {
+            fileWriter = new FileWriter(file);
+            fileWriter.write(contents);
+            fileWriter.flush();
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 
