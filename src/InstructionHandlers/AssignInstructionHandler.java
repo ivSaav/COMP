@@ -20,23 +20,25 @@ public class AssignInstructionHandler implements IntructionHandler{
         InstructionAllocator rhs = new InstructionAllocator();
 
         //Call instruction allocator to handle right part of assignment
-        String rhss= rhs.allocateAndHandle(instruction.getRhs(),className,method);
+        String rhss = rhs.allocateAndHandle(instruction.getRhs(), className, method);
         string.append(rhss);
 
-        HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
+        HashMap<String, Descriptor> vars = OllirAccesser.getVarTable(method);
         Operand variable = (Operand) instruction.getDest();
         Descriptor d = vars.get(variable.getName());
 
         //global variable declaration
-        string.append("\t");
+
 
         //check variable type
-        if(d.getVarType().getTypeOfElement()==ElementType.OBJECTREF)
+        if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF){
             string.append("a");
-        else {
-            string.append(MyJasminUtils.parseType(d.getVarType().getTypeOfElement()).toLowerCase(Locale.ROOT));
-            string.append("store " + d.getVirtualReg() + "\n");
         }
+        else {
+            string.append("\t");
+            string.append(MyJasminUtils.parseType(d.getVarType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+        }
+        string.append("store " + d.getVirtualReg() + "\n");
 
         return string.toString();
     }
