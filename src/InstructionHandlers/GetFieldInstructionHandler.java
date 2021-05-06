@@ -8,39 +8,24 @@ public class GetFieldInstructionHandler implements IntructionHandler{
     private GetFieldInstruction getFieldInstruction;
 
     public GetFieldInstructionHandler(Instruction getFieldInstruction) {
-        //super(getFieldInstruction);
         this.getFieldInstruction = (GetFieldInstruction) getFieldInstruction;
     }
 
 
     public String handleInstruction(String className,Method method) {
         StringBuilder string = new StringBuilder();
-        getFieldInstruction.getFirstOperand();
 
         string.append("\tgetfield ");
 
-        String first = "";
-        if(getFieldInstruction.getFirstOperand().isLiteral()){
-            LiteralElement literal  =  (LiteralElement) getFieldInstruction.getFirstOperand();
-            first = literal.getLiteral();
-        }else {
-            Operand op1= (Operand) getFieldInstruction.getFirstOperand();
-            first = op1.getName();
-        }
-
+        String first = MyJasminUtils.getElementName(getFieldInstruction.getFirstOperand());
         if (first.equals("this")) first= className;
 
-        String second = "";
-        if(getFieldInstruction.getSecondOperand().isLiteral()){
-            LiteralElement literal  =  (LiteralElement) getFieldInstruction.getSecondOperand();
-            second = literal.getLiteral();
-        }else {
-            Operand op1= (Operand) getFieldInstruction.getSecondOperand();
-            second = op1.getName();
-        }
+        String second = MyJasminUtils.getElementName(getFieldInstruction.getSecondOperand());
 
-        string.append(first +"/"+second +" "+ JasminUtils.parseType(getFieldInstruction.getSecondOperand().getType().getTypeOfElement()));
+        string.append(first +"/"+second +" "+ MyJasminUtils.parseType(getFieldInstruction.getSecondOperand().getType().getTypeOfElement()));
 
-        return string.toString()+"\n";
+        return string+"\n";
     }
+
+
 }

@@ -30,6 +30,7 @@ public class CallInstructionHandler implements IntructionHandler{
             Operand classOperand = (Operand) callInstruction.getFirstArg();
             first = classOperand.getName();
 
+            //invokestatic doesnt need load
             if (callInstruction.getInvocationType() == CallType.invokespecial || callInstruction.getInvocationType() == CallType.invokevirtual) {
                 string.append("\taload ").append(vars.get(first).getVirtualReg()).append("\n");
                 first = ((ClassType) callInstruction.getFirstArg().getType()).getName();
@@ -38,46 +39,21 @@ public class CallInstructionHandler implements IntructionHandler{
                 first = ((Operand) callInstruction.getFirstArg()).getName();
             }
 
-
             if(classOperand.getName().equals("this")) {
                 if (method.isConstructMethod()) {
-                    first = "java/lang/Object"; // TODO
+                    first = "java/lang/Object";
+                    // TODO VERIFY SUPER
                 } else {
                     first = ((ClassType) callInstruction.getFirstArg().getType()).getName();
                 }
             }
-
-
         }
-
-
 
         StringBuilder build = new StringBuilder();
         if (callInstruction.getListOfOperands()!=null) {
-            int count = 0;
-
             for (Element element : callInstruction.getListOfOperands()) {
-
-                if (element.isLiteral()) {
-                    LiteralElement literal = (LiteralElement) element;
-                    string.append("\tldc "+literal.getLiteral()+" \n");
-                    build.append(((LiteralElement) element).getLiteral());
-                } else {
-
-                    if (element.getType().getTypeOfElement() == ElementType.OBJECTREF) {
-                        string.append("\t a");
-                    }
-                    else
-                        string.append("\t"+JasminUtils.parseType(element.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
-
-                    Operand variable = (Operand) element;
-                    Descriptor d = vars.get(variable.getName());
-                    string.append("load "+ d.getVirtualReg()+"\n");
-
-                    build.append(JasminUtils.parseType(variable.getType().getTypeOfElement()));
-                }
-                count++;
-
+                MyJasminUtils.checkLiteralOrOperand(method, string, element);
+                build.append(MyJasminUtils.parseType(element.getType().getTypeOfElement()));
             }
         }
 
@@ -89,21 +65,13 @@ public class CallInstructionHandler implements IntructionHandler{
             string.append("/" +methodName);
         }
 
-
-        if (build.toString().equals("")){
-            if (OllirAccesser.getCallInvocation(callInstruction) != CallType.NEW){
-                string.append("()");
-            }
-
-        }else {
+        if(OllirAccesser.getCallInvocation(callInstruction) != CallType.NEW) {
             string.append("(");
             string.append(build);
             string.append(")");
+            string.append(MyJasminUtils.parseType(callInstruction.getReturnType().getTypeOfElement()));
         }
 
-        if (OllirAccesser.getCallInvocation(callInstruction) != CallType.NEW)
-            string.append(JasminUtils.parseType(callInstruction.getReturnType().getTypeOfElement()));
-
-        return string.toString()+"\n";
+        return string+"\n";
     }
 }

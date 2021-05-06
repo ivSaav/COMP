@@ -45,56 +45,7 @@ public class BackendStage implements JasminBackend {
 
             handleClass(ollirClass, jasminCode);
             handleFields(ollirClass, jasminCode);
-
-
-            for(Method method : ollirClass.getMethods()){
-                HashMap<String, Descriptor> varTable = OllirAccesser.getVarTable(method);
-
-                jasminCode.append(".method public ");
-                if(method.isStaticMethod()) jasminCode.append("static ");
-                if(method.isFinalMethod()) jasminCode.append("final ");
-                if(method.isConstructMethod()){
-                    jasminCode.append("<init>(");
-                    parseMethodParameters(method.getParams(), jasminCode);
-                    jasminCode.append(")V\n");
-                }else{
-
-                    String methodName = method.getMethodName();
-
-                    jasminCode.append(methodName + "(");
-                    if (methodName.equals("main")){
-                        jasminCode.append("[Ljava/lang/String;");
-
-                    }else{
-                        parseMethodParameters(method.getParams(), jasminCode);
-                    }
-                    jasminCode.append(")"+ JasminUtils.parseType(method.getReturnType().getTypeOfElement()));
-
-
-                    //LIMITS
-
-                    int localVariables = 0;
-
-                    for(Map.Entry<String, Descriptor> variable : varTable.entrySet()){
-                        if (variable.getValue().getScope().equals(VarScope.LOCAL))
-                            localVariables++;
-                        if (variable.getValue().getScope().equals(VarScope.PARAMETER))
-                            localVariables++;
-                        if (variable.getValue().getScope().equals(VarScope.FIELD))
-                            localVariables++;
-                    }
-
-                    jasminCode.append("\n\t"+ ".limit locals " + ++localVariables);
-                    jasminCode.append("\n\t" + ".limit stack 99");
-
-                }jasminCode.append("\n");
-
-
-                handleInstructions(jasminCode, ollirClass.getClassName(), method, varTable);
-
-                jasminCode.append(".end method \n\n");
-
-            }
+            handleMethods(ollirClass, jasminCode);
 
 //            System.out.println("JASMIN CODE\n" + jasminCode.toString());
 
@@ -110,6 +61,58 @@ public class BackendStage implements JasminBackend {
                     Arrays.asList(Report.newError(Stage.GENERATION, -1, -1, "Exception during Jasmin generation", e)));
         }
 
+    }
+
+    private void handleMethods(ClassUnit ollirClass, StringBuilder jasminCode) {
+        for(Method method : ollirClass.getMethods()){
+            HashMap<String, Descriptor> varTable = OllirAccesser.getVarTable(method);
+
+            jasminCode.append(".method public ");
+            if(method.isStaticMethod()) jasminCode.append("static ");
+            if(method.isFinalMethod()) jasminCode.append("final ");
+            if(method.isConstructMethod()){
+                jasminCode.append("<init>(");
+                parseMethodParameters(method.getParams(), jasminCode);
+                jasminCode.append(")V\n");
+            }else{
+
+                String methodName = method.getMethodName();
+
+                jasminCode.append(methodName + "(");
+                if (methodName.equals("main")){
+                    jasminCode.append("[Ljava/lang/String;");
+
+                }else{
+                    parseMethodParameters(method.getParams(), jasminCode);
+                }
+                jasminCode.append(")"+ MyJasminUtils.parseType(method.getReturnType().getTypeOfElement()));
+
+
+                //LIMITS
+
+                int localVariables = 0;
+
+                for(Map.Entry<String, Descriptor> variable : varTable.entrySet()){
+                    if (variable.getValue().getScope().equals(VarScope.LOCAL))
+                        localVariables++;
+                    if (variable.getValue().getScope().equals(VarScope.PARAMETER))
+                        localVariables++;
+                    if (variable.getValue().getScope().equals(VarScope.FIELD))
+                        localVariables++;
+                }
+
+                jasminCode.append("\n\t"+ ".limit locals " + ++localVariables);
+                jasminCode.append("\n\t" + ".limit stack 99");
+
+            }
+            jasminCode.append("\n");
+
+
+            handleInstructions(jasminCode, ollirClass.getClassName(), method, varTable);
+
+            jasminCode.append(".end method \n\n");
+
+        }
     }
 
     private void handleInstructions(StringBuilder jasminCode, String className,Method method, HashMap<String, Descriptor> varTable) {
@@ -147,7 +150,7 @@ public class BackendStage implements JasminBackend {
             jasminCode.append(".field ");
             if(field.isStaticField()) jasminCode.append("static ");
             jasminCode.append(field.getFieldName()+" ");
-            jasminCode.append(JasminUtils.parseType(field.getFieldType().getTypeOfElement()));
+            jasminCode.append(MyJasminUtils.parseType(field.getFieldType().getTypeOfElement()));
 
             if(field.isInitialized()){
                 jasminCode.append(" = ");
@@ -165,7 +168,7 @@ public class BackendStage implements JasminBackend {
         int paramListSize = paramList.size();
 
         for(int i=0; i < paramListSize; i++){
-            jasminCode.append(JasminUtils.parseType(paramList.get(i).getType().getTypeOfElement()));
+            jasminCode.append(MyJasminUtils.parseType(paramList.get(i).getType().getTypeOfElement()));
 //            if(i!=paramListSize-1){
 //                jasminCode.append(";");
 //            }

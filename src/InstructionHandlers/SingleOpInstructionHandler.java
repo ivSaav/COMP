@@ -3,10 +3,6 @@ package InstructionHandlers;
 import org.specs.comp.ollir.*;
 
 import org.specs.comp.ollir.Instruction;
-import pt.up.fe.comp.jmm.jasmin.JasminUtils;
-
-import java.util.HashMap;
-import java.util.Locale;
 
 public class SingleOpInstructionHandler implements IntructionHandler{
 
@@ -21,24 +17,10 @@ public class SingleOpInstructionHandler implements IntructionHandler{
         StringBuilder string = new StringBuilder();
         Element op = singleOpInstruction.getSingleOperand();
 
-        if (op.isLiteral()){
-            LiteralElement literal = (LiteralElement) op;
-            string.append("\tldc "+literal.getLiteral()+" \n");
-
-        }else{
-            HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
-
-            if (op.getType().getTypeOfElement() == ElementType.OBJECTREF) {
-                string.append("\t a");
-            }
-            else
-                string.append("\t"+JasminUtils.parseType(op.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
-
-            Operand variable = (Operand) op;
-            Descriptor d = vars.get(variable.getName());
-            string.append("load "+ d.getVirtualReg()+"\n");
-        }
+        MyJasminUtils.checkLiteralOrOperand(method, string, op);
 
         return string.toString();
     }
+
+
 }
