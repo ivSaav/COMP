@@ -25,7 +25,6 @@ public class CondBranchInstructionHandler implements IntructionHandler{
         MyJasminUtils.checkLiteralOrOperand(method, string, rop);
         MyJasminUtils.checkLiteralOrOperand(method, string, lop);
 
-
         //TODO
         if (lop.getType().getTypeOfElement()==ElementType.INT32){
             string.append("\tisub\n");

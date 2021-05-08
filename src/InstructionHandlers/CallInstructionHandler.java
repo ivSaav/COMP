@@ -57,7 +57,18 @@ public class CallInstructionHandler implements IntructionHandler{
             }
         }
 
-        string.append("\t"+ OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT) + " " + first);
+        if(OllirAccesser.getCallInvocation(callInstruction) == CallType.NEW) {
+            string.append("\t" + OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT) + first);
+            string.append(" int\n");
+            return string.toString();
+        }
+        else if(OllirAccesser.getCallInvocation(callInstruction) == CallType.arraylength){
+            string.append("\t" + OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT)+"\n");
+            return string.toString();
+        }else{
+            string.append("\t"+ OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT) + " " + first);
+        }
+
 
         if (callInstruction.getSecondArg()!= null) {
             LiteralElement methodLiteral = (LiteralElement) callInstruction.getSecondArg();
@@ -65,12 +76,13 @@ public class CallInstructionHandler implements IntructionHandler{
             string.append("/" +methodName);
         }
 
-        if(OllirAccesser.getCallInvocation(callInstruction) != CallType.NEW) {
-            string.append("(");
-            string.append(build);
-            string.append(")");
-            string.append(MyJasminUtils.parseType(callInstruction.getReturnType().getTypeOfElement()));
-        }
+
+        //operands of method calls (NEW and arraylenght dont have args)
+        string.append("(");
+        string.append(build);
+        string.append(")");
+        string.append(MyJasminUtils.parseType(callInstruction.getReturnType().getTypeOfElement()));
+
 
         return string+"\n";
     }

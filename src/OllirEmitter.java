@@ -355,16 +355,16 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         if (!expr.isEmpty())
             this.insertAuxiliarExpressions(ifBuilder, expr, false, indent);
 
-        ifBuilder.append(auxExp).append(") goto Else" + labelID + ";\n");
+        ifBuilder.append(auxExp).append(") goto Else_" + labelID + ";\n");
         // handle Then
         ifBuilder.append(this.handleStatementBody(ifNode.getChildren().get(1), indent + "\t")); // Then
-        ifBuilder.append(indent).append("\tgoto EndIf" + labelID + ";\n");
+        ifBuilder.append(indent).append("\tgoto EndIf_" + labelID + ";\n");
 
-        ifBuilder.append(indent).append("Else" + labelID + ":\n");
+        ifBuilder.append(indent).append("Else_" + labelID + ":\n");
         JmmNode elseNode = Utils.getChildOfKind(ifNode, "Else");
         ifBuilder.append(this.handleStatementBody(elseNode, indent + "\t"));
 
-        ifBuilder.append(indent).append("EndIf" + labelID + ":\n");
+        ifBuilder.append(indent).append("EndIf_" + labelID + ":\n");
         return ifBuilder.toString();
     }
 
@@ -372,7 +372,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         int labelId = this.labelCounter++;
 
-        StringBuilder whileBuilder = new StringBuilder(indent + "Loop" + labelId + ":\n");
+        StringBuilder whileBuilder = new StringBuilder(indent + "Loop_" + labelId + ":\n");
 
         List<String> expr = new ArrayList<>();
 
@@ -386,14 +386,14 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         if (!expr.isEmpty())
             this.insertAuxiliarExpressions(conditionBuilder, expr, false, indent + "\t");
 
-        conditionBuilder.append(auxExp).append(") goto Body" + labelId + ";\n").append(indent).append(indent).append("goto EndLoop"+ labelId + ";\n");
+        conditionBuilder.append(auxExp).append(") goto Body_" + labelId + ";\n").append(indent).append(indent).append("goto EndLoop_"+ labelId + ";\n");
 
         whileBuilder.append(conditionBuilder);
 
         // statement body
-        whileBuilder.append(indent).append("Body" + labelId + ":\n").append(this.handleStatementBody(whileNode.getChildren().get(1), indent + "\t"));
-        whileBuilder.append(indent).append("\tgoto Loop"+ labelId + ";\n");
-        whileBuilder.append(indent).append("EndLoop" + labelId + ":\n");
+        whileBuilder.append(indent).append("Body_" + labelId + ":\n").append(this.handleStatementBody(whileNode.getChildren().get(1), indent + "\t"));
+        whileBuilder.append(indent).append("\tgoto Loop_"+ labelId + ";\n");
+        whileBuilder.append(indent).append("EndLoop_" + labelId + ":\n");
 
         return whileBuilder.toString();
     }

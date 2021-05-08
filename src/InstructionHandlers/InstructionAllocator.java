@@ -2,11 +2,18 @@ package InstructionHandlers;
 
 import org.specs.comp.ollir.*;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
+
 public class InstructionAllocator {
 
-    public InstructionAllocator() {}
+    public InstructionAllocator() {
+
+    }
 
     public String allocateAndHandle(Instruction instruction,String className, Method method){
+
         switch (instruction.getInstType()){
             case ASSIGN:
                 return new AssignInstructionHandler(instruction).handleInstruction(className,method);
@@ -17,7 +24,7 @@ public class InstructionAllocator {
             case GETFIELD:
                 return new GetFieldInstructionHandler(instruction).handleInstruction(className,method);
             case PUTFIELD:
-                return new PutFieldInstructionHandler(instruction).handleInstruction(className,method);
+                return  new PutFieldInstructionHandler(instruction).handleInstruction(className,method);
             case GOTO:
                 return new GoToInstructionHandler(instruction).handleInstruction(className,method);
             case BRANCH:

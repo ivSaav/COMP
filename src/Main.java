@@ -10,7 +10,6 @@ import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.specs.util.SpecsIo;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -22,7 +21,6 @@ public class Main implements JmmParser {
 
 		try {
 		    Parser parser = new Parser(new StringReader(jmmCode));
-
 
 		    try {
 		    	root = parser.Start(); // returns reference to root node
@@ -74,5 +72,7 @@ public class Main implements JmmParser {
 		}
 
 		System.out.println(ollirResult.getReports());
+
+		jasminResult.run();
     }
 }

@@ -27,12 +27,12 @@ public class AssignInstructionHandler implements IntructionHandler{
         Operand variable = (Operand) instruction.getDest();
         Descriptor d = vars.get(variable.getName());
 
-        //global variable declaration
-
-
         //check variable type
         if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF){
             string.append("a");
+        }else if(d.getVarType().getTypeOfElement() == ElementType.ARRAYREF){
+            string.append("\tiastore\n");
+            return string.toString();
         }
         else {
             string.append("\t");
