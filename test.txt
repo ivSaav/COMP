@@ -15,7 +15,6 @@ class WhileAndIF {
             c = b-1;
         }
 
-
         while((0-1) < c){
             d[c] = a-b;
             c= c-1;
@@ -27,6 +26,8 @@ class WhileAndIF {
             io.println(d[c]);
             c= c+1;
         }
+
     }
+
 
 }

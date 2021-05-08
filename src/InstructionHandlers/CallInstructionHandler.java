@@ -58,8 +58,13 @@ public class CallInstructionHandler implements IntructionHandler{
         }
 
         if(OllirAccesser.getCallInvocation(callInstruction) == CallType.NEW) {
-            string.append("\t" + OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT) + first);
-            string.append(" int\n");
+            if(first.equals("array")){
+                string.append("\t" + OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT) + first);
+                string.append(" int\n");
+            }else{
+                string.append("\t" + OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT) + " " +first+"\n");
+            }
+
             return string.toString();
         }
         else if(OllirAccesser.getCallInvocation(callInstruction) == CallType.arraylength){

@@ -7,7 +7,6 @@ import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.specs.util.SpecsCheck;
 
-import java.net.URI;
 import java.util.*;
 
 public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
@@ -53,12 +52,16 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
             Type type = symbol.getType();
 
             if (!type.isArray())
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Variable isn't an array"));
+                reports.add(createReportFromNode(node, "Variable isn't an array"));
         }
         else {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Variable isn't an array"));
+            reports.add(createReportFromNode(node,"Variable isn't an array"));
         }
         return null;
+    }
+
+    private Report createReportFromNode(JmmNode node, String message){
+        return new Report(ReportType.ERROR, Stage.SEMANTIC, Integer.parseInt(node.get("line")), Integer.parseInt(node.get("col")), message);
     }
 
     private Void dealWithMethod(JmmNode jmmNode, List<Report> reports) {
@@ -81,27 +84,27 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
             case "Ident":
                 if (st.getVariableSymbol(returnNode) != null) {
                     if (!st.getVariableSymbol(returnNode).getType().getName().equals(methodType))
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unmatched return types at method " + methodName));
+                        reports.add(createReportFromNode(node, "Unmatched return types at method " + methodName));
                 }
                 else
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Undeclared variable: " + returnNode.get("name")));
+                    reports.add(createReportFromNode(node, "Undeclared variable: " + returnNode.get("name")));
                 break;
             case "Literal":
                 if(!returnNode.get("type").equals(methodType))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unmatched return types at method " + methodName));
+                    reports.add(createReportFromNode(node, "Unmatched return types at method " + methodName));
                 break;
             case "And":
             case "Smaller":
             case "Negation":
                 if (!methodType.equals("boolean"))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unmatched return types at method " + methodName));
+                    reports.add(createReportFromNode(node, "Unmatched return types at method " + methodName));
                 break;
             case "Plus":
             case "Minus":
             case "Mult":
             case "Div":
                 if (!methodType.equals("int"))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unmatched return types" ));
+                    reports.add(createReportFromNode(node, "Unmatched return types" ));
                 break;
         }
         return null;
@@ -116,7 +119,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         switch (kind) {
             case "Literal":
                 if (!firstChild.get("type").equals("int")) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode,
+                    reports.add(createReportFromNode(arrayNode,
                             "Invalid array initialization size: " + firstChild.get("value")));
                 }
                 break;
@@ -126,7 +129,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
                     return null;
                 Type t = symbol.getType();
                 if (!(t.getName().equals("int") && !t.isArray())) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode,
+                    reports.add(createReportFromNode(arrayNode,
                             "Invalid array initialization size: " + firstChild.get("value")));
                 }
                 break;
@@ -136,7 +139,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
                 Symbol symbol = st.getVariableSymbol(lengthChild);
                 Type type = symbol.getType();
                 if (!type.isArray()) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode,
+                    reports.add(createReportFromNode(arrayNode,
                             "Invalid array initialization size: " + firstChild.get("value")));
                 }
                 break;
@@ -161,16 +164,16 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
 
                 Symbol symbolArrayDec = st.getVariableSymbol(firstChild);
                 if (symbolArrayDec == null){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode, "Undeclared variable: " + firstChild.get("name")));
+                    reports.add(createReportFromNode(arrayNode, "Undeclared variable: " + firstChild.get("name")));
                     return null;
                 }
 
                 if (!symbolArrayDec.getType().isArray()) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode, "Access on non-array variable"));
+                    reports.add(createReportFromNode(arrayNode, "Access on non-array variable"));
                 }
             }
             else {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayNode, "Access on non-array variable"));
+                reports.add(createReportFromNode(arrayNode, "Access on non-array variable"));
             }
 
             // Verify if the index of the access array is an integer
@@ -178,17 +181,17 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
             if (secondChild.getKind().equals("Ident")) {
                 Symbol symbolArrayInd = st.getVariableSymbol(secondChild);
                 if (symbolArrayInd == null){
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, secondChild, "Undeclared variable: " + secondChild.get("name")));
+                    reports.add(createReportFromNode(secondChild, "Undeclared variable: " + secondChild.get("name")));
                     return null;
                 }
 
                 if (!symbolArrayInd.getType().getName().equals("int")) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, secondChild, "Access to an array with a non-integer"));
+                    reports.add(createReportFromNode(secondChild, "Access to an array with a non-integer"));
                 }
             }
             else if (secondChild.getKind().equals("Literal")) {
                 if (!secondChild.get("type").equals("int"))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, secondChild, "Access to an array with a non-integer"));
+                    reports.add(createReportFromNode(secondChild, "Access to an array with a non-integer"));
             }
         }
         return null;
@@ -208,17 +211,17 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
             switch (nodeKind) {
                 case "Ident":
                     if (!st.getImports().contains(methodIdent.get("name")) && st.getSuper().isBlank())
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, methodIdent, "Couldn't resolve method call: " + methodName));
+                        reports.add(createReportFromNode(methodIdent, "Couldn't resolve method call: " + methodName));
                     break;
                 case "New":  // check if class is this. or an imported one
                     if (!st.getImports().contains(node.get("name")))
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, methodIdent, "Couldn't resolve method call: " + methodName +
+                        reports.add(createReportFromNode(methodIdent, "Couldn't resolve method call: " + methodName +
                                 " from " + methodIdent.get("name")));
                     break;
                 case "This":
                     // verifying if method is from super class
                     if (st.getSuper().isBlank())
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, methodIdent, "Couldn't resolve method call: " + methodName));
+                        reports.add(createReportFromNode(methodIdent, "Couldn't resolve method call: " + methodName));
                     break;
             }
 
@@ -229,7 +232,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
             List<JmmNode> args = node.getChildren().get(1).getChildren();
 
             if (parameters.size() != args.size()) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Arguments don't match parameters in method: " + methodName));
+                reports.add(createReportFromNode(node, "Arguments don't match parameters in method: " + methodName));
                 return null;
             }
             else {
@@ -239,10 +242,10 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
                     if (args.get(i).getKind().equals("Ident")) {
                         if (st.getVariableSymbol(args.get(i)) != null) {
                             if (!st.getVariableSymbol(args.get(i)).getType().getName().equals(parameters.get(i).getType().getName()))
-                                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Arguments type don't match in method " + methodName));
+                                reports.add(createReportFromNode(node, "Arguments type don't match in method " + methodName));
                         }
                         else
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Undeclared variable at " + methodName));
+                            reports.add(createReportFromNode(node, "Undeclared variable at " + methodName));
                     }
                 }
             }
@@ -268,24 +271,24 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
 
             case "Literal":
                 if (!mustbool.get("type").equals("boolean"))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Variable at " + nodeName + " is of wrong type"));
+                    reports.add(createReportFromNode(node, "Variable at " + nodeName + " is of wrong type"));
                 break;
 
             case "Ident":
                 if (variables.get(mustbool.get("name")) == null)
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "No declaration available for variable " + mustbool.getKind() ));
+                    reports.add(createReportFromNode(node, "No declaration available for variable " + mustbool.getKind() ));
                 else if (!st.getVariableSymbol(mustbool).getType().getName().equals("boolean"))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Variable at " + nodeName + " statement is of wrong type"));
+                    reports.add(createReportFromNode(node, "Variable at " + nodeName + " statement is of wrong type"));
                 break;
 
             case "MethodCall":
                 MethodSymbols method = st.getMethod(mustbool);
                 if(!method.getReturnType().getName().equals("boolean"))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Method return at "+ nodeName+" is of wrong type"));
+                    reports.add(createReportFromNode(node, "Method return at "+ nodeName+" is of wrong type"));
                 break;
 
             default:
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, nodeName+ " statement is not of type boolean" ));
+                reports.add(createReportFromNode(node, nodeName+ " statement is not of type boolean" ));
 
         }
 
@@ -309,20 +312,20 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
                     case "Ident":
                         Map<String, Symbol> getVariables = st.getVariables(scope);
                         if (getVariables.get(child.get("name")) == null)
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, child, "Undeclared variable: " + child.getKind() ));
+                            reports.add(createReportFromNode(child, "Undeclared variable: " + child.getKind() ));
                         else if(!getVariables.get(child.get("name")).getType().getName().equals("boolean"))
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, child, "Negation done with wrong type"));
+                            reports.add(createReportFromNode(child, "Negation done with wrong type"));
                         break;
 
                     case "MethodCall":
                         MethodSymbols method = st.getMethod(child);
                         if(!method.getReturnType().getName().equals("boolean"))
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, child, "Invalid method call at negation"));
+                            reports.add(createReportFromNode(child, "Invalid method call at negation"));
                         break;
 
                     default:
                         if (!Utils.isConditionalOperator(child))
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, child, "Invalid conditional expression at negation"));
+                            reports.add(createReportFromNode(child, "Invalid conditional expression at negation"));
                         break;
                 }
                 break;
@@ -333,10 +336,10 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
                         Map<String, Symbol> getVariables = st.getVariables(scope);
                         // Check if variable IDENTIFIER is declared
                         if (getVariables.get(currentChild.get("name")) == null)
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, currentChild, "No declaration available for variable " + currentChild.getKind()));
+                            reports.add(createReportFromNode(currentChild, "No declaration available for variable " + currentChild.getKind()));
                         // Check if variable IDENTIFIER is a boolean
                         else if (!getVariables.get(currentChild.get("name")).getType().getName().equals("boolean")) {
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, currentChild, "logic AND done with wrong type"));
+                            reports.add(createReportFromNode(currentChild, "logic AND done with wrong type"));
                             break;
                         }
                     }
@@ -345,19 +348,19 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
 
                         // Check if the return type of the METHODCALL is boolean
                         if(!method.getReturnType().getName().equals("boolean")){
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, currentChild, "Invalid method call at negation"));
+                            reports.add(createReportFromNode(currentChild, "Invalid method call at negation"));
                             break;
                         }
                     }
                     else if (currentChild.getKind().equals("Literal")){
                         // Check if LITERAL is an boolean
                         if (!currentChild.get("type").equals("boolean")){
-                            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, currentChild, "logic AND done with wrong type"));
+                            reports.add(createReportFromNode(currentChild, "logic AND done with wrong type"));
                             break;
                         }
                     }
                     else if (!Utils.isConditionalOperator(node)) {
-                        reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, currentChild, "logic AND done with wrong type"));
+                        reports.add(createReportFromNode(currentChild, "logic AND done with wrong type"));
                         break;
                     }
                 }
@@ -383,7 +386,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
             // Checking if destination has been declared before assignment
             lhsSymb = st.getVariableSymbol(lhs);
             if (lhsSymb  == null){
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Undeclared variable: " + lhs.get("name")));
+                reports.add(createReportFromNode(node, "Undeclared variable: " + lhs.get("name")));
                 return null;
             }
             lhsType = lhsSymb.getType();
@@ -402,21 +405,20 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
 
         if (kind.equals("Ident")) {
             Symbol rhsSymbol = st.getVariableSymbol(expr);
-            if (rhsSymbol == null) // variable wasn't declared
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, expr, "Undeclared variable " + expr.get("name")));
+            if (rhsSymbol == null) // variable wasn't declare
+                reports.add(createReportFromNode(expr,"Undeclared variable " + expr.get("name")));
             else {
-
                 Type rhsType = rhsSymbol.getType();
 
                 if (!lhsType.equals(rhsType))
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, expr, "Unmatched data types in assignment: "  + lhsType.getName() + " and " + rhsType.getName()));
+                    reports.add(createReportFromNode(expr,"Unmatched data types in assignment: "  + lhsType.getName() + " and " + rhsType.getName()));
             }
         }
         else if (kind.equals("Literal")) { // int or boolean
 
             // checking lhs and rhs have the same data type
             if (!lhsType.getName().equals(expr.get("type")) || lhsType.isArray())
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, expr,
+                reports.add(createReportFromNode(expr,
                             "Unmatched data types in assignment: "
                                     + lhsType.getName() + (lhsType.isArray() ? "[]" : "")
                                     + " and " + expr.get("type")));
@@ -431,7 +433,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
 
             Type rhsType = rhsSymbol.getType();
             if (!lhsType.getName().equals(rhsType.getName())) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, arrayIdent,
+                reports.add(createReportFromNode(arrayIdent,
                             "Unmatched data types in assignment: "  + lhsType.getName() + " and " + rhsType.getName()));
             }
         }
@@ -439,25 +441,23 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
            Type t = findOperationReturnType(expr);
 
            if (t == null)
-               reports.add(new Report(ReportType.WARNING, Stage.SEMANTIC, expr,
-                       "Couldn't determine expression result type "));
+               reports.add(createReportFromNode(expr, "Couldn't determine expression result type "));
            else {
                if (!lhsType.equals(t))
-                   reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, expr,
-                           "Unmatched data types in assignment after expression: "  + lhsType.getName() + " and " + t.getName()));
+                   reports.add(createReportFromNode(expr, "Unmatched data types in assignment after expression: "  + lhsType.getName() + " and " + t.getName()));
            }
 
         }
         else if (kind.equals("NewArray")) {
             // assuming right side is correct (validated elsewhere)
             if (!lhsType.isArray())
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, expr,
+                reports.add(createReportFromNode(expr,
                         "Invalid variable assignment: "  + lhsType.getName() + " = int[]"));
         }
         else if (kind.equals("Length")) {
 
             if (!(lhsType.getName().equals("int") && !lhsType.isArray())) {
-                reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, expr,
+                reports.add(createReportFromNode(expr,
                         "Unmatched data types in assignment after expression: "  + lhsType.getName() + " and int"));
             }
         }
@@ -506,7 +506,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         else { // method is not declared in this class
             if (!this.st.getImports().contains(methodNode.get("name"))) // method is not in one of the imports
                 if (reports != null)
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, methodNode,
+                    reports.add(createReportFromNode(methodNode,
                         "Couldn't determine method return type for " + methodNode.get("name") +" in operation"));
         }
         return null;
@@ -526,15 +526,15 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
 
         // Verify if operation is made by operator with the same type
         if (!verifySameTypes(types)) {
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Arithmetic Operation made by variables with different types"));
+            reports.add(createReportFromNode(node, "Arithmetic Operation made by variables with different types"));
             return null;
         }
 
         // Verify if the type of the List<Type> is of arrays
         if (types.get(0).isArray())
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Arithmetic Operation invalid with arrays"));
+            reports.add(createReportFromNode(node, "Arithmetic Operation invalid with arrays"));
         if(types.get(0).getName().equals("boolean"))
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Arithmetic Operation invalid with boolean"));
+            reports.add(createReportFromNode(node, "Arithmetic Operation invalid with boolean"));
 
         return null;
     }
@@ -567,7 +567,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
                 Symbol symbol = variables.get(children.get("name"));
 
                 if (symbol == null) {
-                    reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC,  children, "Variable " + children.get("name") + " not declared"));
+                    reports.add(createReportFromNode(children,"Variable " + children.get("name") + " not declared"));
                     continue;
                 }
                 types.add(symbol.getType());
@@ -590,7 +590,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         // Verify if variable was already declared
         if (!node.getParent().getKind().equals("Parameters") && visitedVariables.contains(varName)) {
             System.out.println(visitedVariables);
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Variable " + varName + " already declared"));
+            reports.add(createReportFromNode(node,"Variable " + varName + " already declared"));
         }
         else
             visitedVariables.add(varName);
@@ -600,7 +600,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         String type = varChild.get("type");
 
         if (!verifyType(type))
-            reports.add(new Report(ReportType.ERROR, Stage.SEMANTIC, node, "Unrecognized type " + type));
+            reports.add(createReportFromNode(node,"Unrecognized type " + type));
 
         return null;
     }

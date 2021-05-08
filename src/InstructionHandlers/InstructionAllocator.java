@@ -3,6 +3,7 @@ package InstructionHandlers;
 import org.specs.comp.ollir.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
@@ -14,30 +15,50 @@ public class InstructionAllocator {
 
     public String allocateAndHandle(Instruction instruction,String className, Method method){
 
+        StringBuilder string = new StringBuilder();
+
+
+        /*List<String> labels = method.getLabels(instruction);
+        for (String label : labels){
+            string.append(label+":\n");
+        }*/
+
         switch (instruction.getInstType()){
             case ASSIGN:
-                return new AssignInstructionHandler(instruction).handleInstruction(className,method);
+                string.append(new AssignInstructionHandler(instruction).handleInstruction(className,method));
+                break;
             case CALL:
-                return new CallInstructionHandler(instruction).handleInstruction(className,method);
+                string.append(new CallInstructionHandler(instruction).handleInstruction(className,method));
+                break;
             case RETURN:
-                return new ReturnInstructionHandler(instruction).handleInstruction(className, method);
+                string.append(new ReturnInstructionHandler(instruction).handleInstruction(className, method));
+                break;
             case GETFIELD:
-                return new GetFieldInstructionHandler(instruction).handleInstruction(className,method);
+                string.append(new GetFieldInstructionHandler(instruction).handleInstruction(className,method));
+                break;
             case PUTFIELD:
-                return  new PutFieldInstructionHandler(instruction).handleInstruction(className,method);
+                string.append(new PutFieldInstructionHandler(instruction).handleInstruction(className,method));
+                break;
             case GOTO:
-                return new GoToInstructionHandler(instruction).handleInstruction(className,method);
+                string.append(new GoToInstructionHandler(instruction).handleInstruction(className,method));
+                break;
             case BRANCH:
-                return new CondBranchInstructionHandler(instruction).handleInstruction(className, method);
+                string.append(new CondBranchInstructionHandler(instruction).handleInstruction(className, method));
+                break;
             case UNARYOPER:
-                return new UnaryOpInstructionHandler(instruction).handleInstruction(className, method);
+                string.append(new UnaryOpInstructionHandler(instruction).handleInstruction(className, method));
+                break;
             case BINARYOPER:
-                return new BinaryOpInstructionHandler(instruction).handleInstruction(className, method);
+                string.append(new BinaryOpInstructionHandler(instruction).handleInstruction(className, method));
+                break;
             case NOPER:
-                return new SingleOpInstructionHandler(instruction).handleInstruction(className, method);
+                string.append(new SingleOpInstructionHandler(instruction).handleInstruction(className, method));
+                break;
             default:
-                return "\t" + instruction.toString()+"\n";
+                string.append("\t" + instruction.toString()+"\n");
         }
+
+        return string.toString();
     }
 
 }

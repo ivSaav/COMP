@@ -29,7 +29,7 @@ public class AssignInstructionHandler implements IntructionHandler{
 
         //check variable type
         if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF){
-            string.append("a");
+            string.append("\ta");
         }else if(d.getVarType().getTypeOfElement() == ElementType.ARRAYREF){
             string.append("\tiastore\n");
             return string.toString();
