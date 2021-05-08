@@ -15,13 +15,15 @@ public class MyJasminUtils {
         }else{
             HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
 
-            if (op.getType().getTypeOfElement() == ElementType.OBJECTREF)
-                string.append("\t a");
+            Operand variable = (Operand) op;
+            Descriptor d = vars.get(variable.getName());
+
+            if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF  || d.getVarType().getTypeOfElement() == ElementType.ARRAYREF)
+                string.append("\ta");
             else
                 string.append("\t"+ MyJasminUtils.parseType(op.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
 
-            Operand variable = (Operand) op;
-            Descriptor d = vars.get(variable.getName());
+
             string.append("load "+ d.getVirtualReg()+"\n");
         }
     }

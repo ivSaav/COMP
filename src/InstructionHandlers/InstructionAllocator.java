@@ -18,10 +18,11 @@ public class InstructionAllocator {
         StringBuilder string = new StringBuilder();
 
 
-        /*List<String> labels = method.getLabels(instruction);
+        List<String> labels = method.getLabels(instruction);
+
         for (String label : labels){
-            string.append(label+":\n");
-        }*/
+            string.insert(0,label+":\n");
+        }
 
         switch (instruction.getInstType()){
             case ASSIGN:

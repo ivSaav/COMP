@@ -3,6 +3,7 @@ package InstructionHandlers;
 import org.specs.comp.ollir.*;
 import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
@@ -28,11 +29,8 @@ public class AssignInstructionHandler implements IntructionHandler{
         Descriptor d = vars.get(variable.getName());
 
         //check variable type
-        if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF){
+        if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF || d.getVarType().getTypeOfElement() == ElementType.ARRAYREF){
             string.append("\ta");
-        }else if(d.getVarType().getTypeOfElement() == ElementType.ARRAYREF){
-            string.append("\tiastore\n");
-            return string.toString();
         }
         else {
             string.append("\t");
