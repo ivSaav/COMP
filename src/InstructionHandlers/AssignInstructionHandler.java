@@ -53,7 +53,7 @@ public class AssignInstructionHandler implements IntructionHandler{
             Descriptor desc = this.getElemDescriptor(vars, instruction);
             if (desc != null) {
                 if (desc.getVarType().getTypeOfElement() == ElementType.ARRAYREF && d.getVarType().getTypeOfElement() == ElementType.INT32)
-                    return string.append(""/*"\tiaload\n"*/).toString();
+                    return string.append("\tiaload\n").toString();
             }
 
             string.append("\t");

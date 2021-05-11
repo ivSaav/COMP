@@ -4,6 +4,7 @@ import org.specs.comp.ollir.*;
 import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 
 public class CallInstructionHandler implements IntructionHandler{
@@ -32,10 +33,11 @@ public class CallInstructionHandler implements IntructionHandler{
 
             //invokestatic doesnt need load
             if (callInstruction.getInvocationType() == CallType.invokespecial || callInstruction.getInvocationType() == CallType.invokevirtual) {
+                // load method reference
                 string.append("\taload ").append(vars.get(first).getVirtualReg()).append("\n");
                 first = ((ClassType) callInstruction.getFirstArg().getType()).getName();
             }
-            else{
+            else{ // static | new | arraylength (don't need load)
                 first = ((Operand) callInstruction.getFirstArg()).getName();
             }
 
@@ -52,12 +54,35 @@ public class CallInstructionHandler implements IntructionHandler{
         StringBuilder build = new StringBuilder();
         if (callInstruction.getListOfOperands()!=null) {
             for (Element element : callInstruction.getListOfOperands()) {
-                MyJasminUtils.checkLiteralOrOperand(method, string, element);
+                List<Node> pred = callInstruction.getPred();
+
+                // checking if the var in method call's parameters has been initialized
+                // if there is a predecessor assign instruction then the variable is already in the stack
+                // TODO maybe review for other cases (check if the name of the variable is the same as assign dest)
+                boolean initializedVar = false;
+                for (Node n : pred) {
+                    InstructionType predInstrType = ((Instruction) n).getInstType();
+                    // param variable has already been involved in an assignment
+                    if (predInstrType == InstructionType.ASSIGN) {
+                        Element predAssign = ((AssignInstruction) n).getDest();
+                        String name = MyJasminUtils.getElementName(predAssign);
+
+                        String paramVarName = MyJasminUtils.getElementName(element);
+                        initializedVar = paramVarName.equals(name); // checking if predecessor is the
+                        if (initializedVar) // found var initialization in pred assigns (stop)
+                            break;
+                    }
+                }
+
+                // if parameter is not in the stack (load it)
+                if (!initializedVar)
+                    MyJasminUtils.checkLiteralOrOperand(method, string, element);
                 build.append(MyJasminUtils.parseType(element.getType().getTypeOfElement()));
             }
         }
 
         CallType callType = OllirAccesser.getCallInvocation(callInstruction);
+        // new declaration
         if(callType == CallType.NEW) {
             if(first.equals("array")){
                 string.append("\t" + callType.toString().toLowerCase(Locale.ROOT) + first);
@@ -69,7 +94,13 @@ public class CallInstructionHandler implements IntructionHandler{
             return string.toString();
         }
         else if(callType == CallType.arraylength){
-            string.append("\t" + callType.toString().toLowerCase(Locale.ROOT)+"\n");
+            // load array reference into stack
+            Operand arrayVar = (Operand) callInstruction.getFirstArg();
+            String arrayName = MyJasminUtils.getElementName(arrayVar);
+            string.append("\taload " + vars.get(arrayName).getVirtualReg() + "\n");
+
+            // arrayref → length
+            string.append("\tarraylength \n");
             return string.toString();
         }else{
             string.append("\t"+ callType.toString().toLowerCase(Locale.ROOT) + " " + first);
