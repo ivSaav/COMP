@@ -20,53 +20,41 @@ public class AssignInstructionHandler implements IntructionHandler{
         InstructionAllocator rhs = new InstructionAllocator();
         HashMap<String, Descriptor> vars = OllirAccesser.getVarTable(method);
 
-        // handle lhs
-        if (instruction.getDest().getType().getTypeOfElement() == ElementType.ARRAYREF) {
-//            String name = MyJasminUtils.getElementName(instruction.getDest());
-//            string.append("\taload " + vars.get(name).getVirtualReg() + "\n");
+        Operand variable = (Operand) instruction.getDest();
+        Descriptor d = vars.get(variable.getName());
 
-//            MyJasminUtils.checkLiteralOrOperand(method, string, instruction.getDest());
-
-        }
+        // destination variable is an array access
+        boolean lhsArrayAccess = d.getVarType().getTypeOfElement() == ElementType.ARRAYREF &&
+                                variable.getType().getTypeOfElement() == ElementType.INT32;
+        // handle lhs if is an array access -> aload array; iload index
+        if (lhsArrayAccess)
+            MyJasminUtils.checkLiteralOrOperand(method, string, instruction.getDest());
 
         //Call instruction allocator to handle right part of assignment
         String rhss = rhs.allocateAndHandle(instruction.getRhs(), className, method);
         string.append(rhss);
 
-
-        Operand variable = (Operand) instruction.getDest();
-        Descriptor d = vars.get(variable.getName());
-
-        //check variable type
-
-
-        System.out.println("DEST " + variable.getName());
-        System.out.println("RHSS " + rhss);
-        MyJasminUtils.printVarTable(vars);
-
         ElementType destType = d.getVarType().getTypeOfElement();
-        ElementType rhsType = this.getElemType(vars, instruction.getRhs());
-
-        System.out.println("RHSType " + rhsType + " " + destType);
-//         Array access verification
-        if (rhsType == ElementType.ARRAYREF && destType == ElementType.INT32) { // lhs is iteger in array access
-                return string.toString();
-        }
-
-        if (destType == ElementType.OBJECTREF || destType == ElementType.ARRAYREF){
+        if (destType == ElementType.OBJECTREF){
             string.append("\ta");
+        }
+        else if (destType == ElementType.ARRAYREF) {
 
+            // if lhs is array access call iastore -> arrayref, index, value
+            if (lhsArrayAccess) {
+                return string.append("\tiastore\n").toString();
+            }
+            else // add reference modifier
+                string.append("\ta");
         }
         else {
             string.append("\t");
             string.append(MyJasminUtils.parseType(d.getVarType().getTypeOfElement()).toLowerCase(Locale.ROOT));
 
-
             // check if rhs is an array
             Descriptor desc = this.getRhsElemDescriptor(vars, instruction);
 
             if (desc != null) {
-//                System.out.println("VAR T: " + desc.));
                 if (desc.getVarType().getTypeOfElement() == ElementType.ARRAYREF)
                     return string.append("astore\n").toString();
             }
@@ -90,7 +78,6 @@ public class AssignInstructionHandler implements IntructionHandler{
         System.out.println(inst.getInstType());
         if (inst.getInstType() == InstructionType.NOPER) {
             Element op = ((SingleOpInstruction) inst).getSingleOperand();
-            System.out.println("OPOPOPO : " + op.getType());
             String name = MyJasminUtils.getElementName(op);
             return vars.get(name);
         }
