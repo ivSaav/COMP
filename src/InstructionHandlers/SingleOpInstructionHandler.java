@@ -6,7 +6,7 @@ import org.specs.comp.ollir.Instruction;
 
 public class SingleOpInstructionHandler implements IntructionHandler{
 
-    private SingleOpInstruction singleOpInstruction;
+    private final SingleOpInstruction singleOpInstruction;
 
     public SingleOpInstructionHandler(Instruction single) {
 

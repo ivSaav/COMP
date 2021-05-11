@@ -2,8 +2,7 @@ package InstructionHandlers;
 
 import org.specs.comp.ollir.*;
 
-import java.util.HashMap;
-import java.util.Locale;
+import java.util.*;
 
 public class MyJasminUtils {
 
@@ -18,8 +17,22 @@ public class MyJasminUtils {
             Operand variable = (Operand) op;
             Descriptor d = vars.get(variable.getName());
 
-            if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF  || d.getVarType().getTypeOfElement() == ElementType.ARRAYREF)
+
+            System.out.println("UTILS "  + d.getVarType().getTypeOfElement() + " " + ((Operand) op).getName());
+
+            if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF) {
                 string.append("\ta");
+            }
+            else if (d.getVarType().getTypeOfElement() == ElementType.ARRAYREF) {
+                string.append("\taload "+ d.getVirtualReg()+"\n");
+                ArrayOperand arrayOp = (ArrayOperand) op;
+
+                String name = MyJasminUtils.getElementName((arrayOp).getIndexOperands().get(0));
+
+                Descriptor desc = vars.get(name);
+                string.append("\tiload " + desc.getVirtualReg() + "\n");
+                return;
+            }
             else
                 string.append("\t"+ MyJasminUtils.parseType(op.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
 
@@ -117,6 +130,23 @@ public class MyJasminUtils {
             case SHRRI32:
             default:
                 return "another";
+        }
+    }
+
+    public static Type getVarType(int regID, Map<String, Descriptor> varTable) {
+
+        for (Map.Entry<String, Descriptor> entry : varTable.entrySet()) {
+            if (entry.getValue().getVirtualReg() == regID)
+                return entry.getValue().getVarType();
+        }
+
+        return null;
+    }
+
+
+    public static void printVarTable(Map<String, Descriptor> vars) {
+        for (Map.Entry<String, Descriptor> entry : vars.entrySet()) {
+            System.out.println(entry.getKey() + " : " + entry.getValue().getVirtualReg() + " " + entry.getValue().getVarType());
         }
     }
 }

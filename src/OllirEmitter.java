@@ -181,7 +181,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         // putfield(this, t, value)
         if (destNode.getKind().equals("Array")) {
             List<String> auxExpr = new ArrayList<>();
-            varName = this.handleVariable(destNode, auxExpr);
+            varName = this.handleVariable(destNode, auxExpr, false);
             this.insertAuxiliarExpressions(builder, auxExpr, false, indent);
         }
         else
@@ -228,7 +228,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         }
 
         // For the variable that stores the value
-        assign.append(indent).append(this.handleVariable(lhs, expressions));
+        assign.append(indent).append(this.handleVariable(lhs, expressions, true));
 
         this.insertAuxiliarExpressions(assign, expressions, false, indent);
 
@@ -267,7 +267,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 break;
             case "Ident":
             case "Array":
-                rhsBuilder.append(this.handleVariable(rhs, auxExpressions));
+                rhsBuilder.append(this.handleVariable(rhs, auxExpressions, false));
                 this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
                 break;
             case "MethodCall": // In the case of a call to a method
@@ -544,7 +544,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         }
         // Case the terminal is an Identifier
         else {
-            return this.handleVariable(expr, expressions);
+            return this.handleVariable(expr, expressions, false);
         }
     }
 
@@ -705,7 +705,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         return paramsBuilder.toString();
     }
 
-    private String handleVariable(JmmNode varNode, List<String> auxExpr) {
+    private String handleVariable(JmmNode varNode, List<String> auxExpr, boolean isLhs) {
         String kind = varNode.getKind();
 
         switch (kind) {
@@ -728,6 +728,9 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                     return newVarName;
                 }
+
+                if (isLhs)
+                    return this.handleArrayAccess(varNode, auxExpr);
 
                 String vName = "t" + this.idCounter++ + ".i32";
                 auxExpr.add(vName + " :=.i32 " +  this.handleArrayAccess(varNode, auxExpr)); // array is not a class field
