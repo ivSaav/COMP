@@ -57,21 +57,22 @@ public class CallInstructionHandler implements IntructionHandler{
             }
         }
 
-        if(OllirAccesser.getCallInvocation(callInstruction) == CallType.NEW) {
+        CallType callType = OllirAccesser.getCallInvocation(callInstruction);
+        if(callType == CallType.NEW) {
             if(first.equals("array")){
-                string.append("\t" + OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT) + first);
+                string.append("\t" + callType.toString().toLowerCase(Locale.ROOT) + first);
                 string.append(" int\n");
             }else{
-                string.append("\t" + OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT) + " " +first+"\n");
+                string.append("\t" + callType.toString().toLowerCase(Locale.ROOT) + " " +first+"\n");
             }
 
             return string.toString();
         }
-        else if(OllirAccesser.getCallInvocation(callInstruction) == CallType.arraylength){
-            string.append("\t" + OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT)+"\n");
+        else if(callType == CallType.arraylength){
+            string.append("\t" + callType.toString().toLowerCase(Locale.ROOT)+"\n");
             return string.toString();
         }else{
-            string.append("\t"+ OllirAccesser.getCallInvocation(callInstruction).toString().toLowerCase(Locale.ROOT) + " " + first);
+            string.append("\t"+ callType.toString().toLowerCase(Locale.ROOT) + " " + first);
         }
 
 
@@ -91,4 +92,5 @@ public class CallInstructionHandler implements IntructionHandler{
 
         return string+"\n";
     }
+
 }

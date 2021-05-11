@@ -12,13 +12,12 @@ public class MyJasminUtils {
             string.append("\tldc "+literal.getLiteral()+" \n");
 
         }else{
+            System.out.println("DESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
+
             HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
 
             Operand variable = (Operand) op;
             Descriptor d = vars.get(variable.getName());
-
-
-            System.out.println("UTILS "  + d.getVarType().getTypeOfElement() + " " + ((Operand) op).getName());
 
             if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF) {
                 string.append("\ta");
@@ -33,8 +32,10 @@ public class MyJasminUtils {
                 string.append("\tiload " + desc.getVirtualReg() + "\n");
                 return;
             }
-            else
-                string.append("\t"+ MyJasminUtils.parseType(op.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+            else {
+                System.out.println("INT : " +  ((Operand) op).getName() );
+                string.append("\t" + MyJasminUtils.parseType(op.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+            }
 
 
             string.append("load "+ d.getVirtualReg()+"\n");
