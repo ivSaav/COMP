@@ -30,12 +30,12 @@ public class AssignInstructionHandler implements IntructionHandler{
         if (lhsArrayAccess)
             MyJasminUtils.loadElement(method, string, instruction.getDest());
 
-        //Call instruction allocator to handle right part of assignment
+        System.out.println("ASSIGN ===\n" + method.getMethodName() + "\n" + instruction.getRhs().getInstType());
+
+        // Call instruction allocator to handle right part of assignment
         String rhss = rhs.allocateAndHandle(instruction.getRhs(), className, method);
         string.append(rhss);
 
-
-//        System.out.println("ASSIGN ===\n" + method.getMethodName() + "\n" + instruction.getRhs().getInstType());
         // don't store if successor instruction is a putfield
         Instruction rhsInst = instruction.getRhs();
         if (rhsInst.getInstType() == InstructionType.CALL) {
@@ -43,9 +43,16 @@ public class AssignInstructionHandler implements IntructionHandler{
             // successor is a putfield call (abort store)
             if (succ.getInstType() == InstructionType.PUTFIELD)
                 return string.toString();
+
+////            TODO improvement
+//            CallType callType = OllirAccesser.getCallInvocation((CallInstruction) rhsInst);
+////             arralength -> value
+//            if (callType == CallType.arraylength)
+//                return string.toString();
+
         }
-        else if (rhsInst.getInstType() == InstructionType.GETFIELD) // don't store in getfield calls either
-            return string.toString();
+//        else if (rhsInst.getInstType() == InstructionType.GETFIELD) // don't store in getfield calls either
+//            return string.toString();
 
 
         // store LHS
@@ -69,7 +76,8 @@ public class AssignInstructionHandler implements IntructionHandler{
             if (rhsDesc != null) {
                 if (rhsDesc.getVarType().getTypeOfElement() == ElementType.ARRAYREF
                     && destDesc.getVarType().getTypeOfElement() == ElementType.INT32) // rhs array access
-                    return string.append("\tiaload\n").toString(); // load index
+                    string.append("\tiaload\n"); // load array access
+                // TODO improvement (return on iaload if auxiliary variable)
             }
 
             string.append("\t");

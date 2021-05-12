@@ -21,7 +21,8 @@ public class ReturnInstructionHandler implements IntructionHandler {
 
         if (returnInstruction.hasReturnValue()) {
             Element rop = returnInstruction.getOperand();
-            MyJasminUtils.loadElement(method, string, rop);
+//            if (!MyJasminUtils.isLoaded(rop, this.returnInstruction.getPred()))
+                MyJasminUtils.loadElement(method, string, rop);
         }
 
         string.append("\t");

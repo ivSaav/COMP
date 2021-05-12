@@ -168,6 +168,10 @@ public class SymbolsTable implements SymbolTable {
         return this.fields.containsKey(varName);
     }
 
+    public boolean isClassMethod(String methodName, int numArgs) {
+        return this.methods.containsKey(methodName + numArgs);
+    }
+
     @Override
     public String toString() {
         return "SymbolsTable{" +

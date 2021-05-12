@@ -19,7 +19,7 @@ public class MyJasminUtils {
             Operand variable = (Operand) op;
             Descriptor d = vars.get(variable.getName());
 
-            System.out.println("SCOPE : " + d.getScope());
+            System.out.println("REG : " + d.getVirtualReg());
 
             if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF) {
                 string.append("\ta");
@@ -38,6 +38,8 @@ public class MyJasminUtils {
                 }
                 else {
                     System.out.println("olha sou um array normal");
+                    if (d.getScope() == VarScope.LOCAL)
+                        string.append("\taload " + d.getVirtualReg() + "\n");
                 }
                 return;
             }
@@ -158,5 +160,37 @@ public class MyJasminUtils {
         for (Map.Entry<String, Descriptor> entry : vars.entrySet()) {
             System.out.println(entry.getKey() + " : " + entry.getValue().getVirtualReg() + " " + entry.getValue().getVarType());
         }
+    }
+
+//    public static boolean isAuxVar(Element desc) {
+//        String name = getElementName(desc);
+//        return name
+//    }
+
+
+    /**
+     * Looks up in the predecessor instructions if variavle 'var' has already been loaded into
+     * the stack
+     * @param var
+     * @param pred
+     * @return
+     */
+    public static boolean isLoaded(Element var, List<Node> pred) {
+        System.out.println("====");
+        for (Node n : pred) {
+            InstructionType predInstrType = ((Instruction) n).getInstType();
+            // checking if param variable has already been involved in an assignment
+            if (predInstrType == InstructionType.ASSIGN) {
+                Element predAssign = ((AssignInstruction) n).getDest();
+                String name = MyJasminUtils.getElementName(predAssign);
+
+
+                String paramVarName = MyJasminUtils.getElementName(var);
+                System.out.println("NAME :"+ paramVarName + " " + name );
+                if (paramVarName.equals(name)) // found var initialization in pred assigns (stop)
+                    return true;
+            }
+        }
+        return false;
     }
 }

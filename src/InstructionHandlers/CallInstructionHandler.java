@@ -55,27 +55,8 @@ public class CallInstructionHandler implements IntructionHandler{
             for (Element element : callInstruction.getListOfOperands()) {
                 List<Node> pred = callInstruction.getPred();
 
-                // checking if the var in method call's parameters has been initialized
-                // if there is a predecessor assign instruction then the variable is already in the stack
-                // TODO maybe review for other cases (check if the name of the variable is the same as assign dest)
-                boolean initializedVar = false;
-                for (Node n : pred) {
-                    InstructionType predInstrType = ((Instruction) n).getInstType();
-                    // param variable has already been involved in an assignment
-                    if (predInstrType == InstructionType.ASSIGN) {
-                        Element predAssign = ((AssignInstruction) n).getDest();
-                        String name = MyJasminUtils.getElementName(predAssign);
-
-                        String paramVarName = MyJasminUtils.getElementName(element);
-                        initializedVar = paramVarName.equals(name); // checking if predecessor is the
-                        if (initializedVar) // found var initialization in pred assigns (stop)
-                            break;
-                    }
-                }
-
-                // if parameter is not in the stack (load it)
-                if (!initializedVar)
-                    MyJasminUtils.loadElement(method, string, element);
+                // TODO initialized variable verification
+                MyJasminUtils.loadElement(method, string, element);
                 build.append(MyJasminUtils.parseType(element.getType().getTypeOfElement()));
             }
         }
