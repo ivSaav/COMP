@@ -17,7 +17,7 @@ public class SingleOpInstructionHandler implements IntructionHandler{
         StringBuilder string = new StringBuilder();
         Element op = singleOpInstruction.getSingleOperand();
 
-        MyJasminUtils.checkLiteralOrOperand(method, string, op);
+        MyJasminUtils.loadElement(method, string, op);
 
         return string.toString();
     }

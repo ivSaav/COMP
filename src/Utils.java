@@ -111,7 +111,7 @@ public class Utils {
         String t = "";
         switch (type.getName()) {
             case "int":
-                t = "i32";
+                t = (type.isArray() ? "array." : "" ) + "i32";
                 break;
             case "boolean":
                 t = "bool";

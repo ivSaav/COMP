@@ -1,7 +1,6 @@
 package InstructionHandlers;
 
 import org.specs.comp.ollir.*;
-import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 
 public class PutFieldInstructionHandler implements IntructionHandler{
     private PutFieldInstruction put;
@@ -14,16 +13,22 @@ public class PutFieldInstructionHandler implements IntructionHandler{
     public String handleInstruction(String className,Method method) {
 
         StringBuilder string = new StringBuilder();
-        Element third = put.getThirdOperand();
+//        Element third = put.getThirdOperand();
 
-        MyJasminUtils.checkLiteralOrOperand(method, string, third);
+        String first = MyJasminUtils.getElementName(put.getFirstOperand());
+        String second = MyJasminUtils.getElementName(put.getSecondOperand());
+        String third = MyJasminUtils.getElementName(put.getThirdOperand());
+
+        System.out.println(" FST : " + first + " " + second + " " + third);
+
+        MyJasminUtils.loadElement(method, string, put.getThirdOperand());
 
         string.append("\tputfield ");
 
-        String first = MyJasminUtils.getElementName(put.getFirstOperand());
+        first = MyJasminUtils.getElementName(put.getFirstOperand());
         if (first.equals("this")) first= className;
 
-        String second = MyJasminUtils.getElementName(put.getSecondOperand());
+        second = MyJasminUtils.getElementName(put.getSecondOperand());
 
 
         string.append(first +"/"+second +" "+ MyJasminUtils.parseType(put.getSecondOperand().getType().getTypeOfElement()));

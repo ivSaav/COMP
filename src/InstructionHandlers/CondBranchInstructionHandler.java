@@ -1,7 +1,6 @@
 package InstructionHandlers;
 
 import org.specs.comp.ollir.*;
-import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 
 import java.util.Locale;
 
@@ -22,8 +21,8 @@ public class CondBranchInstructionHandler implements IntructionHandler{
 
 
         //load or lcd operands to stack
-        MyJasminUtils.checkLiteralOrOperand(method, string, rop);
-        MyJasminUtils.checkLiteralOrOperand(method, string, lop);
+        MyJasminUtils.loadElement(method, string, rop);
+        MyJasminUtils.loadElement(method, string, lop);
 
         //TODO
         if (lop.getType().getTypeOfElement()==ElementType.INT32){

@@ -6,13 +6,13 @@ import java.util.*;
 
 public class MyJasminUtils {
 
-    static void checkLiteralOrOperand(Method method, StringBuilder string, Element op) {
+    static void loadElement(Method method, StringBuilder string, Element op) {
         if (op.isLiteral()){
             LiteralElement literal = (LiteralElement) op;
             string.append("\tldc "+literal.getLiteral()+" \n");
 
         }else{
-            System.out.println("DESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
+            System.out.println("== \nDESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
 
             HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
 
@@ -23,17 +23,24 @@ public class MyJasminUtils {
                 string.append("\ta");
             }
             else if (d.getVarType().getTypeOfElement() == ElementType.ARRAYREF) {
-                string.append("\taload "+ d.getVirtualReg()+"\n");
-                ArrayOperand arrayOp = (ArrayOperand) op;
+                System.out.println(d.getVarType());
+                // array access
+                if (op.getType().getTypeOfElement() == ElementType.INT32) {
+                    string.append("\taload " + d.getVirtualReg() + "\n");
+                    ArrayOperand arrayOp = (ArrayOperand) op;
 
-                String name = MyJasminUtils.getElementName((arrayOp).getIndexOperands().get(0));
+                    String name = MyJasminUtils.getElementName((arrayOp).getIndexOperands().get(0));
 
-                Descriptor desc = vars.get(name);
-                string.append("\tiload " + desc.getVirtualReg() + "\n");
+                    Descriptor desc = vars.get(name);
+                    string.append("\tiload " + desc.getVirtualReg() + "\n");
+                }
+                else {
+                    System.out.println("olha sou um array normal");
+                }
                 return;
             }
             else {
-                System.out.println("INT : " +  ((Operand) op).getName() );
+//                System.out.println("INT : " +  ((Operand) op).getName() );
                 string.append("\t" + MyJasminUtils.parseType(op.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
             }
 

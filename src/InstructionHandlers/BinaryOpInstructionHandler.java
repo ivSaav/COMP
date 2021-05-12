@@ -1,7 +1,6 @@
 package InstructionHandlers;
 
 import org.specs.comp.ollir.*;
-import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 
 import java.util.Locale;
 
@@ -22,8 +21,8 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
         Element lop = instruction.getLeftOperand();
 
         //load or lcd operands to stack
-        MyJasminUtils.checkLiteralOrOperand(method, string, rop);
-        MyJasminUtils.checkLiteralOrOperand(method, string, lop);
+        MyJasminUtils.loadElement(method, string, rop);
+        MyJasminUtils.loadElement(method, string, lop);
 
         string.append("\t"+ MyJasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
         string.append(MyJasminUtils.parseOperationType(instruction.getUnaryOperation().getOpType())+"\n");

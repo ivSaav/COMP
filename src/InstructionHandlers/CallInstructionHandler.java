@@ -1,7 +1,6 @@
 package InstructionHandlers;
 
 import org.specs.comp.ollir.*;
-import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -76,7 +75,7 @@ public class CallInstructionHandler implements IntructionHandler{
 
                 // if parameter is not in the stack (load it)
                 if (!initializedVar)
-                    MyJasminUtils.checkLiteralOrOperand(method, string, element);
+                    MyJasminUtils.loadElement(method, string, element);
                 build.append(MyJasminUtils.parseType(element.getType().getTypeOfElement()));
             }
         }

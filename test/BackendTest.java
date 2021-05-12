@@ -46,4 +46,15 @@ public class BackendTest {
 
         var output = result.run();
     }
+
+    @Test
+    public void testWhilesAndIfs() {
+
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/WhileAndIf.jmm"));
+
+        var result = TestUtils.backend(optm);
+        TestUtils.noErrors(result.getReports());
+
+        var output = result.run();
+    }
 }
