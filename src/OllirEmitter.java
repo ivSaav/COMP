@@ -98,7 +98,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         // Method's return type
         Type retType = methodSymbols.getReturnType();
-        String methodRet = "." + Utils.getOllirType(retType) + " {\n";
+        String methodRet = "." + (retType.isArray() ? "array." : "") + Utils.getOllirType(retType) + " {\n";
 
         // Method's body
         JmmNode methodBody = Utils.getChildOfKind(methodNode, "MethodBody");

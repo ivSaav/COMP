@@ -21,10 +21,10 @@ public class AssignInstructionHandler implements IntructionHandler{
         HashMap<String, Descriptor> vars = OllirAccesser.getVarTable(method);
 
         Operand variable = (Operand) instruction.getDest();
-        Descriptor d = vars.get(variable.getName());
+        Descriptor destDesc = vars.get(variable.getName());
 
         // destination variable is an array access
-        boolean lhsArrayAccess = d.getVarType().getTypeOfElement() == ElementType.ARRAYREF &&
+        boolean lhsArrayAccess = destDesc.getVarType().getTypeOfElement() == ElementType.ARRAYREF &&
                                 variable.getType().getTypeOfElement() == ElementType.INT32;
         // handle lhs if is an array access -> aload array; iload index
         if (lhsArrayAccess)
@@ -34,7 +34,22 @@ public class AssignInstructionHandler implements IntructionHandler{
         String rhss = rhs.allocateAndHandle(instruction.getRhs(), className, method);
         string.append(rhss);
 
-        ElementType destType = d.getVarType().getTypeOfElement();
+
+//        System.out.println("ASSIGN ===\n" + method.getMethodName() + "\n" + instruction.getRhs().getInstType());
+        // don't store if successor instruction is a putfield
+        Instruction rhsInst = instruction.getRhs();
+        if (rhsInst.getInstType() == InstructionType.CALL) {
+            Instruction succ = (Instruction) instruction.getSucc1();
+            // successor is a putfield call (abort store)
+            if (succ.getInstType() == InstructionType.PUTFIELD)
+                return string.toString();
+        }
+        else if (rhsInst.getInstType() == InstructionType.GETFIELD) // don't store in getfield calls either
+            return string.toString();
+
+
+        // store LHS
+        ElementType destType = destDesc.getVarType().getTypeOfElement();
         if (destType == ElementType.OBJECTREF){
             string.append("\ta");
         }
@@ -50,16 +65,17 @@ public class AssignInstructionHandler implements IntructionHandler{
         else {
 
             // check if rhs is an array access (return before doing load)
-            Descriptor desc = this.getElemDescriptor(vars, instruction);
-            if (desc != null) {
-                if (desc.getVarType().getTypeOfElement() == ElementType.ARRAYREF && d.getVarType().getTypeOfElement() == ElementType.INT32)
-                    return string.append("\tiaload\n").toString();
+            Descriptor rhsDesc = this.getRhsElemDescriptor(vars, instruction);
+            if (rhsDesc != null) {
+                if (rhsDesc.getVarType().getTypeOfElement() == ElementType.ARRAYREF
+                    && destDesc.getVarType().getTypeOfElement() == ElementType.INT32) // rhs array access
+                    return string.append("\tiaload\n").toString(); // load index
             }
 
             string.append("\t");
-            string.append(MyJasminUtils.parseType(d.getVarType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+            string.append(MyJasminUtils.parseType(destDesc.getVarType().getTypeOfElement()).toLowerCase(Locale.ROOT));
         }
-        string.append("store " + d.getVirtualReg() + "\n");
+        string.append("store " + destDesc.getVirtualReg() + "\n");
 
         return string.toString();
     }
@@ -67,22 +83,22 @@ public class AssignInstructionHandler implements IntructionHandler{
     private ElementType getElemType(Map<String, Descriptor> vars, Instruction inst) {
         if (instruction.getRhs().getInstType() == InstructionType.NOPER) {
             // get variable descriptor
-            Descriptor des = this.getElemDescriptor(vars, inst);
+            Descriptor des = this.getRhsElemDescriptor(vars, inst);
 
             return des != null ? des.getVarType().getTypeOfElement() : null;
         }
         return null;
     }
 
-    private Descriptor getElemDescriptor(Map<String, Descriptor> vars, Instruction inst) {
+    private Descriptor getRhsElemDescriptor(Map<String, Descriptor> vars, Instruction inst) {
         if (inst.getInstType() == InstructionType.NOPER) {
             Element op = ((SingleOpInstruction) inst).getSingleOperand();
             String name = MyJasminUtils.getElementName(op);
             return vars.get(name);
         }
         else if (inst.getInstType() == InstructionType.ASSIGN) {
-            Instruction op = ((Instruction) ((AssignInstruction) inst).getRhs());
-            return getElemDescriptor(vars, op);
+            Instruction op = (((AssignInstruction) inst).getRhs());
+            return getRhsElemDescriptor(vars, op);
         }
         return null;
     }

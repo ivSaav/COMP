@@ -74,7 +74,8 @@ public class BackendStage implements JasminBackend {
                 jasminCode.append("<init>(");
                 parseMethodParameters(method.getParams(), jasminCode);
                 jasminCode.append(")V\n");
-            }else{
+            }
+            else {
 
                 String methodName = method.getMethodName();
 
@@ -104,9 +105,10 @@ public class BackendStage implements JasminBackend {
                 jasminCode.append("\n\t"+ ".limit locals " + ++localVariables);
                 jasminCode.append("\n\t" + ".limit stack 99");
 
+                if (!method.isStaticMethod())
+                    jasminCode.append("\n\taload 0");
             }
             jasminCode.append("\n");
-
 
             handleInstructions(jasminCode, ollirClass.getClassName(), method, varTable);
 

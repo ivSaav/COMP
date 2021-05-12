@@ -12,18 +12,20 @@ public class MyJasminUtils {
             string.append("\tldc "+literal.getLiteral()+" \n");
 
         }else{
-            System.out.println("== \nDESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
+            System.out.println("= \nDESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
 
             HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
 
             Operand variable = (Operand) op;
             Descriptor d = vars.get(variable.getName());
 
+            System.out.println("SCOPE : " + d.getScope());
+
             if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF) {
                 string.append("\ta");
             }
             else if (d.getVarType().getTypeOfElement() == ElementType.ARRAYREF) {
-                System.out.println(d.getVarType());
+//                System.out.println(d.getVarType());
                 // array access
                 if (op.getType().getTypeOfElement() == ElementType.INT32) {
                     string.append("\taload " + d.getVirtualReg() + "\n");

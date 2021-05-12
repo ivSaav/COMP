@@ -19,7 +19,7 @@ public class PutFieldInstructionHandler implements IntructionHandler{
         String second = MyJasminUtils.getElementName(put.getSecondOperand());
         String third = MyJasminUtils.getElementName(put.getThirdOperand());
 
-        System.out.println(" FST : " + first + " " + second + " " + third);
+        System.out.println("PUTFIELD ===\n " + first + " " + second + " " + third);
 
         MyJasminUtils.loadElement(method, string, put.getThirdOperand());
 
