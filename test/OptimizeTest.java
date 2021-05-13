@@ -43,9 +43,34 @@ public class OptimizeTest {
         TestUtils.noErrors(result.getReports());
     }
 
-//    @Test
-//    public void testLife() {
-//        var result = TestUtils.optimize(SpecsIo.getResource("fixtures/public/Life.jmm"));
-//        TestUtils.noErrors(result.getReports());
-//    }
+    @Test
+    public void testLife() {
+        var result = TestUtils.optimize(SpecsIo.getResource("fixtures/public/Life.jmm"));
+        TestUtils.noErrors(result.getReports());
+    }
+
+    @Test
+    public void testMonteCarlo() {
+        var result = TestUtils.optimize(SpecsIo.getResource("fixtures/public/MonteCarloPi.jmm"));
+        TestUtils.noErrors(result.getReports());
+    }
+
+    @Test
+    public void testQuickSort() {
+        var result = TestUtils.optimize(SpecsIo.getResource("fixtures/public/QuickSort.jmm"));
+        TestUtils.noErrors(result.getReports());
+    }
+
+    @Test
+    public void testTicTacToe() {
+        var result = TestUtils.optimize(SpecsIo.getResource("fixtures/public/TicTacToe.jmm"));
+        TestUtils.noErrors(result.getReports());
+    }
+
+
+    @Test
+    public void testWhileAndIf() {
+        var result = TestUtils.optimize(SpecsIo.getResource("fixtures/public/WhileAndIf.jmm"));
+        TestUtils.noErrors(result.getReports());
+    }
 }

@@ -1,5 +1,7 @@
 package pt.up.fe.comp;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
@@ -190,4 +192,6 @@ public class TestUtils {
     public static String getLibsClasspath() {
         return "test/fixtures/libs/compiled";
     }
+
+
 }

@@ -1,10 +1,6 @@
 package InstructionHandlers;
 
-import org.specs.comp.ollir.ElementType;
-import org.specs.comp.ollir.Instruction;
-import org.specs.comp.ollir.Method;
-import org.specs.comp.ollir.ReturnInstruction;
-import pt.up.fe.comp.jmm.jasmin.JasminUtils;
+import org.specs.comp.ollir.*;
 
 import java.util.Locale;
 
@@ -19,19 +15,26 @@ public class ReturnInstructionHandler implements IntructionHandler {
     @Override
     public String handleInstruction(String className, Method method) {
 
-        StringBuffer string = new StringBuffer();
+        StringBuilder string = new StringBuilder();
 
         ElementType returnType = method.getReturnType().getTypeOfElement();
 
-        if(returnType != null && returnType!=ElementType.VOID){
-            string.append("\t" + JasminUtils.parseType(returnType).toLowerCase(Locale.ROOT));
-        }
-        else{
-            string.append("\t");
+        if (returnInstruction.hasReturnValue()) {
+            Element rop = returnInstruction.getOperand();
+//            if (!MyJasminUtils.isLoaded(rop, this.returnInstruction.getPred()))
+                MyJasminUtils.loadElement(method, string, rop);
         }
 
-        string.append("return ");
-        string.append("\n");
+        string.append("\t");
+        if(returnType != null && returnType!=ElementType.VOID){
+            if (returnType == ElementType.ARRAYREF)
+                string.append("a");
+            else if (returnType == ElementType.BOOLEAN)
+                string.append("i");
+            else
+                string.append(MyJasminUtils.parseType(returnType).toLowerCase(Locale.ROOT));
+        }
+        string.append("return \n");
 
         return string.toString();
     }
