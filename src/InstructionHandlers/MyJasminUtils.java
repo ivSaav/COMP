@@ -35,7 +35,7 @@ public class MyJasminUtils {
                     string.append("\tiload " + desc.getVirtualReg() + "\n");
                 }
                 else {
-                    System.out.println("olha sou um array normal");
+//                    System.out.println("olha sou um array normal");
                     if (d.getScope() == VarScope.LOCAL)
                         string.append("\taload " + d.getVirtualReg() + "\n");
                 }
@@ -174,7 +174,6 @@ public class MyJasminUtils {
      * @return
      */
     public static boolean isLoaded(Element var, List<Node> pred) {
-        System.out.println("====");
         for (Node n : pred) {
             InstructionType predInstrType = ((Instruction) n).getInstType();
             // checking if param variable has already been involved in an assignment
@@ -182,9 +181,7 @@ public class MyJasminUtils {
                 Element predAssign = ((AssignInstruction) n).getDest();
                 String name = MyJasminUtils.getElementName(predAssign);
 
-
                 String paramVarName = MyJasminUtils.getElementName(var);
-                System.out.println("NAME :"+ paramVarName + " " + name );
                 if (paramVarName.equals(name)) // found var initialization in pred assigns (stop)
                     return true;
             }

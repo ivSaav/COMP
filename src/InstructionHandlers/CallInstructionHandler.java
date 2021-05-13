@@ -98,7 +98,6 @@ public class CallInstructionHandler implements IntructionHandler{
         string.append("(");
         string.append(build);
         string.append(")");
-        System.out.println("ELEM TYPE = "+ callInstruction.getReturnType().getTypeOfElement());
         string.append(MyJasminUtils.parseType(callInstruction.getReturnType().getTypeOfElement()));
 
 

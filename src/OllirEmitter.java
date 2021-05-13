@@ -570,8 +570,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                         String args = this.handleMethodParameters(arguments, auxExpressions);
                         String retType = this.determineMethodReturnType(methodCall);
 
-                        System.out.println("RET : " + retType);
-
                         String stMethod;
                         if (this.st.isClassMethod(methodCall.get("name"), arguments.getNumChildren())) {
                             Symbol varSymbol = this.st.getVariableSymbol(firstChild);
@@ -680,7 +678,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         if (methodSymb == null) {// not a defined method in this class
             JmmNode parent = methodNode.getParent();
 
-            System.out.println("KIND : " + parent.getKind());
             switch (parent.getKind()) {
                 case "Equal":
                     JmmNode lhs = parent.getChildren().get(0);

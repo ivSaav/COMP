@@ -19,10 +19,6 @@ public class CondBranchInstructionHandler implements IntructionHandler{
         Element lop = condBranchInstruction.getLeftOperand();
         Element rop = condBranchInstruction.getRightOperand();
 
-        for (Node n : this.condBranchInstruction.getPred()) {
-            System.out.println("PRED " + ((Instruction) n).getInstType());
-        }
-
         //load or lcd operands to stack
 //        if (!MyJasminUtils.isLoaded(rop, this.condBranchInstruction.getPred()))
             MyJasminUtils.loadElement(method, string, rop);
