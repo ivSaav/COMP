@@ -13,7 +13,7 @@ public class SingleOpInstructionHandler implements IntructionHandler{
         this.singleOpInstruction = (SingleOpInstruction) single;
     }
 
-    public String handleInstruction(String className, Method method) {
+    public String handleInstruction(ClassUnit classUnit, Method method) {
         StringBuilder string = new StringBuilder();
         Element op = singleOpInstruction.getSingleOperand();
 

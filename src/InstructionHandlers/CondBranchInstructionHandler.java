@@ -13,18 +13,12 @@ public class CondBranchInstructionHandler implements IntructionHandler{
         this.condBranchInstruction = (CondBranchInstruction) branchInstruction;
     }
 
-    public String handleInstruction(String className, Method method) {
+    public String handleInstruction(ClassUnit classUnit, Method method) {
         String label=condBranchInstruction.getLabel();
         StringBuilder string = new StringBuilder();
 
         Element lop = condBranchInstruction.getLeftOperand();
         Element rop = condBranchInstruction.getRightOperand();
-
-        System.out.println("======================");
-        System.out.println("LABEL " + label);
-        System.out.println("LEFT " + lop);
-        System.out.println("RIGHT " + rop);
-        System.out.println("METHOD " + method.getMethodName());
 
         //load or lcd operands to stack
 //        if (!MyJasminUtils.isLoaded(rop, this.condBranchInstruction.getPred()))

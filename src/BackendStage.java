@@ -109,19 +109,19 @@ public class BackendStage implements JasminBackend {
             }
             jasminCode.append("\n");
 
-            handleInstructions(jasminCode, ollirClass.getClassName(), method, varTable);
+            handleInstructions(jasminCode, ollirClass, method, varTable);
 
             jasminCode.append(".end method \n\n");
 
         }
     }
 
-    private void handleInstructions(StringBuilder jasminCode, String className,Method method, HashMap<String, Descriptor> varTable) {
+    private void handleInstructions(StringBuilder jasminCode, ClassUnit classUnit,Method method, HashMap<String, Descriptor> varTable) {
 
         InstructionAllocator instructionAllocator = new InstructionAllocator();
 
         for (Instruction instruction : method.getInstructions()) {
-            jasminCode.append(instructionAllocator.allocateAndHandle(instruction, className,method));
+            jasminCode.append(instructionAllocator.allocateAndHandle(instruction, classUnit,method));
         }
 
     }
@@ -148,12 +148,13 @@ public class BackendStage implements JasminBackend {
         if(ollirClass.isFinalClass()) jasminCode.append("final ");
         if(ollirClass.isStaticClass()) jasminCode.append("static ");
         jasminCode.append(ollirClass.getClassName());
-        if (ollirClass.getPackage()==null){
+        if (ollirClass.getSuperClass() != null)
+            jasminCode.append("\n.super " +ollirClass.getSuperClass() + "\n\n");
+        else
             jasminCode.append("\n.super java/lang/Object\n\n");
-        }
-
-        ollirClass.show();
-
+        /*if (ollirClass.getPackage()==null){
+            jasminCode.append("\n.super java/lang/Object\n\n");
+        }*/
     }
 
     private void handleFields(ClassUnit ollirClass, StringBuilder jasminCode) {

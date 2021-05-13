@@ -41,6 +41,11 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     private String handleClass(JmmNode classNode, String indent) {
         StringBuilder stringBuilder = new StringBuilder(classNode.get("class"));
 
+        //Case a class extends from another class
+        if (!st.getSuper().isBlank()) {
+            stringBuilder.append(" extends " + st.getSuper());
+        }
+
         stringBuilder.append(" {\n");
 
         // handling class fields
@@ -406,17 +411,17 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     private String forceBinaryExpression(JmmNode exprNode, String auxExp, List<String> expr) {
         String kind = exprNode.getKind();
         if (kind.equals("Literal") || kind.equals("MethodCall")) {
-           return auxExp + " &&.bool true.bool";
+           return auxExp + " &&.bool 1.bool";
         }
         else if (kind.equals("Negation")) {
             JmmNode innerExpr = exprNode.getChildren().get(0);
             if (innerExpr.getNumChildren() < 2 || innerExpr.getKind().equals("MethodCall")) {
                 expr.add("t" + this.idCounter++ + ".bool :=.bool " + auxExp);
-                return "t" + this.idCounter + ".bool &&.bool true.bool";
+                return "t" + this.idCounter + ".bool &&.bool 1.bool";
             }
         }
         else if (exprNode.getNumChildren() < 2)
-               return auxExp + " &&.bool true.bool";
+               return auxExp + " &&.bool 1.bool";
 
        return auxExp;
     }
@@ -569,10 +574,11 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                         String args = this.handleMethodParameters(arguments, auxExpressions);
                         String retType = this.determineMethodReturnType(methodCall);
+                        Symbol varSymbol = this.st.getVariableSymbol(firstChild);
+
 
                         String stMethod;
-                        if (this.st.isClassMethod(methodCall.get("name"), arguments.getNumChildren())) {
-                            Symbol varSymbol = this.st.getVariableSymbol(firstChild);
+                        if (varSymbol != null) {
                             String varname = Utils.getOllirVar(varSymbol);
 
                             stMethod = String.format(indent + "invokevirtual(%s, \"%s\"%s).%s",

@@ -14,7 +14,7 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
 
 
     @Override
-    public String handleInstruction(String className,Method method) {
+    public String handleInstruction(ClassUnit classUnit ,Method method) {
         StringBuilder string = new StringBuilder();
 
         Element rop = instruction.getRightOperand();

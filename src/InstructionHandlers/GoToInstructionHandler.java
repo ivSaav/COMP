@@ -1,5 +1,6 @@
 package InstructionHandlers;
 
+import org.specs.comp.ollir.ClassUnit;
 import org.specs.comp.ollir.GotoInstruction;
 import org.specs.comp.ollir.Instruction;
 import org.specs.comp.ollir.Method;
@@ -13,7 +14,7 @@ public class GoToInstructionHandler implements IntructionHandler{
     }
 
     @Override
-    public String handleInstruction(String className,Method method) {
+    public String handleInstruction(ClassUnit classUnit, Method method) {
         return "\tgoto " + instruction.getLabel()+"\n";
     }
 }

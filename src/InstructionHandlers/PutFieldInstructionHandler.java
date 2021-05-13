@@ -10,8 +10,8 @@ public class PutFieldInstructionHandler implements IntructionHandler{
     }
 
     @Override
-    public String handleInstruction(String className,Method method) {
-
+    public String handleInstruction(ClassUnit classUnit ,Method method) {
+        String className = classUnit.getClassName();
         StringBuilder string = new StringBuilder();
 //        Element third = put.getThirdOperand();
 

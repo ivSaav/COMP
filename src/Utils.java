@@ -133,15 +133,21 @@ public class Utils {
      */
     public static String getOllirLiteral(JmmNode literalNode) {
         String t = "";
+        String value = literalNode.get("value");
         switch (literalNode.get("type")) {
             case "int":
                 t = "i32";
                 break;
             case "boolean":
                 t = "bool";
+                if (value.equals("true"))
+                    value = "1";
+                else
+                    value = "0";
+
                 break;
         }
-        return literalNode.get("value") + "." + t;
+        return value + "." + t;
     }
 
         /**

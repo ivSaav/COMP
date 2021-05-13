@@ -16,25 +16,33 @@ public class CallInstructionHandler implements IntructionHandler{
 
 
     @Override
-    public String handleInstruction(String className,Method method) {
+    public String handleInstruction(ClassUnit classUnit,Method method) {
 
         StringBuilder string = new StringBuilder();
         HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
 
         String first = "";
-        if (callInstruction.getFirstArg().isLiteral()){
+        String stringPop = "";
+        /*if (callInstruction.getFirstArg().isLiteral()){
             LiteralElement literal = (LiteralElement) callInstruction.getFirstArg();
             first = literal.getLiteral();
         }
-        else {
+        else {*/
             Operand classOperand = (Operand) callInstruction.getFirstArg();
             first = classOperand.getName();
 
             //invokestatic doesnt need load
             if (callInstruction.getInvocationType() == CallType.invokespecial || callInstruction.getInvocationType() == CallType.invokevirtual) {
                 // load method reference
+
                 string.append("\taload ").append(vars.get(first).getVirtualReg()).append("\n");
                 first = ((ClassType) callInstruction.getFirstArg().getType()).getName();
+
+                if (method.getInstructions().contains(this.callInstruction)) {
+                    if (callInstruction.getReturnType().getTypeOfElement() != ElementType.VOID) {
+                        stringPop = "\tpop\n";
+                    }
+                }
             }
             else{ // static | new | arraylength (don't need load)
                 first = ((Operand) callInstruction.getFirstArg()).getName();
@@ -42,18 +50,22 @@ public class CallInstructionHandler implements IntructionHandler{
 
             if(classOperand.getName().equals("this")) {
                 if (method.isConstructMethod()) {
-                    first = "java/lang/Object";
-                    // TODO VERIFY SUPER
+                    if (classUnit.getSuperClass() != null)
+                        first =  classUnit.getSuperClass();
+                    else
+                        first = "java/lang/Object";
                 } else {
                     first = ((ClassType) callInstruction.getFirstArg().getType()).getName();
                 }
             }
-        }
+        //}
 
         StringBuilder build = new StringBuilder();
         if (callInstruction.getListOfOperands()!=null) {
             for (Element element : callInstruction.getListOfOperands()) {
                 List<Node> pred = callInstruction.getPred();
+
+                System.out.println("============================" + method.getMethodName());
 
                 // TODO initialized variable verification
                 MyJasminUtils.loadElement(method, string, element);
@@ -98,10 +110,10 @@ public class CallInstructionHandler implements IntructionHandler{
         string.append("(");
         string.append(build);
         string.append(")");
-        string.append(MyJasminUtils.parseTypeForMethod(callInstruction.getReturnType().getTypeOfElement()));
+        string.append(MyJasminUtils.parseTypeForMethod(callInstruction.getReturnType().getTypeOfElement()) + "\n");
+        string.append(stringPop);
 
-
-        return string+"\n";
+        return string.toString();
     }
 
 }

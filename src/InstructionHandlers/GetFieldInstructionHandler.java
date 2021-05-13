@@ -12,7 +12,8 @@ public class GetFieldInstructionHandler implements IntructionHandler{
     }
 
 
-    public String handleInstruction(String className,Method method) {
+    public String handleInstruction(ClassUnit classUnit,Method method) {
+        String className = classUnit.getClassName();
         StringBuilder string = new StringBuilder();
 
         string.append("\taload 0\n");

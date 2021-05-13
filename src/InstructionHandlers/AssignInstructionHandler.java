@@ -15,7 +15,9 @@ public class AssignInstructionHandler implements IntructionHandler{
     }
 
     @Override
-    public String handleInstruction(String className, Method method) {
+    public String handleInstruction(ClassUnit classUnit, Method method) {
+        String className = classUnit.getClassName();
+
         StringBuilder string = new StringBuilder();
         InstructionAllocator rhs = new InstructionAllocator();
         HashMap<String, Descriptor> vars = OllirAccesser.getVarTable(method);
@@ -27,13 +29,15 @@ public class AssignInstructionHandler implements IntructionHandler{
         boolean lhsArrayAccess = destDesc.getVarType().getTypeOfElement() == ElementType.ARRAYREF &&
                                 variable.getType().getTypeOfElement() == ElementType.INT32;
         // handle lhs if is an array access -> aload array; iload index
+
+        MyJasminUtils.printVarTable(vars);
         if (lhsArrayAccess)
             MyJasminUtils.loadElement(method, string, instruction.getDest());
 
 //        System.out.println("ASSIGN ===\n" + method.getMethodName() + "\n" + instruction.getRhs().getInstType());
 
         // Call instruction allocator to handle right part of assignment
-        String rhss = rhs.allocateAndHandle(instruction.getRhs(), className, method);
+        String rhss = rhs.allocateAndHandle(instruction.getRhs(), classUnit, method);
         string.append(rhss);
 
         // don't store if successor instruction is a putfield
