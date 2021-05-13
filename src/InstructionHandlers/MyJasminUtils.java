@@ -7,17 +7,29 @@ import java.util.*;
 public class MyJasminUtils {
 
     static void loadElement(Method method, StringBuilder string, Element op) {
+
         if (op.isLiteral()){
             LiteralElement literal = (LiteralElement) op;
             string.append("\tldc "+literal.getLiteral()+" \n");
 
         }else{
-//            System.out.println("= \nDESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
+            //System.out.println("= \nDESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
 
             HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
 
             Operand variable = (Operand) op;
+
             Descriptor d = vars.get(variable.getName());
+
+            // Case the return value is a literal boolean
+            if (d == null && op.getType().getTypeOfElement() == ElementType.BOOLEAN) {
+                if (variable.getName().equals("true"))
+                    string.append("\tldc 1 \n");
+                else if (variable.getName().equals("false"))
+                    string.append("\tldc 0 \n");
+
+                return;
+            }
 
             if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF) {
                 string.append("\ta");
@@ -68,7 +80,7 @@ public class MyJasminUtils {
             case INT32:
                 return "I";
             case BOOLEAN:
-                return "B";
+                return "I";
             case ARRAYREF:
                 return "[I";
             case OBJECTREF:
@@ -83,6 +95,86 @@ public class MyJasminUtils {
                 return "V";
             default:
                 return null;
+        }
+    }
+
+    public static String parseTypeForMethod(ElementType type){
+        switch (type) {
+            case INT32:
+                return "I";
+            case BOOLEAN:
+                return "Z";
+            case ARRAYREF:
+                return "[I";
+            case OBJECTREF:
+                return "Ljava/lang/Object";
+            case CLASS:
+                return "C";
+            case THIS:
+                return "T";
+            case STRING:
+                return "Ljava/lang/String";
+            case VOID:
+                return "V";
+            default:
+                return null;
+        }
+    }
+
+    public static String parseIFCond(OperationType type){
+        switch (type) {
+            case LTH:
+            case LTHI32:
+                return "lt";
+            case GTH:
+            case GTHI32:
+                return "gt";
+            case EQ:
+            case EQI32:
+                return "eq";
+            case NEQ:
+            case NEQI32:
+                return "ne";
+            case LTE:
+            case LTEI32:
+                return "le";
+            case GTE:
+            case GTEI32:
+                return "ge";
+            case MUL:
+            case MULI32:
+                return "mul";
+            case DIV:
+            case DIVI32:
+                return "div";
+            case ADD:
+            case ADDI32:
+                return "add";
+            case SUB:
+            case SUBI32:
+                return "sub";
+            case AND:
+            case ANDB:
+            case ANDI32:
+                return "eq";
+            case OR:
+            case ORB:
+                return "or";
+            case NOT:
+            case NOTB:
+                return "not";
+            case XOR:
+            case XORI32:
+                return "xor";
+            case SHL:
+            case SHR:
+            case SHRR:
+            case ORI32:
+            case SHLI32:
+            case SHRI32:
+            case SHRRI32:
+            default:
+                return "another";
         }
     }
 
@@ -121,13 +213,13 @@ public class MyJasminUtils {
             case AND:
             case ANDB:
             case ANDI32:
-                return "and";
+                return "eq";
             case OR:
             case ORB:
                 return "or";
             case NOT:
             case NOTB:
-                return "not";
+                return "xor";
             case XOR:
             case XORI32:
                 return "xor";

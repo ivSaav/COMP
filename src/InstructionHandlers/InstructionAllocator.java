@@ -17,7 +17,6 @@ public class InstructionAllocator {
 
         StringBuilder string = new StringBuilder();
 
-
         List<String> labels = method.getLabels(instruction);
 
         for (String label : labels){

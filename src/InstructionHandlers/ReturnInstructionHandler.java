@@ -29,6 +29,8 @@ public class ReturnInstructionHandler implements IntructionHandler {
         if(returnType != null && returnType!=ElementType.VOID){
             if (returnType == ElementType.ARRAYREF)
                 string.append("a");
+            else if (returnType == ElementType.BOOLEAN)
+                string.append("i");
             else
                 string.append(MyJasminUtils.parseType(returnType).toLowerCase(Locale.ROOT));
         }

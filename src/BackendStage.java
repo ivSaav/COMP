@@ -76,7 +76,6 @@ public class BackendStage implements JasminBackend {
                 jasminCode.append(")V\n");
             }
             else {
-
                 String methodName = method.getMethodName();
 
                 jasminCode.append(methodName + "(");
@@ -86,7 +85,7 @@ public class BackendStage implements JasminBackend {
                 }else{
                     parseMethodParameters(method.getParams(), jasminCode);
                 }
-                jasminCode.append(")"+ MyJasminUtils.parseType(method.getReturnType().getTypeOfElement()));
+                jasminCode.append(")"+ MyJasminUtils.parseTypeForMethod(method.getReturnType().getTypeOfElement()));
 
 
                 //LIMITS
@@ -153,6 +152,8 @@ public class BackendStage implements JasminBackend {
             jasminCode.append("\n.super java/lang/Object\n\n");
         }
 
+        ollirClass.show();
+
     }
 
     private void handleFields(ClassUnit ollirClass, StringBuilder jasminCode) {
@@ -175,13 +176,12 @@ public class BackendStage implements JasminBackend {
         jasminCode.append("\n");
     }
 
-
     public void parseMethodParameters(ArrayList<Element> paramList, StringBuilder jasminCode){
 
         int paramListSize = paramList.size();
 
         for(int i=0; i < paramListSize; i++){
-            jasminCode.append(MyJasminUtils.parseType(paramList.get(i).getType().getTypeOfElement()));
+            jasminCode.append(MyJasminUtils.parseTypeForMethod(paramList.get(i).getType().getTypeOfElement()));
 //            if(i!=paramListSize-1){
 //                jasminCode.append(";");
 //            }

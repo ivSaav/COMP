@@ -1,49 +1,69 @@
-import ioPlus;
-class FindMaximum {
-	int[] test_arr;
+import MathUtils; //lowerLimit,upperLimit
+import Quicksort;
 
-	public int find_maximum(int[] arr) {
-		int i;
-		int maximum;
-		int value;
+class Lazysort extends Quicksort {
+    public static void main(String[] a) {
+        int[] L;
+        int i;
+		boolean d;
+        Lazysort q;
 
-		i = 1;
-		maximum = arr[0];
-		while (i < arr.length) {
-			value = arr[i];
-			if (maximum < value) {
-				maximum = value;
-			} else {
-			}
-			i = i + 1;
-		}
+        L = new int[10];
 
-		return maximum;
-	}
+        i = 0;
+        while (i < L.length) {
+            L[i] = L.length - i;
+            i = i + 1;
+        }
 
-	public int build_test_arr() {
-		test_arr = new int[5];
-		test_arr[0] = 14;
+        q = new Lazysort();
 
-		test_arr[1] = 28;
+        q.quicksort(L);
+        d = q.printL(L);
+    }
 
-		test_arr[2] = 0;
-		test_arr[3] = 0-5; // No unary minus in Java--
-		test_arr[4] = 12;
-		return 0;
-	}
+    public boolean quicksort(int[] L) {
+        boolean lazy;
+        int rand;
+        rand = MathUtils.random(0, 5);
+        if (rand  < 4 ) {
+            this.beLazy(L);
+            lazy = true;
+        }
+        else {
+            lazy = false;
+        }
 
-	public int[] get_array() {
-		return test_arr;
-	}
+        if ( lazy ) {
+            lazy = !lazy;
+        }
+        else {
+            lazy = this.quicksort(L, 0, L.length - 1);
+        }
 
-	public static void main(String[] args) {
-		FindMaximum fm;
-		int max;
-		fm = new FindMaximum();
-		fm.build_test_arr();
+        return lazy;
+    }
 
-		max = fm.find_maximum(fm.get_array());
-		ioPlus.printResult(max);
-	}
+    public boolean beLazy(int[] L) {
+        int _allowedNameL;
+        int $allowedNameI;
+		int rand;
+        _allowedNameL = L.length;
+
+        $allowedNameI = 0;
+        while ($allowedNameI < _allowedNameL/2) {
+            L[$allowedNameI] = MathUtils.random(0, 10);
+
+            $allowedNameI = $allowedNameI + 1;
+        }
+
+        while ($allowedNameI < _allowedNameL) {
+        	rand = MathUtils.random(0, 10);
+            L[$allowedNameI] = rand + 1;
+
+            $allowedNameI = $allowedNameI + 1;
+        }
+
+        return true;
+    }
 }

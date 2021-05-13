@@ -69,7 +69,7 @@ public class BackendTest {
         TestUtils.noErrors(result.getReports());
 
         var output = result.run();
-//        assertEquals("Result: 14", output.trim());
+        assertEquals("Result: 14", output.trim());
     }
 
     @Test

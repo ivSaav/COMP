@@ -57,7 +57,7 @@ public class CallInstructionHandler implements IntructionHandler{
 
                 // TODO initialized variable verification
                 MyJasminUtils.loadElement(method, string, element);
-                build.append(MyJasminUtils.parseType(element.getType().getTypeOfElement()));
+                build.append(MyJasminUtils.parseTypeForMethod(element.getType().getTypeOfElement()));
             }
         }
 
@@ -98,7 +98,7 @@ public class CallInstructionHandler implements IntructionHandler{
         string.append("(");
         string.append(build);
         string.append(")");
-        string.append(MyJasminUtils.parseType(callInstruction.getReturnType().getTypeOfElement()));
+        string.append(MyJasminUtils.parseTypeForMethod(callInstruction.getReturnType().getTypeOfElement()));
 
 
         return string+"\n";
