@@ -45,6 +45,31 @@ public class BackendTest {
         TestUtils.noErrors(result.getReports());
 
         var output = result.run();
+        assertEquals("30", output.trim());
+    }
+
+    @Test
+    public void testFindMaximum() {
+
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/FindMaximum.jmm"));
+
+        var result = TestUtils.backend(optm);
+        TestUtils.noErrors(result.getReports());
+
+        var output = result.run();
+        assertEquals("Result: 14", output.trim());
+    }
+
+    @Test
+    public void testLazysort() {
+
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/Lazysort.jmm"));
+
+        var result = TestUtils.backend(optm);
+        TestUtils.noErrors(result.getReports());
+
+        var output = result.run();
+//        assertEquals("Result: 14", output.trim());
     }
 
     @Test

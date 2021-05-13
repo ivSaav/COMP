@@ -19,12 +19,12 @@ public class PutFieldInstructionHandler implements IntructionHandler{
         String second = MyJasminUtils.getElementName(put.getSecondOperand());
         String third = MyJasminUtils.getElementName(put.getThirdOperand());
 
-        System.out.println("PUTFIELD ===\n " + first + " " + second + " " + third);
+//        System.out.println("PUTFIELD ===\n " + first + " " + second + " " + third);
 
 //        if (!MyJasminUtils.isLoaded(put.getSecondOperand(), this.put.getPred()))
-            MyJasminUtils.loadElement(method, string, put.getSecondOperand());
-        if (!MyJasminUtils.isLoaded(put.getThirdOperand(), this.put.getPred()))
-        MyJasminUtils.loadElement(method, string, put.getThirdOperand());
+//            MyJasminUtils.loadElement(method, string, put.getSecondOperand());
+//        if (!MyJasminUtils.isLoaded(put.getThirdOperand(), this.put.getPred()))
+//        MyJasminUtils.loadElement(method, string, put.getThirdOperand());
 
         string.append("\tputfield ");
 

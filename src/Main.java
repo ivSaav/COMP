@@ -24,7 +24,7 @@ public class Main implements JmmParser {
 
 		    try {
 		    	root = parser.Start(); // returns reference to root node
-				root.dump(""); // prints the tree on the screen
+//				root.dump(""); // prints the tree on the screen
 //				System.out.println(root.toJson()); //prints Json version of ast
 
 			}catch(TokenMgrError e) {

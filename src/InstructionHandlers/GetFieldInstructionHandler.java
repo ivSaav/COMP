@@ -15,6 +15,7 @@ public class GetFieldInstructionHandler implements IntructionHandler{
     public String handleInstruction(String className,Method method) {
         StringBuilder string = new StringBuilder();
 
+        string.append("\taload 0\n");
         string.append("\tgetfield ");
 
         String first = MyJasminUtils.getElementName(getFieldInstruction.getFirstOperand());

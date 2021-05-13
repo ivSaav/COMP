@@ -12,14 +12,12 @@ public class MyJasminUtils {
             string.append("\tldc "+literal.getLiteral()+" \n");
 
         }else{
-            System.out.println("= \nDESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
+//            System.out.println("= \nDESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
 
             HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
 
             Operand variable = (Operand) op;
             Descriptor d = vars.get(variable.getName());
-
-            System.out.println("REG : " + d.getVirtualReg());
 
             if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF) {
                 string.append("\ta");
