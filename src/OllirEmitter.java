@@ -410,6 +410,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
     private String forceBinaryExpression(JmmNode exprNode, String auxExp, List<String> expr) {
         String kind = exprNode.getKind();
+
         if (kind.equals("Literal") || kind.equals("MethodCall")) {
            return auxExp + " &&.bool 1.bool";
         }
@@ -541,13 +542,26 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             // Get the return type from the method
             MethodSymbols methodSymbols = st.getMethod(expr);
+            String retType = Utils.getOllirType(methodSymbols.getReturnType());
 
-            String varName = "t" + this.idCounter++ + "." + Utils.getOllirType(methodSymbols.getReturnType());
+            String varName = "t" + this.idCounter++ + "." + retType;
 
             List<String> auxExpr = new ArrayList<>();
-            String methodCall = varName + " :=.i32 " +  this.handleMethodCall(expr, true, auxExpr,"");
+
+            String methodCall = String.format("%s :=.%s %s", varName, retType,
+                            this.handleMethodCall(expr, true, auxExpr,""));
+
+
             expressions.addAll(auxExpr);
             expressions.add(methodCall);
+
+            if (reverse) {
+                String reverVarName = "t" + this.idCounter++ + "." + retType;
+                String revert = String.format("%s :=.bool !.bool %s", reverVarName, varName);
+                expressions.add(revert);
+                return reverVarName;
+            }
+
             return varName;
         }
         else if (expr.getKind().equals("Length")) {
@@ -555,7 +569,15 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         }
         // Case the terminal is an Identifier
         else {
-            return this.handleVariable(expr, expressions, false);
+            String varName =  this.handleVariable(expr, expressions, false);  // TODO reverse
+
+            if (reverse) {
+                String reverVarName = "t" + this.idCounter++ + ".bool";
+                String revert = String.format("%s :=.bool !.bool %s", reverVarName, varName);
+                expressions.add(revert);
+                return reverVarName;
+            }
+            return varName;
         }
     }
 

@@ -22,9 +22,9 @@ public class CondBranchInstructionHandler implements IntructionHandler{
 
         //load or lcd operands to stack
 //        if (!MyJasminUtils.isLoaded(rop, this.condBranchInstruction.getPred()))
-            MyJasminUtils.loadElement(method, string, rop);
-//        if (!MyJasminUtils.isLoaded(lop, this.condBranchInstruction.getPred()))
             MyJasminUtils.loadElement(method, string, lop);
+//        if (!MyJasminUtils.isLoaded(lop, this.condBranchInstruction.getPred()))
+            MyJasminUtils.loadElement(method, string, rop);
 
         //TODO
         if (lop.getType().getTypeOfElement()==ElementType.INT32){

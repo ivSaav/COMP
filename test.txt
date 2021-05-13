@@ -1,70 +1,53 @@
 import MathUtils; //lowerLimit,upperLimit
-import Quicksort;
+import ioPlus;
 
-class Lazysort extends Quicksort {
-    public static void main(String[] a) {
-        int[] L;
-        int i;
-		boolean d;
-        Lazysort q;
+class MonteCarloPi {
+	public boolean performSingleEstimate() {
+		int rand1;
+		int rand2;
+		boolean in_circle;
+		int squareDist;
 
-        L = new int[10];
+		rand1 = MathUtils.random(0-100, 100);
+		rand2 = MathUtils.random(0-100, 100);
 
-        i = 0;
-        while (i < L.length) {
-            L[i] = L.length - i;
-            i = i + 1;
-        }
+		squareDist = (rand1 * rand1 + rand2 * rand2) / 100;
+		if (squareDist < 100) {
+			in_circle = true;
+		} else {
+			in_circle = false;
+		}
 
-        q = new Lazysort();
+		return in_circle;
+	}
 
-        q.quicksort(L);
-        d = q.printL(L);
-    }
+	public int estimatePi100(int n) {
+		int samples_in_circle;
+		int samples_so_far;
+		int pi_estimate;
 
-    public boolean quicksort(int[] L) {
-        boolean lazy;
-        int rand;
-        rand = MathUtils.random(0, 5);
-        if (rand  < 4 ) {
-            this.beLazy(L);
-            lazy = true;
-        }
-        else {
-            lazy = false;
-        }
+		samples_so_far = 0;
+		samples_in_circle = 0;
 
-        if ( lazy ) {
-            lazy = !lazy;
-        }
-        else {
-            lazy = this.quicksort(L, 0, L.length - 1);
-        }
+		while (samples_so_far < n) {
+			if (this.performSingleEstimate()) {
+				samples_in_circle = samples_in_circle + 1;
+			} else {
+			}
+			samples_so_far = samples_so_far + 1;
+		}
 
-        return lazy;
-    }
+		pi_estimate = 400 * samples_in_circle / n;
+		return pi_estimate;
+	}
 
-    public boolean beLazy(int[] L) {
-        int _allowedNameL;
-        int $allowedNameI;
-		int rand;
-        _allowedNameL = L.length;
+	public static void main(String[] args) {
+		int pi_estimate_times_100;
+		int num_samples;
 
-        $allowedNameI = 0;
-        while ($allowedNameI < _allowedNameL/2) {
-            L[$allowedNameI] = MathUtils.random(0, 10);
+		num_samples = 25; //ioPlus.requestNumber();
+		pi_estimate_times_100 = new MonteCarloPi().estimatePi100(num_samples);
 
-            $allowedNameI = $allowedNameI + 1;
-        }
-
-        while ($allowedNameI < _allowedNameL) {
-        	rand = MathUtils.random(0, 10);
-            L[$allowedNameI] = rand + 1;
-
-            $allowedNameI = $allowedNameI + 1;
-        }
-
-
-        return true;
-    }
+		ioPlus.printResult(pi_estimate_times_100);
+	}
 }
