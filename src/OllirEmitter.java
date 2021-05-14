@@ -578,7 +578,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             if (reverse) {
                 Symbol identSymbol = this.st.getVariableSymbol(expr);
 
-                System.out.println("BOOOL " + identSymbol.getType().getName());
                 if (!identSymbol.getType().getName().equals("boolean"))
                     return varName;
 

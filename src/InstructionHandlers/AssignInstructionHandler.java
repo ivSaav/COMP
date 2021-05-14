@@ -30,7 +30,6 @@ public class AssignInstructionHandler implements IntructionHandler{
                                 variable.getType().getTypeOfElement() == ElementType.INT32;
         // handle lhs if is an array access -> aload array; iload index
 
-        MyJasminUtils.printVarTable(vars);
         if (lhsArrayAccess)
             MyJasminUtils.loadElement(method, string, instruction.getDest());
 

@@ -13,7 +13,7 @@ public class MyJasminUtils {
             string.append("\tldc "+literal.getLiteral()+" \n");
 
         }else{
-            System.out.println("= \nDESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
+//            System.out.println("= \nDESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
 
             HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
 
@@ -47,8 +47,7 @@ public class MyJasminUtils {
                     string.append("\tiload " + desc.getVirtualReg() + "\n");
                 }
                 else {
-                    System.out.println("olha sou um array normal");
-                    System.out.println("SCOPE " + d.getScope());
+//                    System.out.println("SCOPE " + d.getScope());
                     if (d.getScope() != VarScope.FIELD)
                         string.append("\taload " + d.getVirtualReg() + "\n");
                 }
