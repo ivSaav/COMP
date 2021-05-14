@@ -20,6 +20,11 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
         Element rop = instruction.getRightOperand();
         Element lop = instruction.getLeftOperand();
 
+        String lname = MyJasminUtils.getElementName(lop);
+        String rname = MyJasminUtils.getElementName(rop);
+
+//        System.out.println("LOP " + lname + " ROP " + rname);
+
         //load or lcd operands to stack
         if (!MyJasminUtils.isLoaded(rop, this.instruction.getPred()))
             MyJasminUtils.loadElement(method, string, lop);

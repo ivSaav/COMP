@@ -556,6 +556,9 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             expressions.add(methodCall);
 
             if (reverse) {
+                if (!retType.equals("bool"))
+                    return varName;
+
                 String reverVarName = "t" + this.idCounter++ + "." + retType;
                 String revert = String.format("%s :=.bool !.bool %s", reverVarName, varName);
                 expressions.add(revert);
@@ -571,7 +574,14 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         else {
             String varName =  this.handleVariable(expr, expressions, false);  // TODO reverse
 
+            // TODO move this to another place
             if (reverse) {
+                Symbol identSymbol = this.st.getVariableSymbol(expr);
+
+                System.out.println("BOOOL " + identSymbol.getType().getName());
+                if (!identSymbol.getType().getName().equals("boolean"))
+                    return varName;
+
                 String reverVarName = "t" + this.idCounter++ + ".bool";
                 String revert = String.format("%s :=.bool !.bool %s", reverVarName, varName);
                 expressions.add(revert);
@@ -719,9 +729,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                     return Utils.getOllirType(varSymb.getType());
 
                     // TODO more cases (Parameters ,Arguments ...)
-
-
-
             }
            return "V"; // TODO recursively determine parent's type
         }
