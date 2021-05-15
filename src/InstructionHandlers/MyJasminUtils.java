@@ -42,6 +42,7 @@ public class MyJasminUtils {
                     ArrayOperand arrayOp = (ArrayOperand) op;
 
                     String name = MyJasminUtils.getElementName((arrayOp).getIndexOperands().get(0));
+                    System.out.println("NAME " + name);
 
                     Descriptor desc = vars.get(name);
                     string.append("\tiload " + desc.getVirtualReg() + "\n");

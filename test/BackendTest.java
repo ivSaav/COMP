@@ -101,4 +101,15 @@ public class BackendTest {
 
         var output = result.run();
     }
+
+    @Test
+    public void testTicTacToe() {
+
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/TicTacToe.jmm"));
+
+        var result = TestUtils.backend(optm);
+        TestUtils.noErrors(result.getReports());
+
+        var output = result.run();
+    }
 }

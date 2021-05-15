@@ -64,6 +64,12 @@ public class CondBranchInstructionHandler implements IntructionHandler{
                 builder.append("\tiand\n");
                 builder.append("\tifeq ").append(label).append("\n");
                 break;
+            case OR:
+            case ORB:
+            case ORI32:
+                builder.append("\tior\n");
+                builder.append("\tifeq ").append(label).append("\n");
+                break;
             default:
                 builder.append("INVALID");
                 break;

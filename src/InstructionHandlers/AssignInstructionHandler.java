@@ -35,31 +35,23 @@ public class AssignInstructionHandler implements IntructionHandler{
 
 //        System.out.println("ASSIGN ===\n" + method.getMethodName() + "\n" + instruction.getRhs().getInstType());
 
+
         // Call instruction allocator to handle right part of assignment
         String rhss = rhs.allocateAndHandle(instruction.getRhs(), classUnit, method);
-        string.append(rhss);
 
         // don't store if successor instruction is a putfield
-        Instruction rhsInst = instruction.getRhs();
-        if (rhsInst.getInstType() == InstructionType.CALL) {
-            Instruction succ = (Instruction) instruction.getSucc1();
-            // successor is a putfield call (abort store)
-            if (succ.getInstType() == InstructionType.PUTFIELD)
-                return string.toString();
-
-////            TODO improvement
-//            CallType callType = OllirAccesser.getCallInvocation((CallInstruction) rhsInst);
-////             arralength -> value
-//            if (callType == CallType.arraylength)
-//                return string.toString();
-
+        // auxiliary expression for putfield call
+        if (this.precedesPutFieldCall()) {
+            string.append("\taload_0\n"); // 'this'
+            string.append(rhss); // putfield args
+            return string.toString();
         }
-//        else if (rhsInst.getInstType() == InstructionType.GETFIELD) // don't store in getfield calls either
-//            return string.toString();
 
+        string.append(rhss);
 
         // store LHS
         ElementType destType = destDesc.getVarType().getTypeOfElement();
+        System.out.println("DEST " + destType + " " + MyJasminUtils.getElementName(this.instruction.getDest()));
         if (destType == ElementType.OBJECTREF){
             string.append("\ta");
         }
@@ -67,6 +59,12 @@ public class AssignInstructionHandler implements IntructionHandler{
 
             // if lhs is array access call iastore -> arrayref, index, value
             if (lhsArrayAccess) {
+
+                // check if rhs is an array access          dest[i] = rhs[j]
+                Descriptor rhsDesc = this.getRhsElemDescriptor(vars, instruction);
+                if (rhsDesc != null && rhsDesc.getVarType().getTypeOfElement() == ElementType.ARRAYREF)// rhs array access
+                        string.append("\tiaload\n"); // load rhs array access
+
                 return string.append("\tiastore\n").toString();
             }
             else // add reference modifier
@@ -91,14 +89,18 @@ public class AssignInstructionHandler implements IntructionHandler{
         return string.toString();
     }
 
-    private ElementType getElemType(Map<String, Descriptor> vars, Instruction inst) {
-        if (instruction.getRhs().getInstType() == InstructionType.NOPER) {
-            // get variable descriptor
-            Descriptor des = this.getRhsElemDescriptor(vars, inst);
+    /**
+     * Determines if the next instruction after this one is a putfield call
+     * @return
+     */
+    private boolean precedesPutFieldCall() {
+        Instruction succ = (Instruction) instruction.getSucc1();
+        // successor is a putfield call (abort store)
+        if (succ.getInstType() == InstructionType.PUTFIELD) {
 
-            return des != null ? des.getVarType().getTypeOfElement() : null;
+            return true;
         }
-        return null;
+        return false;
     }
 
     private Descriptor getRhsElemDescriptor(Map<String, Descriptor> vars, Instruction inst) {

@@ -353,9 +353,41 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         int labelID = this.labelCounter++;
 
+        JmmNode exprNode = ifNode.getChildren().get(0);
+
+        StringBuilder ifBuilder = new StringBuilder();
+        ifBuilder.append(this.handleConditionalExpression(exprNode, labelID, indent));
+        // handle Then
+        ifBuilder.append(this.handleStatementBody(ifNode.getChildren().get(1), indent + "\t")); // Then
+        ifBuilder.append(indent).append("\tgoto EndIf_" + labelID + ";\n");
+
+        ifBuilder.append(indent).append("Else_" + labelID + ":\n");
+        JmmNode elseNode = Utils.getChildOfKind(ifNode, "Else");
+        ifBuilder.append(this.handleStatementBody(elseNode, indent + "\t"));
+
+        ifBuilder.append(indent).append("EndIf_" + labelID + ":\n");
+        return ifBuilder.toString();
+    }
+
+
+    private String handleConditionalExpression(JmmNode exprNode, int labelID, String indent) {
+
+        StringBuilder builder = new StringBuilder();
+        if (exprNode.getKind().equals("And")) {
+            JmmNode left = exprNode.getChildren().get(0);
+            JmmNode right = exprNode.getChildren().get(1);
+            builder.append(this.buildIfCondition(left, labelID, indent));
+            builder.append(this.buildIfCondition(right, labelID, indent));
+        }
+        else {
+            builder.append(this.buildIfCondition(exprNode, labelID, indent));
+        }
+        return builder.toString();
+    }
+
+    private String buildIfCondition(JmmNode exprNode, int labelID, String indent) {
         StringBuilder ifBuilder = new StringBuilder(indent + "if (");
 
-        JmmNode exprNode = ifNode.getChildren().get(0);
         List<String> expr = new ArrayList<>();
         String auxExp = this.handleExpression(exprNode, true, true, expr);
 
@@ -366,15 +398,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             this.insertAuxiliarExpressions(ifBuilder, expr, false, indent);
 
         ifBuilder.append(auxExp).append(") goto Else_" + labelID + ";\n");
-        // handle Then
-        ifBuilder.append(this.handleStatementBody(ifNode.getChildren().get(1), indent + "\t")); // Then
-        ifBuilder.append(indent).append("\tgoto EndIf_" + labelID + ";\n");
 
-        ifBuilder.append(indent).append("Else_" + labelID + ":\n");
-        JmmNode elseNode = Utils.getChildOfKind(ifNode, "Else");
-        ifBuilder.append(this.handleStatementBody(elseNode, indent + "\t"));
-
-        ifBuilder.append(indent).append("EndIf_" + labelID + ":\n");
         return ifBuilder.toString();
     }
 
@@ -500,7 +524,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 JmmNode child = expr.getChildren().get(0);
 
                 // Go to the next level in the tree
-                String innerNegation = handleExpression(child, allowComplex, false, expressions); // TODO fix for negation in while loops (reverse)
+                // when inside an if, complex expressions ara allowed because ! is negated
+                String innerNegation = handleExpression(child, allowComplex || reverse, false, expressions); // TODO fix for negation in while loops (reverse)
 
                 // negation is cancelled of inside 'if' condition
                 expression += (reverse ? "" : "!.bool ") + innerNegation;
@@ -575,7 +600,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             String varName =  this.handleVariable(expr, expressions, false);  // TODO reverse
 
             // TODO move this to another place
-            if (reverse) {
+            if (reverse && !expr.getKind().equals("Array")) {
                 Symbol identSymbol = this.st.getVariableSymbol(expr);
 
                 if (!identSymbol.getType().getName().equals("boolean"))
@@ -837,7 +862,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             return "[" + auxVar + "].i32";
         }
         else // array access is an identifier A[b]
-            innerAccess += resolveVariableIdentifier(accessNode, false);
+            innerAccess += handleVariable(accessNode,auxExpressions, false);
         innerAccess += "].i32";
         return innerAccess;
     }
