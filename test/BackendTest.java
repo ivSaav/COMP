@@ -88,7 +88,7 @@ public class BackendTest {
         TestUtils.noErrors(result.getReports());
 
         var output = result.run();
-        assertEquals("00000000", output.trim());
+        assertEquals("Result: 3", output.trim());
     }
 
     @Test
