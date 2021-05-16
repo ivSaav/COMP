@@ -13,6 +13,8 @@ import java.io.*;
 import java.util.List;
 import java.util.ArrayList;
 
+import static java.lang.System.exit;
+
 public class Main implements JmmParser {
 
 	private SimpleNode root;
@@ -36,7 +38,7 @@ public class Main implements JmmParser {
 
 		} catch(Exception j) {
 			List<Report> reports = new ArrayList<>();
-			reports.add(new Report(ReportType.ERROR, Stage.OTHER, -1, "Error while parsing: "+j.getMessage()));
+			reports.add(new Report(ReportType.ERROR, Stage.OTHER, 0, "Error while parsing: " + j.getMessage()));
 			return new JmmParserResult(null, reports);
 		}
 	}
@@ -46,16 +48,39 @@ public class Main implements JmmParser {
 //		System.out.println("Executing with args: " + fileContents);
 		Main m = new Main();
 		JmmParserResult parseResult = m.parse(fileContents);
-		System.out.println(parseResult.getReports());
+
+		if (parseResult.getReports().size() > 0) {
+			System.out.println("*** Found errors in syntactical stage (aborting). ***");
+			System.out.println(parseResult.getReports());
+			exit(1);
+		}
 
 		AnalysisStage analysisStage = new AnalysisStage();
 		JmmSemanticsResult semanticResult = analysisStage.semanticAnalysis(parseResult);
 
+		if (semanticResult.getReports().size() > 0) {
+			System.out.println("*** Found errors in semantics stage (aborting). ***");
+			System.out.println(semanticResult.getReports());
+			exit(1);
+		}
+
 		OptimizationStage optimization = new OptimizationStage();
 		OllirResult ollirResult = optimization.toOllir(semanticResult);
 
+		if (ollirResult.getReports().size() > 0) {
+			System.out.println("*** Found errors in optimization stage (aborting). ***");
+			System.out.println(ollirResult.getReports());
+			exit(1);
+		}
+
 		BackendStage backendStage = new BackendStage();
 		JasminResult jasminResult = backendStage.toJasmin(ollirResult);
+
+		if (jasminResult.getReports().size() > 0) {
+			System.out.println("*** Found errors in backend stage (aborting). ***");
+			System.out.println(jasminResult.getReports());
+			exit(1);
+		}
 
 		try {
 			// AST ===============
@@ -71,7 +96,6 @@ public class Main implements JmmParser {
 			e.printStackTrace();
 		}
 
-		System.out.println(ollirResult.getReports());
 
 		jasminResult.run();
     }
