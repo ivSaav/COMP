@@ -80,6 +80,28 @@ public class BackendTest {
     }
 
     @Test
+    public void testQuickSort() {
+
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/QuickSort.jmm"));
+
+        var result = TestUtils.backend(optm);
+        TestUtils.noErrors(result.getReports());
+
+        var output = result.run();
+
+        /*assertEquals("1\n" +
+                "2\n" +
+                "3\n" +
+                "4\n" +
+                "5\n" +
+                "6\n" +
+                "7\n" +
+                "8\n" +
+                "9\n" +
+                "10", output.trim());*/
+    }
+
+    @Test
     public void testMonteCarlo() {
 
         OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/MonteCarlitos.jmm"));
