@@ -19,7 +19,7 @@ public class UnaryOpInstructionHandler implements IntructionHandler{
 
         // Case
         if (unaryOpInstruction.getUnaryOperation().getOpType() == OperationType.NOTB)
-            string.append("\tldc 1\n");
+            string.append("\ticonst_1\n");
 
         string.append("\t"+ MyJasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
 

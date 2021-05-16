@@ -10,7 +10,14 @@ public class MyJasminUtils {
 
         if (op.isLiteral()){
             LiteralElement literal = (LiteralElement) op;
-            string.append("\tldc "+literal.getLiteral()+" \n");
+
+            int lit = Integer.parseInt(literal.getLiteral());
+            if (lit == -1)
+                string.append("\ticonst_m1\n");
+            else if (lit < 6)
+                string.append("\ticonst_"+  lit + "\n");
+            else
+                string.append("\tldc "+literal.getLiteral()+" \n");
 
         }else{
 //            System.out.println("= \nDESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
@@ -24,44 +31,47 @@ public class MyJasminUtils {
             // Case the return value is a literal boolean
             if (d == null && op.getType().getTypeOfElement() == ElementType.BOOLEAN) {
                 if (variable.getName().equals("true"))
-                    string.append("\tldc 1 \n");
+                    string.append("\ticonst_1 \n");
                 else if (variable.getName().equals("false"))
-                    string.append("\tldc 0 \n");
-
+                    string.append("\ticonst_0 \n");
                 return;
             }
 
-            if (d.getVarType().getTypeOfElement() == ElementType.OBJECTREF) {
-                string.append("\ta");
+            ElementType elementType = d.getVarType().getTypeOfElement();
+            if (elementType == ElementType.OBJECTREF) {
+                string.append("\taload RRRRR" + d.getVirtualReg());
             }
-            else if (d.getVarType().getTypeOfElement() == ElementType.ARRAYREF) {
-//                System.out.println(d.getVarType());
+            else if (elementType == ElementType.ARRAYREF) {
                 // array access
                 if (op.getType().getTypeOfElement() == ElementType.INT32) {
-                    string.append("\taload " + d.getVirtualReg() + "\n");
+                    string.append("\taload" + (d.getVirtualReg() < 4 ? "_" : " ") + d.getVirtualReg() + "\n");
                     ArrayOperand arrayOp = (ArrayOperand) op;
 
                     String name = MyJasminUtils.getElementName((arrayOp).getIndexOperands().get(0));
 
                     Descriptor desc = vars.get(name);
-                    string.append("\tiload " + desc.getVirtualReg() + "\n");
+                    string.append("\tiload" + (desc.getVirtualReg() < 4 ? "_" : " ") + desc.getVirtualReg() + "\n");
                 }
                 else {
 //                    System.out.println("SCOPE " + d.getScope());
                     if (d.getScope() != VarScope.FIELD)
-                        string.append("\taload " + d.getVirtualReg() + "\n");
+                        string.append("\taload" + (d.getVirtualReg() < 4 ? "_" : " ") + d.getVirtualReg() + "\n");
                 }
                 return;
             }
+            else if (elementType == ElementType.INT32 || elementType == ElementType.BOOLEAN){
+
+                string.append("\tiload"+ (d.getVirtualReg() < 4 ? "_" : " ") + d.getVirtualReg()+"\n");
+            }
             else {
-//                System.out.println("INT : " +  ((Operand) op).getName() );
-                string.append("\t" + MyJasminUtils.parseType(op.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+                string.append("INVALID ======\n"); // debug
             }
 
 
-            string.append("load "+ d.getVirtualReg()+"\n");
         }
     }
+
+
 
     public static boolean findInstruction(Instruction instruction, List<Instruction> instructions) {
         for (Instruction inst : instructions) {

@@ -21,10 +21,8 @@ public class CondBranchInstructionHandler implements IntructionHandler{
         Element rop = condBranchInstruction.getRightOperand();
 
         //load or lcd operands to stack
-//        if (!MyJasminUtils.isLoaded(rop, this.condBranchInstruction.getPred()))
-            MyJasminUtils.loadElement(method, string, lop);
-//        if (!MyJasminUtils.isLoaded(lop, this.condBranchInstruction.getPred()))
-            MyJasminUtils.loadElement(method, string, rop);
+        MyJasminUtils.loadElement(method, string, lop);
+        MyJasminUtils.loadElement(method, string, rop);
 
         OperationType opType = condBranchInstruction.getCondOperation().getOpType();
         this.buildBranchCondition(opType, label, string);

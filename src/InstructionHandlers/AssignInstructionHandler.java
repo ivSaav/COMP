@@ -34,8 +34,6 @@ public class AssignInstructionHandler implements IntructionHandler{
         if (lhsArrayAccess)
             MyJasminUtils.loadElement(method, string, instruction.getDest());
 
-//        System.out.println("ASSIGN ===\n" + method.getMethodName() + "\n" + instruction.getRhs().getInstType());
-
 
         // Call instruction allocator to handle right part of assignment
         String rhss = rhs.allocateAndHandle(instruction.getRhs(), classUnit, method);
@@ -54,7 +52,7 @@ public class AssignInstructionHandler implements IntructionHandler{
         ElementType destType = destDesc.getVarType().getTypeOfElement();
 //        System.out.println("DEST " + destType + " " + MyJasminUtils.getElementName(this.instruction.getDest()));
         if (destType == ElementType.OBJECTREF){
-            string.append("\ta");
+            string.append("\tastore" + (destDesc.getVirtualReg() < 4 ? "_" : " ") + destDesc.getVirtualReg() + "\n");
         }
         else if (destType == ElementType.ARRAYREF) {
 
@@ -69,11 +67,11 @@ public class AssignInstructionHandler implements IntructionHandler{
                 return string.append("\tiastore\n").toString();
             }
             else // add reference modifier
-                string.append("\ta");
+                string.append("\tastore" + (destDesc.getVirtualReg() < 4 ? "_" : " ") + destDesc.getVirtualReg() + "\n");
         }
         else {
 
-            // check if rhs is an array access (return before doing load)
+            // check if rhs is an array access (load value before storing in dest
             Descriptor rhsDesc = this.getRhsElemDescriptor(vars, instruction);
             if (rhsDesc != null) {
                 if (rhsDesc.getVarType().getTypeOfElement() == ElementType.ARRAYREF
@@ -82,10 +80,9 @@ public class AssignInstructionHandler implements IntructionHandler{
                 // TODO improvement (return on iaload if auxiliary variable)
             }
 
-            string.append("\t");
-            string.append(MyJasminUtils.parseType(destDesc.getVarType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+            string.append("\tistore" + (destDesc.getVirtualReg() < 4 ? "_" : " ") + destDesc.getVirtualReg() + "\n");
         }
-        string.append("store " + destDesc.getVirtualReg() + "\n");
+
 
         return string.toString();
     }
@@ -98,11 +95,10 @@ public class AssignInstructionHandler implements IntructionHandler{
         Instruction succ = (Instruction) instruction.getSucc1();
         // successor is a putfield call (abort store)
         if (succ.getInstType() == InstructionType.PUTFIELD) {
+            // checking if successor putfield uses dest variable
             PutFieldInstruction putCall = (PutFieldInstruction) succ;
             String name = MyJasminUtils.getElementName(putCall.getThirdOperand()) ;
-            System.out.println("VAERS " + varName + " " + name);
             return varName.equals(name);
-//            return true;
         }
         return false;
     }

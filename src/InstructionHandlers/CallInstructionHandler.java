@@ -30,8 +30,8 @@ public class CallInstructionHandler implements IntructionHandler{
         //invokestatic doesnt need load
         if (callInstruction.getInvocationType() == CallType.invokespecial || callInstruction.getInvocationType() == CallType.invokevirtual) {
             // load method reference
-
-            string.append("\taload ").append(vars.get(first).getVirtualReg()).append("\n");
+            int virtReg = vars.get(first).getVirtualReg();
+            string.append("\taload").append((virtReg < 4 ? "_" : " ") + virtReg).append("\n");
             first = ((ClassType) callInstruction.getFirstArg().getType()).getName();
 
             if (method.getInstructions().contains(this.callInstruction)) {
@@ -81,7 +81,8 @@ public class CallInstructionHandler implements IntructionHandler{
             Operand arrayVar = (Operand) callInstruction.getFirstArg();
             String arrayName = MyJasminUtils.getElementName(arrayVar);
 
-            string.append("\taload " + vars.get(arrayName).getVirtualReg() + "\n");
+            int virtReg = vars.get(arrayName).getVirtualReg();
+            string.append("\taload" +  (virtReg < 4 ? "_" : " ") + virtReg + "\n");
 
             // arrayref → length
             string.append("\tarraylength \n");
