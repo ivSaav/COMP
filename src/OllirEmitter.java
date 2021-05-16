@@ -208,20 +208,28 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     /**
      * Receives a length node for .length expressions ands creates an auxiliary expression
      * @param lengthNode - lenght node
+     * @pararm allowComplex
      * @param auxExpr - list of intermediate expressions
      * @return length expression identifier
      */
-    private String createLengthExpression(JmmNode lengthNode, List<String> auxExpr) {
+    private String createLengthExpression(JmmNode lengthNode, boolean allowComplex, List<String> auxExpr) {
         String auxId = "t" + this.idCounter++ + ".i32";
 
         JmmNode arrayIdent = lengthNode.getChildren().get(0);
 
 
         String varName = this.handleVariable(arrayIdent, auxExpr, true);
-        String lengthExpr = String.format("%s :=.i32 arraylength(%s).i32", auxId, varName);
+        String lengthExpr;
 
-        auxExpr.add(lengthExpr);
-        return auxId;
+        if (allowComplex) {
+            lengthExpr = String.format("arraylength(%s).i32", varName);
+            return lengthExpr;
+        }
+        else {
+            lengthExpr = String.format("%s :=.i32 arraylength(%s).i32", auxId, varName);
+            auxExpr.add(lengthExpr);
+            return auxId;
+        }
     }
 
     /**
@@ -303,7 +311,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 break;
 
             case "Length":
-                String lengthIdent = this.createLengthExpression(rhs, auxExpressions);
+                String lengthIdent = this.createLengthExpression(rhs, allowComplexExpr, auxExpressions);
                 this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
                 rhsBuilder.append(lengthIdent);
                 break;
@@ -602,7 +610,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             return varName;
         }
         else if (expr.getKind().equals("Length")) {
-            return this.createLengthExpression(expr, expressions);
+            return this.createLengthExpression(expr, allowComplex, expressions);
         }
         // Case the terminal is an Identifier
         else {
@@ -752,14 +760,15 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 case "Equal":
                     JmmNode lhs = parent.getChildren().get(0);
 
+                    boolean arrayAccess = lhs.getKind().equals("Array");
                     // get array identifier
-                    if (lhs.getKind().equals("Array"))
+                    if (arrayAccess)
                         lhs = lhs.getChildren().get(0);
 
                     // determine type of lhs variable
                     Symbol varSymb = this.st.getVariableSymbol(lhs);
                     Type t = varSymb.getType();
-                    return (t.isArray() ? "array." : "" ) + Utils.getOllirType(varSymb.getType());
+                    return (t.isArray() && !arrayAccess ? "array." : "" ) + Utils.getOllirType(varSymb.getType());
 
                     // TODO more cases (Parameters ,Arguments ...)
             }
