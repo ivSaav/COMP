@@ -80,6 +80,7 @@ public class CallInstructionHandler implements IntructionHandler{
             // load array reference into stack
             Operand arrayVar = (Operand) callInstruction.getFirstArg();
             String arrayName = MyJasminUtils.getElementName(arrayVar);
+
             string.append("\taload " + vars.get(arrayName).getVirtualReg() + "\n");
 
             // arrayref → length

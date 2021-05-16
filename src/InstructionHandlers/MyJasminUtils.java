@@ -130,44 +130,7 @@ public class MyJasminUtils {
         }
     }
 
-    public static String parseIFInstruction(OperationType type){
-        switch (type) {
-            case LTH:
-            case LTHI32:
-                return "lt";
-            case GTH:
-            case GTHI32:
-                return "gt";
-            case EQ:
-            case EQI32:
-                return "eq";
-            case NEQ:
-            case NEQI32:
-                return "ne";
-            case LTE:
-            case LTEI32:
-                return "le";
-            case GTE:
-            case GTEI32:
-                return "ge";
-            case AND:
-            case ANDB:
-            case ANDI32:
-                return "eq";
-            case SHL:
-            case SHR:
-            case SHRR:
-            case ORI32:
-            case SHLI32:
-            case SHRI32:
-            case SHRRI32:
-            default:
-                return "another";
-        }
-    }
-
-    public static String parseIInstruction(OperationType type){
-        System.out.println("I INSTRUCTION: " + type);
+    public static String parseInstruction(OperationType type){
         switch (type) {
             case LTH:
             case LTHI32:

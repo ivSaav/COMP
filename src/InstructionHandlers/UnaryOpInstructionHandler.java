@@ -23,7 +23,7 @@ public class UnaryOpInstructionHandler implements IntructionHandler{
 
         string.append("\t"+ MyJasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
 
-        string.append(MyJasminUtils.parseIInstruction(unaryOpInstruction.getUnaryOperation().getOpType())+"\n");
+        string.append(MyJasminUtils.parseInstruction(unaryOpInstruction.getUnaryOperation().getOpType())+"\n");
 
         return string.toString();
     }

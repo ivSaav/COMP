@@ -33,7 +33,7 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
 
         else {
             string.append("\t" + MyJasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
-            string.append(MyJasminUtils.parseOperationType(opType) + "\n");
+            string.append(MyJasminUtils.parseInstruction(opType) + "\n");
         }
 
         return string.toString();

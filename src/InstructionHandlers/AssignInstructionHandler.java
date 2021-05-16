@@ -1,6 +1,7 @@
 package InstructionHandlers;
 
 import org.specs.comp.ollir.*;
+import pt.up.fe.comp.jmm.JmmNode;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -41,7 +42,7 @@ public class AssignInstructionHandler implements IntructionHandler{
 
         // don't store if successor instruction is a putfield
         // auxiliary expression for putfield call
-        if (this.precedesPutFieldCall()) {
+        if (this.precedesPutFieldCall(variable.getName())) {
             string.append("\taload_0\n"); // 'this'
             string.append(rhss); // putfield args
             return string.toString();
@@ -93,12 +94,15 @@ public class AssignInstructionHandler implements IntructionHandler{
      * Determines if the next instruction after this one is a putfield call
      * @return
      */
-    private boolean precedesPutFieldCall() {
+    private boolean precedesPutFieldCall(String varName) {
         Instruction succ = (Instruction) instruction.getSucc1();
         // successor is a putfield call (abort store)
         if (succ.getInstType() == InstructionType.PUTFIELD) {
-
-            return true;
+            PutFieldInstruction putCall = (PutFieldInstruction) succ;
+            String name = MyJasminUtils.getElementName(putCall.getThirdOperand()) ;
+            System.out.println("VAERS " + varName + " " + name);
+            return varName.equals(name);
+//            return true;
         }
         return false;
     }

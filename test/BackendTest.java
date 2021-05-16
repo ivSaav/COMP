@@ -100,7 +100,7 @@ public class BackendTest {
         TestUtils.noErrors(result.getReports());
 
         var output = result.run();
-        //assertEquals("00000000", output.trim());
+        assertEquals("", output.trim());
     }
 
     @Test
