@@ -130,7 +130,7 @@ public class MyJasminUtils {
         }
     }
 
-    public static String parseIFCond(OperationType type){
+    public static String parseIFInstruction(OperationType type){
         switch (type) {
             case LTH:
             case LTHI32:
@@ -150,31 +150,10 @@ public class MyJasminUtils {
             case GTE:
             case GTEI32:
                 return "ge";
-            case MUL:
-            case MULI32:
-                return "mul";
-            case DIV:
-            case DIVI32:
-                return "div";
-            case ADD:
-            case ADDI32:
-                return "add";
-            case SUB:
-            case SUBI32:
-                return "sub";
             case AND:
             case ANDB:
             case ANDI32:
                 return "eq";
-            case OR:
-            case ORB:
-                return "or";
-            case NOT:
-            case NOTB:
-                return "not";
-            case XOR:
-            case XORI32:
-                return "xor";
             case SHL:
             case SHR:
             case SHRR:
@@ -187,26 +166,15 @@ public class MyJasminUtils {
         }
     }
 
-    public static String parseOperationType(OperationType type){
+    public static String parseIInstruction(OperationType type){
+        System.out.println("I INSTRUCTION: " + type);
         switch (type) {
             case LTH:
             case LTHI32:
                 return "lt";
-            case GTH:
-            case GTHI32:
-                return "gt";
-            case EQ:
-            case EQI32:
-                return "eq";
             case NEQ:
             case NEQI32:
-                return "ne";
-            case LTE:
-            case LTEI32:
-                return "le";
-            case GTE:
-            case GTEI32:
-                return "ge";
+                return "neg";
             case MUL:
             case MULI32:
                 return "mul";
@@ -222,7 +190,7 @@ public class MyJasminUtils {
             case AND:
             case ANDB:
             case ANDI32:
-                return "eq";
+                return "and";
             case OR:
             case ORB:
                 return "or";

@@ -36,7 +36,7 @@ public class CondBranchInstructionHandler implements IntructionHandler{
         }
 
         string.append("\tif");
-        string.append(MyJasminUtils.parseOperationType(condBranchInstruction.getCondOperation().getOpType()));
+        string.append(MyJasminUtils.parseIFInstruction(condBranchInstruction.getCondOperation().getOpType()));
         string.append(" "+ label +"\n");
 
         return string.toString();

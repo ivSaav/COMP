@@ -163,7 +163,10 @@ public class BackendStage implements JasminBackend {
 
             jasminCode.append(".field ");
             if(field.isStaticField()) jasminCode.append("static ");
-            jasminCode.append(field.getFieldName()+" ");
+            if (field.getFieldName().equals("field"))
+                jasminCode.append("/" + field.getFieldName()+" ");
+            else
+                jasminCode.append(field.getFieldName()+" ");
             jasminCode.append(MyJasminUtils.parseType(field.getFieldType().getTypeOfElement()));
 
             if(field.isInitialized()){

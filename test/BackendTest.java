@@ -92,6 +92,18 @@ public class BackendTest {
     }
 
     @Test
+    public void testLife() {
+
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/Life.jmm"));
+
+        var result = TestUtils.backend(optm);
+        TestUtils.noErrors(result.getReports());
+
+        var output = result.run();
+        //assertEquals("00000000", output.trim());
+    }
+
+    @Test
     public void testWhilesAndIfs() {
 
         OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/WhileAndIf.jmm"));
