@@ -246,7 +246,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         String assignmentType = ".i32 "; // special case where destination is array access
         if (!lhs.getKind().equals("Array")) {
             Symbol lhsSymbol = this.st.getVariableSymbol(lhs);
-            assignmentType = "." +  Utils.getOllirType(lhsSymbol.getType()) + " "; // if not array access, then fetch type
+            Type t = lhsSymbol.getType();
+            assignmentType = "." + (t.isArray() ? "array." : "") + Utils.getOllirType(lhsSymbol.getType()) + " "; // if not array access, then fetch type
         }
 
         if(rhs.getKind().equals("NewArray")) {
@@ -353,9 +354,41 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         int labelID = this.labelCounter++;
 
+        JmmNode exprNode = ifNode.getChildren().get(0);
+
+        StringBuilder ifBuilder = new StringBuilder();
+        ifBuilder.append(this.handleConditionalExpression(exprNode, labelID, indent));
+        // handle Then
+        ifBuilder.append(this.handleStatementBody(ifNode.getChildren().get(1), indent + "\t")); // Then
+        ifBuilder.append(indent).append("\tgoto EndIf_" + labelID + ";\n");
+
+        ifBuilder.append(indent).append("Else_" + labelID + ":\n");
+        JmmNode elseNode = Utils.getChildOfKind(ifNode, "Else");
+        ifBuilder.append(this.handleStatementBody(elseNode, indent + "\t"));
+
+        ifBuilder.append(indent).append("EndIf_" + labelID + ":\n");
+        return ifBuilder.toString();
+    }
+
+
+    private String handleConditionalExpression(JmmNode exprNode, int labelID, String indent) {
+
+        StringBuilder builder = new StringBuilder();
+        if (exprNode.getKind().equals("And")) {
+            JmmNode left = exprNode.getChildren().get(0);
+            JmmNode right = exprNode.getChildren().get(1);
+            builder.append(this.handleConditionalExpression(left, labelID, indent));
+            builder.append(this.handleConditionalExpression(right, labelID, indent));
+        }
+        else {
+            builder.append(this.buildIfCondition(exprNode, labelID, indent));
+        }
+        return builder.toString();
+    }
+
+    private String buildIfCondition(JmmNode exprNode, int labelID, String indent) {
         StringBuilder ifBuilder = new StringBuilder(indent + "if (");
 
-        JmmNode exprNode = ifNode.getChildren().get(0);
         List<String> expr = new ArrayList<>();
         String auxExp = this.handleExpression(exprNode, true, true, expr);
 
@@ -366,15 +399,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             this.insertAuxiliarExpressions(ifBuilder, expr, false, indent);
 
         ifBuilder.append(auxExp).append(") goto Else_" + labelID + ";\n");
-        // handle Then
-        ifBuilder.append(this.handleStatementBody(ifNode.getChildren().get(1), indent + "\t")); // Then
-        ifBuilder.append(indent).append("\tgoto EndIf_" + labelID + ";\n");
 
-        ifBuilder.append(indent).append("Else_" + labelID + ":\n");
-        JmmNode elseNode = Utils.getChildOfKind(ifNode, "Else");
-        ifBuilder.append(this.handleStatementBody(elseNode, indent + "\t"));
-
-        ifBuilder.append(indent).append("EndIf_" + labelID + ":\n");
         return ifBuilder.toString();
     }
 
@@ -417,8 +442,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         else if (kind.equals("Negation")) {
             JmmNode innerExpr = exprNode.getChildren().get(0);
             if (innerExpr.getNumChildren() < 2 || innerExpr.getKind().equals("MethodCall")) {
-                expr.add("t" + this.idCounter++ + ".bool :=.bool " + auxExp);
-                return "t" + this.idCounter + ".bool &&.bool 1.bool";
+                expr.add("t" + this.idCounter + ".bool :=.bool " + auxExp);
+                return "t" + this.idCounter++ + ".bool &&.bool 1.bool";
             }
         }
         else if (exprNode.getNumChildren() < 2)
@@ -500,7 +525,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 JmmNode child = expr.getChildren().get(0);
 
                 // Go to the next level in the tree
-                String innerNegation = handleExpression(child, allowComplex, false, expressions); // TODO fix for negation in while loops (reverse)
+                // when inside an if, complex expressions ara allowed because ! is negated
+                String innerNegation = handleExpression(child, allowComplex || reverse, false, expressions); // TODO fix for negation in while loops (reverse)
 
                 // negation is cancelled of inside 'if' condition
                 expression += (reverse ? "" : "!.bool ") + innerNegation;
@@ -575,7 +601,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             String varName =  this.handleVariable(expr, expressions, false);  // TODO reverse
 
             // TODO move this to another place
-            if (reverse) {
+            if (reverse && !expr.getKind().equals("Array")) {
                 Symbol identSymbol = this.st.getVariableSymbol(expr);
 
                 if (!identSymbol.getType().getName().equals("boolean"))
@@ -656,7 +682,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                         allowComplex &= arguments.getNumChildren() <= 0;
                         String args = this.handleMethodParameters(arguments, auxExpressions);
                         if (!allowComplex) {
-                            System.out.println("METHOD " + methodCall);
                             MethodSymbols methodSymbols = st.getMethod(methodCall);
 
                             String id = "aux" + this.idCounter + "." + Utils.getOllirType(methodSymbols.getReturnType());
@@ -725,7 +750,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                     // determine type of lhs variable
                     Symbol varSymb = this.st.getVariableSymbol(lhs);
-                    return Utils.getOllirType(varSymb.getType());
+                    Type t = varSymb.getType();
+                    return (t.isArray() ? "array." : "" ) + Utils.getOllirType(varSymb.getType());
 
                     // TODO more cases (Parameters ,Arguments ...)
             }
@@ -837,7 +863,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             return "[" + auxVar + "].i32";
         }
         else // array access is an identifier A[b]
-            innerAccess += resolveVariableIdentifier(accessNode, false);
+            innerAccess += handleVariable(accessNode,auxExpressions, false);
         innerAccess += "].i32";
         return innerAccess;
     }

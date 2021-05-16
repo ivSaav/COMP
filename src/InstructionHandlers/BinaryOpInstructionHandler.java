@@ -17,6 +17,7 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
     public String handleInstruction(ClassUnit classUnit ,Method method) {
         StringBuilder string = new StringBuilder();
 
+        OperationType opType = instruction.getUnaryOperation().getOpType();
         Element rop = instruction.getRightOperand();
         Element lop = instruction.getLeftOperand();
 
@@ -26,14 +27,14 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
         if (!MyJasminUtils.isLoaded(lop, this.instruction.getPred()))
             MyJasminUtils.loadElement(method, string, rop);
 
-        if (instruction.getUnaryOperation().getOpType() == OperationType.LTH) {
+        if (opType == OperationType.LTH) {
             string.append("\tisub\n");
         }
 
-        System.out.println("METHOD " + method.getMethodName() + " OP " + instruction.getUnaryOperation().getOpType());
-
-        string.append("\t"+ MyJasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
-        string.append(MyJasminUtils.parseIInstruction(instruction.getUnaryOperation().getOpType())+"\n");
+        else {
+            string.append("\t" + MyJasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
+            string.append(MyJasminUtils.parseOperationType(opType) + "\n");
+        }
 
         return string.toString();
     }

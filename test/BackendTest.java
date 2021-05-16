@@ -88,7 +88,7 @@ public class BackendTest {
         TestUtils.noErrors(result.getReports());
 
         var output = result.run();
-        assertEquals("00000000", output.trim());
+        assertEquals("Result: 3", output.trim());
     }
 
     @Test
@@ -107,6 +107,17 @@ public class BackendTest {
     public void testWhilesAndIfs() {
 
         OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/WhileAndIf.jmm"));
+
+        var result = TestUtils.backend(optm);
+        TestUtils.noErrors(result.getReports());
+
+        var output = result.run();
+    }
+
+    @Test
+    public void testTicTacToe() {
+
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/TicTacToe.jmm"));
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());

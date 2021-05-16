@@ -13,18 +13,17 @@ public class PutFieldInstructionHandler implements IntructionHandler{
     public String handleInstruction(ClassUnit classUnit ,Method method) {
         String className = classUnit.getClassName();
         StringBuilder string = new StringBuilder();
-//        Element third = put.getThirdOperand();
 
         String first = MyJasminUtils.getElementName(put.getFirstOperand());
         String second = MyJasminUtils.getElementName(put.getSecondOperand());
         String third = MyJasminUtils.getElementName(put.getThirdOperand());
 
-//        System.out.println("PUTFIELD ===\n " + first + " " + second + " " + third);
+//        System.out.println("PUTFIELD ===\n " + first + " " + second + " " + third + " " +this.put.getPred());
 
-//        if (!MyJasminUtils.isLoaded(put.getSecondOperand(), this.put.getPred()))
-//            MyJasminUtils.loadElement(method, string, put.getSecondOperand());
-//        if (!MyJasminUtils.isLoaded(put.getThirdOperand(), this.put.getPred()))
-//        MyJasminUtils.loadElement(method, string, put.getThirdOperand());
+        if (!this.wasLoaded()) {
+            string.append("\taload_0\n");
+            MyJasminUtils.loadElement(method, string, put.getThirdOperand());
+        }
 
         string.append("\tputfield ");
 
@@ -37,6 +36,19 @@ public class PutFieldInstructionHandler implements IntructionHandler{
         string.append(first +"/"+second +" "+ MyJasminUtils.parseType(put.getSecondOperand().getType().getTypeOfElement()));
 
         return string.toString()+"\n";
+    }
+
+    private boolean wasLoaded() {
+        if (put.getThirdOperand().isLiteral()) // putfield(this, var, 0)
+            return false;
+
+        // TODO: assumes the expression before putfield puts 'this' into stack (review)
+        for (Node pred : this.put.getPred()) {
+            Instruction inst = (Instruction) pred;
+            if (inst.getInstType() != InstructionType.ASSIGN)
+                return false;
+        }
+        return true;
     }
 
 }

@@ -103,9 +103,6 @@ public class BackendStage implements JasminBackend {
 
                 jasminCode.append("\n\t"+ ".limit locals " + ++localVariables);
                 jasminCode.append("\n\t" + ".limit stack 99");
-
-                if (!method.isStaticMethod())
-                    jasminCode.append("\n\taload 0");
             }
             jasminCode.append("\n");
 
