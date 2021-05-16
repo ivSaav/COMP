@@ -246,7 +246,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         String assignmentType = ".i32 "; // special case where destination is array access
         if (!lhs.getKind().equals("Array")) {
             Symbol lhsSymbol = this.st.getVariableSymbol(lhs);
-            assignmentType = "." +  Utils.getOllirType(lhsSymbol.getType()) + " "; // if not array access, then fetch type
+            Type t = lhsSymbol.getType();
+            assignmentType = "." + (t.isArray() ? "array." : "") + Utils.getOllirType(lhsSymbol.getType()) + " "; // if not array access, then fetch type
         }
 
         if(rhs.getKind().equals("NewArray")) {
@@ -376,8 +377,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         if (exprNode.getKind().equals("And")) {
             JmmNode left = exprNode.getChildren().get(0);
             JmmNode right = exprNode.getChildren().get(1);
-            builder.append(this.buildIfCondition(left, labelID, indent));
-            builder.append(this.buildIfCondition(right, labelID, indent));
+            builder.append(this.handleConditionalExpression(left, labelID, indent));
+            builder.append(this.handleConditionalExpression(right, labelID, indent));
         }
         else {
             builder.append(this.buildIfCondition(exprNode, labelID, indent));
@@ -441,8 +442,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         else if (kind.equals("Negation")) {
             JmmNode innerExpr = exprNode.getChildren().get(0);
             if (innerExpr.getNumChildren() < 2 || innerExpr.getKind().equals("MethodCall")) {
-                expr.add("t" + this.idCounter++ + ".bool :=.bool " + auxExp);
-                return "t" + this.idCounter + ".bool &&.bool 1.bool";
+                expr.add("t" + this.idCounter + ".bool :=.bool " + auxExp);
+                return "t" + this.idCounter++ + ".bool &&.bool 1.bool";
             }
         }
         else if (exprNode.getNumChildren() < 2)
@@ -681,7 +682,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                         allowComplex &= arguments.getNumChildren() <= 0;
                         String args = this.handleMethodParameters(arguments, auxExpressions);
                         if (!allowComplex) {
-                            System.out.println("METHOD " + methodCall);
                             MethodSymbols methodSymbols = st.getMethod(methodCall);
 
                             String id = "aux" + this.idCounter + "." + Utils.getOllirType(methodSymbols.getReturnType());
@@ -750,7 +750,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                     // determine type of lhs variable
                     Symbol varSymb = this.st.getVariableSymbol(lhs);
-                    return Utils.getOllirType(varSymb.getType());
+                    Type t = varSymb.getType();
+                    return (t.isArray() ? "array." : "" ) + Utils.getOllirType(varSymb.getType());
 
                     // TODO more cases (Parameters ,Arguments ...)
             }

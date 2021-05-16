@@ -51,7 +51,7 @@ public class AssignInstructionHandler implements IntructionHandler{
 
         // store LHS
         ElementType destType = destDesc.getVarType().getTypeOfElement();
-        System.out.println("DEST " + destType + " " + MyJasminUtils.getElementName(this.instruction.getDest()));
+//        System.out.println("DEST " + destType + " " + MyJasminUtils.getElementName(this.instruction.getDest()));
         if (destType == ElementType.OBJECTREF){
             string.append("\ta");
         }
