@@ -208,7 +208,7 @@ public class Utils {
             case "And":
                 return "||.bool";
             default:
-                return "";
+                return getOllirOp(op);
         }
     }
 

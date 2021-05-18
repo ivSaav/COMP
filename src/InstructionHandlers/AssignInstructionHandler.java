@@ -92,6 +92,10 @@ public class AssignInstructionHandler implements IntructionHandler{
      * @return
      */
     private boolean precedesPutFieldCall(String varName) {
+//        System.out.println(instruction.getSucc1().getNodeType());
+
+        if (instruction.getSucc1().getNodeType() == NodeType.END)
+            return false;
         Instruction succ = (Instruction) instruction.getSucc1();
         // successor is a putfield call (abort store)
         if (succ.getInstType() == InstructionType.PUTFIELD) {

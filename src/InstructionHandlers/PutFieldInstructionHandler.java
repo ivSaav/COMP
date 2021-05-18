@@ -18,7 +18,7 @@ public class PutFieldInstructionHandler implements IntructionHandler{
         String second = MyJasminUtils.getElementName(put.getSecondOperand());
         String third = MyJasminUtils.getElementName(put.getThirdOperand());
 
-        System.out.println("PUTFIELD ===\n " + first + " " + second + " " + third + " " +this.put.getPred());
+//        System.out.println("PUTFIELD ===\n " + first + " " + second + " " + third + " " +this.put.getPred());
 
         if (!this.wasLoaded()) {
             string.append("\taload_0\n");
@@ -47,7 +47,6 @@ public class PutFieldInstructionHandler implements IntructionHandler{
             // ignore method definition
             if (pred.getNodeType() == NodeType.BEGIN)
                 return false;
-            pred.showNode();
             Instruction inst = (Instruction) pred;
             if (inst.getInstType() != InstructionType.ASSIGN)
                 return false;

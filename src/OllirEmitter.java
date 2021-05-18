@@ -373,7 +373,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         JmmNode exprNode = ifNode.getChildren().get(0);
 
         StringBuilder ifBuilder = new StringBuilder();
-        ifBuilder.append(this.handleConditionalExpression(exprNode, labelID, indent));
+        ifBuilder.append(this.handleConditionalExpression(exprNode, true, "Else_" + labelID, indent));
         // handle Then
         ifBuilder.append(this.handleStatementBody(ifNode.getChildren().get(1), indent + "\t")); // Then
         ifBuilder.append(indent).append("\tgoto EndIf_" + labelID + ";\n");
@@ -387,26 +387,30 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     }
 
 
-    private String handleConditionalExpression(JmmNode exprNode, int labelID, String indent) {
+    private String handleConditionalExpression(JmmNode exprNode, boolean reverse, String exitLabel, String indent) {
 
         StringBuilder builder = new StringBuilder();
-        if (exprNode.getKind().equals("And")) {
+        if (exprNode.getKind().equals("And") && reverse) {
             JmmNode left = exprNode.getChildren().get(0);
             JmmNode right = exprNode.getChildren().get(1);
-            builder.append(this.handleConditionalExpression(left, labelID, indent));
-            builder.append(this.handleConditionalExpression(right, labelID, indent));
+            builder.append(this.handleConditionalExpression(left, true, exitLabel, indent));
+            builder.append(this.handleConditionalExpression(right, true, exitLabel, indent));
+        }
+        else if (exprNode.getKind().equals("Negation")) {
+            JmmNode child = exprNode.getChildren().get(0);
+            builder.append(this.handleConditionalExpression(child, !reverse, exitLabel, indent));
         }
         else {
-            builder.append(this.buildIfCondition(exprNode, labelID, indent));
+            builder.append(this.buildIfCondition(exprNode, reverse, exitLabel, indent));
         }
         return builder.toString();
     }
 
-    private String buildIfCondition(JmmNode exprNode, int labelID, String indent) {
+    private String buildIfCondition(JmmNode exprNode, boolean reverse,  String exitLabel, String indent) {
         StringBuilder ifBuilder = new StringBuilder(indent + "if (");
 
         List<String> expr = new ArrayList<>();
-        String auxExp = this.handleExpression(exprNode, true, true, expr);
+        String auxExp = this.handleExpression(exprNode, true, reverse, expr);
 
         // ollir doesn't accept unary conditional operations
         auxExp = this.forceBinaryExpression(exprNode, auxExp, expr);
@@ -414,7 +418,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         if (!expr.isEmpty())
             this.insertAuxiliarExpressions(ifBuilder, expr, false, indent);
 
-        ifBuilder.append(auxExp).append(") goto Else_" + labelID + ";\n");
+        ifBuilder.append(auxExp).append(") goto " + exitLabel  + ";\n");
 
         return ifBuilder.toString();
     }
@@ -428,18 +432,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         List<String> expr = new ArrayList<>();
 
         JmmNode exprNode = whileNode.getChildren().get(0);
-        StringBuilder conditionBuilder = new StringBuilder(indent + "\t" + "if (");
-        String auxExp = this.handleExpression(exprNode, true, false, expr);
 
-        // ollir doesn't accept unary conditional operations
-        auxExp = this.forceBinaryExpression(exprNode, auxExp, expr);
-
-        if (!expr.isEmpty())
-            this.insertAuxiliarExpressions(conditionBuilder, expr, false, indent + "\t");
-
-        conditionBuilder.append(auxExp).append(") goto Body_" + labelId + ";\n").append(indent).append(indent).append("goto EndLoop_"+ labelId + ";\n");
-
-        whileBuilder.append(conditionBuilder);
+        whileBuilder.append(this.handleConditionalExpression(exprNode, true, "EndLoop_" + labelId, indent+ "\t"));
 
         // statement body
         whileBuilder.append(indent).append("Body_" + labelId + ":\n").append(this.handleStatementBody(whileNode.getChildren().get(1), indent + "\t"));
