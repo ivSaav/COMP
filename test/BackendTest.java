@@ -19,13 +19,7 @@ import org.junit.Test;
 
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
-import pt.up.fe.comp.jmm.ollir.OllirUtils;
 import pt.up.fe.specs.util.SpecsIo;
-
-import java.sql.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 public class BackendTest {
 
@@ -132,7 +126,7 @@ public class BackendTest {
     @Test
     public void testTicTacToe() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/TicTacToe.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/TicTacToeRandomMoves.jmm"));
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
@@ -143,7 +137,7 @@ public class BackendTest {
     @Test
     public void testTuring() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Turing.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/TuringNoInput.jmm"));
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());

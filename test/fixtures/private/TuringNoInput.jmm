@@ -4,11 +4,11 @@ class Turing {
 
     int NUM_SYMBOLS;
     int NUM_STATES;
-    
+
     int[] WTABLE;
     int[] MTABLE;
     int[] NTABLE;
-    
+
     int H;
     int L;
     int R;
@@ -21,13 +21,13 @@ class Turing {
 
     public static void main(String[] a) {
         Turing t;
-        
+
         t = new Turing();
         t.init_bb_3s2sy();
         t.run();
     }
 
-    
+
     public boolean init_bb_3s2sy() {
 
         TAPE = this.initGeneric(3, 2, 18);
@@ -43,7 +43,7 @@ class Turing {
         return true;
     }
 
-    
+
     public boolean init_bb_4s2sy() {
 
         TAPE = this.initGeneric(4, 2, 20);
@@ -65,21 +65,21 @@ class Turing {
         int dummy;
         boolean halt;
         Turing t;
-        
-        
+
+
         t = this;
-        
+
         halt = false;
         while (!halt) {
             this.printTape();
-            
-            
+
+
             dummy = 5;//io.read();
 
             halt = !t.trans();
         }
-        
-        
+
+
         this.printTape();
         return true;
 
@@ -88,7 +88,7 @@ class Turing {
     public boolean printTape() {
         int i;
 
-        
+
         i = 0;
         while (i < TAPE.length) {
             if (!(!(i < curPos) && !(curPos < i)))
@@ -100,9 +100,9 @@ class Turing {
         }
 
         io.println();
-        
 
-        
+
+
         i = 0;
         while (i < TAPE.length) {
             io.print(TAPE[i]);
@@ -122,10 +122,10 @@ class Turing {
         int next;
 
         int curS;
-        
+
         boolean halt;
-        
-        
+
+
         curS = TAPE[curPos];
 
         write = WTABLE[this.ss2i(curS, curState)];
@@ -137,12 +137,12 @@ class Turing {
         curPos = curPos + move;
         curState = next;
 
-        
+
         if ((!(H < curState) && !(curState < H)))
             halt = false;
         else
             halt = true;
-            
+
         return halt;
 
     }

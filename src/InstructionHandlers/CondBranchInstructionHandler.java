@@ -60,7 +60,7 @@ public class CondBranchInstructionHandler implements IntructionHandler{
             case ANDB:
             case ANDI32:
                 builder.append("\tiand\n");
-                builder.append("\tifeq ").append(label).append("\n");
+                builder.append("\tifne ").append(label).append("\n");
                 break;
             case OR:
             case ORB:
