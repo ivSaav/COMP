@@ -329,14 +329,14 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                 else // put whole expression
                     id = newInit;
 
-//                for (String auxExpression : auxExpressions)
-//                    builder.insert(0, indent + auxExpression + ";\n");
-
                 for (int i = auxExpressions.size()-1; i >= 0; i--) {
                     builder.insert(0, indent + auxExpressions.get(i) + ";\n");
                 }
 
                 rhsBuilder.append(id);
+                break;
+            case "This":
+                rhsBuilder.append("this.").append(st.getClassName());
                 break;
 
             default:
@@ -879,8 +879,19 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             return "[" + auxVar + "].i32";
         }
-        else // array access is an identifier A[b]
-            innerAccess += handleVariable(accessNode,auxExpressions, false);
+        else if (accessNode.getKind().equals("MethodCall")) {
+            String arrayExpr = this.handleMethodCall(accessNode, true, auxExpressions, "");
+
+            String auxVar = "t" + this.idCounter + ".i32";
+
+            String auxExpr = String.format("t%d.i32 :=.i32 %s", this.idCounter++, arrayExpr);
+            auxExpressions.add(auxExpr);
+
+            return "[" + auxVar + "].i32";
+        }
+        else {// array access is an identifier A[b]
+            innerAccess += handleVariable(accessNode, auxExpressions, false);
+        }
         innerAccess += "].i32";
         return innerAccess;
     }

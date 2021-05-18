@@ -9,6 +9,7 @@ import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
 
 /**
@@ -26,6 +27,26 @@ import pt.up.fe.comp.jmm.report.Stage;
 
 public class BackendStage implements JasminBackend {
 
+    private final boolean reg_alloc;
+    private final int k;
+    private final boolean optm;
+    private List<Report> reports;
+
+    public BackendStage(boolean reg_alloc, int k, boolean optm) {
+        this.reg_alloc = reg_alloc;
+        this.k = k;
+        this.optm = optm;
+        this.reports = new ArrayList<>();
+    }
+
+
+    public BackendStage() {
+        this.reg_alloc = false;
+        this.k = 0;
+        this.optm = false;
+        this.reports = new ArrayList<>();
+    }
+
     @Override
     public JasminResult toJasmin(OllirResult ollirResult) {
 
@@ -38,7 +59,7 @@ public class BackendStage implements JasminBackend {
             ollirClass.buildCFGs(); // build the CFG of each method
             ollirClass.outputCFGs(); // output to .dot files the CFGs, one per method
             ollirClass.buildVarTables(); // build the table of variables for each method
-//            ollirClass.show(); // print to console main information about the input OLLIR
+            ollirClass.show(); // print to console main information about the input OLLIR
 
             // Convert the OLLIR to a String containing the equivalent Jasmin code
             StringBuilder jasminCode = new StringBuilder(); // Convert node ...
@@ -48,9 +69,6 @@ public class BackendStage implements JasminBackend {
             handleMethods(ollirClass, jasminCode);
 
 //            System.out.println("JASMIN CODE\n" + jasminCode.toString());
-
-            // More reports from this stage
-            List<Report> reports = new ArrayList<>();
 
             Utils.saveContents(jasminCode.toString(), "jasmin.j");
 
@@ -90,8 +108,7 @@ public class BackendStage implements JasminBackend {
 
                 //LIMITS
 
-                int localVariables = 0;
-
+                int localVariables = 1;   // this
                 for(Map.Entry<String, Descriptor> variable : varTable.entrySet()){
                     if (variable.getValue().getScope().equals(VarScope.LOCAL))
                         localVariables++;
@@ -101,8 +118,16 @@ public class BackendStage implements JasminBackend {
                         localVariables++;
                 }
 
-                jasminCode.append("\n\t"+ ".limit locals " + ++localVariables);
-                jasminCode.append("\n\t" + ".limit stack 99");
+                jasminCode.append("\n\t"+ ".limit locals " + localVariables);
+
+                if (this.reg_alloc && k < localVariables) {
+                    reports.add(
+                            new Report(ReportType.ERROR, Stage.GENERATION, -1,
+                                    "Unnable to limit registers for: " + method.getMethodName())
+                    );
+                }
+                
+                jasminCode.append("\n\t" + ".limit stack " + localVariables);
             }
             jasminCode.append("\n");
 

@@ -26,7 +26,7 @@ public class Main implements JmmParser {
 
 		    try {
 		    	root = parser.Start(); // returns reference to root node
-//				root.dump(""); // prints the tree on the screen
+				root.dump(""); // prints the tree on the screen
 //				System.out.println(root.toJson()); //prints Json version of ast
 
 			}catch(TokenMgrError e) {
@@ -44,14 +44,33 @@ public class Main implements JmmParser {
 	}
 
     public static void main(String[] args) {
-		var fileContents = SpecsIo.read("./test.txt");
+
+		boolean register_allocation = false;
+		int k = 0;
+		boolean optm = false;
+		String filename = "";
+		if (args.length > 1) {
+
+			if (args[0].equals("-r")) {
+				register_allocation = true;
+				k = Integer.parseInt(args[1]);
+
+				if (k < 1) {
+					System.out.println("k must be at least 1");
+					exit(1);
+				}
+				filename = args[2];
+			}
+		}
+
+		var fileContents = SpecsIo.read("./" + filename /*"./test.txt"*/);
 //		System.out.println("Executing with args: " + fileContents);
 		Main m = new Main();
 		JmmParserResult parseResult = m.parse(fileContents);
 
 		if (parseResult.getReports().size() > 0) {
 			System.out.println("*** Found errors in syntactical stage (aborting). ***");
-			System.out.println(parseResult.getReports());
+			Utils.printReports(parseResult.getReports());
 			exit(1);
 		}
 
@@ -60,7 +79,7 @@ public class Main implements JmmParser {
 
 		if (semanticResult.getReports().size() > 0) {
 			System.out.println("*** Found errors in semantics stage (aborting). ***");
-			System.out.println(semanticResult.getReports());
+			Utils.printReports(semanticResult.getReports());
 			exit(1);
 		}
 
@@ -69,16 +88,16 @@ public class Main implements JmmParser {
 
 		if (ollirResult.getReports().size() > 0) {
 			System.out.println("*** Found errors in optimization stage (aborting). ***");
-			System.out.println(ollirResult.getReports());
+			Utils.printReports(ollirResult.getReports());
 			exit(1);
 		}
 
-		BackendStage backendStage = new BackendStage();
+		BackendStage backendStage = new BackendStage(register_allocation, k, optm);
 		JasminResult jasminResult = backendStage.toJasmin(ollirResult);
 
 		if (jasminResult.getReports().size() > 0) {
 			System.out.println("*** Found errors in backend stage (aborting). ***");
-			System.out.println(jasminResult.getReports());
+			Utils.printReports(jasminResult.getReports());
 			exit(1);
 		}
 

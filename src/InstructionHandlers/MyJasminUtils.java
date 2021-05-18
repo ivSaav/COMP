@@ -14,10 +14,10 @@ public class MyJasminUtils {
             int lit = Integer.parseInt(literal.getLiteral());
             if (lit == -1)
                 string.append("\ticonst_m1\n");
-            else if (lit < 6)
+            else if (lit < 6 && lit >= 0)
                 string.append("\ticonst_"+  lit + "\n");
             else
-                string.append("\tldc "+literal.getLiteral()+" \n");
+                string.append("\t" + (lit > -129 && lit < 128 ? "bipush " : "ldc ") +literal.getLiteral()+" \n");
 
         }else{
 //            System.out.println("= \nDESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
@@ -39,7 +39,8 @@ public class MyJasminUtils {
 
             ElementType elementType = d.getVarType().getTypeOfElement();
             if (elementType == ElementType.OBJECTREF) {
-                string.append("\taload RRRRR" + d.getVirtualReg());
+
+                string.append("\taload" + (d.getVirtualReg() < 4 ? "_" : " ") + d.getVirtualReg()).append("\n");
             }
             else if (elementType == ElementType.ARRAYREF) {
                 // array access

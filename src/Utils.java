@@ -1,9 +1,11 @@
 import pt.up.fe.comp.jmm.JmmNode;
 import pt.up.fe.comp.jmm.analysis.table.Symbol;
 import pt.up.fe.comp.jmm.analysis.table.Type;
+import pt.up.fe.comp.jmm.report.Report;
 
 import java.io.*;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -224,5 +226,9 @@ public class Utils {
         }
     }
 
+    public static void printReports(List<Report> reports) {
+        for (Report report : reports)
+            System.out.println(report);
+    }
 
 }

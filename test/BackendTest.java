@@ -90,7 +90,7 @@ public class BackendTest {
 
         var output = result.run();
 
-        assertEquals("1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n", output);
+        assertEquals("1\r\n2\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n9\r\n10", output.trim());
     }
 
     @Test
@@ -133,6 +133,17 @@ public class BackendTest {
     public void testTicTacToe() {
 
         OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/TicTacToe.jmm"));
+
+        var result = TestUtils.backend(optm);
+        TestUtils.noErrors(result.getReports());
+
+        var output = result.run();
+    }
+
+    @Test
+    public void testTuring() {
+
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Turing.jmm"));
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
