@@ -37,20 +37,14 @@ public class AnalysisStage implements JmmAnalysis {
 
         generator.visit(node);
         SymbolsTable st = generator.getSt();
-        System.out.println("GENERATED ============================");
-        System.out.println(st);
+//        System.out.println("GENERATED ============================");
+//        System.out.println(st);
 
         SemanticAnalyser semanticAnalyser = new SemanticAnalyser(st);
         List<Report> reports = new ArrayList<>();
         semanticAnalyser.visit(node, reports);
         for (Report r : reports)
             System.out.println(r);
-
-
-        // System.out.println(
-        //         "Print variables name and line, and their corresponding parent with Visitor that automatically performs preorder tree traversal");
-        // var varPrinter = new ExamplePrintVariables("Variable", "name", "line");
-        // varPrinter.visit(node, null);
 
         // No Symbol Table being calculated yet
         return new JmmSemanticsResult(parserResult, st, reports);

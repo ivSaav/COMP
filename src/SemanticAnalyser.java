@@ -110,8 +110,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         return null;
     }
 
-
-
     private Void dealWithArrayInit(JmmNode arrayNode, List<Report> reports) {
         JmmNode firstChild = arrayNode.getChildren().get(0);
 

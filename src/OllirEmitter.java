@@ -410,10 +410,12 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         StringBuilder ifBuilder = new StringBuilder(indent + "if (");
 
         List<String> expr = new ArrayList<>();
+
+
         String auxExp = this.handleExpression(exprNode, true, reverse, expr);
 
         // ollir doesn't accept unary conditional operations
-        auxExp = this.forceBinaryExpression(exprNode, auxExp, expr);
+        auxExp = this.forceBinaryExpression(exprNode, auxExp, reverse, expr);
 
         if (!expr.isEmpty())
             this.insertAuxiliarExpressions(ifBuilder, expr, false, indent);
@@ -443,10 +445,15 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         return whileBuilder.toString();
     }
 
-    private String forceBinaryExpression(JmmNode exprNode, String auxExp, List<String> expr) {
+    private String forceBinaryExpression(JmmNode exprNode, String auxExp, boolean reverse, List<String> expr) {
         String kind = exprNode.getKind();
 
-        if (kind.equals("Literal") || kind.equals("MethodCall")) {
+        if (kind.equals("Literal")) {
+            if (reverse)
+                return "0.bool &&.bool 0.bool";
+            return auxExp + " &&.bool 1.bool";
+        }
+        else if (kind.equals("MethodCall")) {
            return auxExp + " &&.bool 1.bool";
         }
         else if (kind.equals("Negation")) {

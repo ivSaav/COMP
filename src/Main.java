@@ -115,7 +115,6 @@ public class Main implements JmmParser {
 			e.printStackTrace();
 		}
 
-
 		jasminResult.run();
     }
 }

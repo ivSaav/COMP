@@ -12,14 +12,16 @@
  * specific language governing permissions and limitations under the License. under the License.
  */
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import org.junit.Test;
 
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.specs.util.SpecsIo;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class BackendTest {
 
@@ -58,7 +60,7 @@ public class BackendTest {
     }
 
     @Test
-    public void testLazysort() {
+    public void testLazySort() {
 
         OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/Lazysort.jmm"));
 
@@ -66,12 +68,11 @@ public class BackendTest {
         TestUtils.noErrors(result.getReports());
 
         var output = result.run();
-//
-//        String aux = output.replace('\n', ' ');
-//
-//        System.out.println("AUX - " + aux);
 
-        assertEquals("00000000", output.trim());
+        List<String> aux = Arrays.asList(output.trim().split("\r\n"));
+
+        // output should have ten numbers
+        assertEquals(10, aux.size());
     }
 
     @Test
@@ -90,26 +91,31 @@ public class BackendTest {
     @Test
     public void testMonteCarlo() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/MonteCarlitos.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/MonteCarloPi100NoInput.jmm"));
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
 
         var output = result.run();
-//        assertEquals("Result: 3", output.trim());
+        List<String> split = Arrays.asList(output.trim().split(": "));
+
         assertTrue(output.trim().contains("Result:"));
+        assertTrue(Integer.parseInt(split.get(1)) > 300);
     }
 
     @Test
     public void testLife() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/Life.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/LifeRandomInput.jmm"));
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
 
         var output = result.run();
-        assertEquals("", output.trim());
+
+        List<String> out = Arrays.asList(output.trim().split("\r\n"));
+        // each line must have 100 chars
+        assertEquals(100, out.get(0).length());
     }
 
     @Test
@@ -121,6 +127,7 @@ public class BackendTest {
         TestUtils.noErrors(result.getReports());
 
         var output = result.run();
+        assertEquals("10\r\n10\r\n10\r\n10\r\n10\r\n10\r\n10\r\n10\r\n10\r\n10", output.trim());
     }
 
     @Test
@@ -132,6 +139,10 @@ public class BackendTest {
         TestUtils.noErrors(result.getReports());
 
         var output = result.run();
+
+        output = output.replace("\n", "");
+        assertTrue(output.trim().contains("Congratulations")
+                || output.trim().contains("Both of you played to a tie."));
     }
 
     @Test
@@ -143,5 +154,8 @@ public class BackendTest {
         TestUtils.noErrors(result.getReports());
 
         var output = result.run();
+
+        // final result
+        assertTrue(output.trim().contains("000000000000000000\r\n000000111111000000"));
     }
 }
