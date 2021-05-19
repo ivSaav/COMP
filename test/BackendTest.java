@@ -17,6 +17,7 @@ import org.junit.Test;
 import pt.up.fe.comp.TestUtils;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.specs.util.SpecsIo;
+import pt.up.fe.specs.util.SpecsStrings;
 
 import java.util.Arrays;
 import java.util.List;
@@ -69,7 +70,9 @@ public class BackendTest {
 
         var output = result.run();
 
-        List<String> aux = Arrays.asList(output.trim().split("\r\n"));
+        String normalized = SpecsStrings.normalizeFileContents(output.trim());
+
+        List<String> aux = Arrays.asList(normalized.split("\n"));
 
         // output should have ten numbers
         assertEquals(10, aux.size());
@@ -85,7 +88,9 @@ public class BackendTest {
 
         var output = result.run();
 
-        assertEquals("1\r\n2\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n9\r\n10", output.trim());
+        output = SpecsStrings.normalizeFileContents(output.trim());
+
+        assertEquals("1\n2\n3\n4\n5\n6\n7\n8\n9\n10", output);
     }
 
     @Test
@@ -113,7 +118,8 @@ public class BackendTest {
 
         var output = result.run();
 
-        List<String> out = Arrays.asList(output.trim().split("\r\n"));
+        output= SpecsStrings.normalizeFileContents(output.trim());
+        List<String> out = Arrays.asList(output.split("\n"));
         // each line must have 100 chars
         assertEquals(100, out.get(0).length());
     }
@@ -127,7 +133,8 @@ public class BackendTest {
         TestUtils.noErrors(result.getReports());
 
         var output = result.run();
-        assertEquals("10\r\n10\r\n10\r\n10\r\n10\r\n10\r\n10\r\n10\r\n10\r\n10", output.trim());
+        output = SpecsStrings.normalizeFileContents(output.trim());
+        assertEquals("10\n10\n10\n10\n10\n10\n10\n10\n10\n10", output);
     }
 
     @Test
@@ -155,7 +162,8 @@ public class BackendTest {
 
         var output = result.run();
 
+        output = SpecsStrings.normalizeFileContents(output.trim());
         // final result
-        assertTrue(output.trim().contains("000000000000000000\r\n000000111111000000"));
+        assertTrue(output.contains("000000000000000000\n000000111111000000"));
     }
 }
