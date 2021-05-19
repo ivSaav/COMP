@@ -1,7 +1,6 @@
 package InstructionHandlers;
 
 import org.specs.comp.ollir.*;
-import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 
 public class GetFieldInstructionHandler implements IntructionHandler{
 
