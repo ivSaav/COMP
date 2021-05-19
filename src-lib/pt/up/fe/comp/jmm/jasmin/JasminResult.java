@@ -167,7 +167,6 @@ public class JasminResult {
         return run(Collections.emptyList());
     }
 
-
     public String run(String input) {
         return run(Collections.emptyList(), Arrays.asList(TestUtils.getLibsClasspath()), input);
     }
