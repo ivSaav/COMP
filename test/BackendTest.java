@@ -183,4 +183,19 @@ public class BackendTest {
         // final result
         assertEquals("125", output);
     }
+
+    @Test
+    public void testArithmetic() {
+
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Arithmetic.jmm"));
+
+        var result = TestUtils.backend(optm);
+        TestUtils.noErrors(result.getReports());
+
+        var output = result.run();
+
+        output = SpecsStrings.normalizeFileContents(output.trim());
+        // final result
+        assertEquals("20", output);
+    }
 }

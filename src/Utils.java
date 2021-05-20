@@ -261,4 +261,22 @@ public class Utils {
             System.out.println(report);
     }
 
+    /**
+     * Check is the attribute is inside the main method and if it is a class attribute
+     * @param node
+     * @param st
+     * @return true if is a class attribute, false otherwise
+     */
+    public static boolean checkClassAtribute(JmmNode node, SymbolsTable st) {
+        JmmNode scope = Utils.findScope(node);
+
+        // Verify if the call is made in the main method
+        if (scope.getKind().equals("Method") && scope.get("name").equals("main")) {
+            // Verify if it is a class attribute
+            if (st.getField().containsKey(node.get("name"))) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

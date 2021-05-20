@@ -265,6 +265,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         if(rhs.getKind().equals("NewArray")) {
             assignmentType = ".array.i32 ";
         }
+
         assign.append(" :=").append(assignmentType);
 
         // For the value to be saved
@@ -386,7 +387,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         return ifBuilder.toString();
     }
 
-
     private String handleConditionalExpression(JmmNode exprNode, boolean reverse, String exitLabel, String indent) {
 
         StringBuilder builder = new StringBuilder();
@@ -469,7 +469,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
        return auxExp;
     }
 
-
     /**
      * Coverts a statement's ody to ollir code
      * @param statement - statement node
@@ -516,7 +515,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         return stmBuilder.toString();
     }
-
 
     /**
      * Saves the content of when an expression is made with the Ollir's notation
@@ -856,6 +854,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         String arrayName = resolveVariableIdentifier(arrayIdent, true);
 
         JmmNode accessNode = arrayNode.getChildren().get(1);
+
         String innerAccess = this.handleInnerAcess(accessNode, auxExpressions);
 
         return arrayName + innerAccess;
@@ -863,6 +862,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
     private String handleInnerAcess(JmmNode accessNode, List<String> auxExpressions) {
         String innerAccess = "[";
+
         if (accessNode.getKind().equals("Literal")) {// A[0]
             String auxVar = "t" + this.idCounter++ + ".i32";
             String auxExpr = String.format("%s :=.i32 %s.i32", auxVar, accessNode.get("value"));
@@ -890,8 +890,23 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             return "[" + auxVar + "].i32";
         }
-        else {// array access is an identifier A[b]
+
+        else if (accessNode.getKind().equals("Ident")) {// array access is an identifier A[b]
             innerAccess += handleVariable(accessNode, auxExpressions, false);
+        }
+
+        else { // array access is an expression A[b-1]
+            if (Utils.isOperator(accessNode)) {
+
+                String rhsExpr =  this.handleExpression(accessNode, true, false, auxExpressions);
+
+                String auxVar = "t" + this.idCounter + ".i32";
+
+                String auxExpr = String.format("t%d.i32 :=.i32 %s", this.idCounter++, rhsExpr);
+                auxExpressions.add(auxExpr);
+
+                return "[" + auxVar + "].i32";
+            }
         }
         innerAccess += "].i32";
         return innerAccess;

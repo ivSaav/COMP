@@ -45,6 +45,11 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         JmmNode child = node.getChildren().get(0);
 
         if (child.getKind().equals("Ident")) {
+
+            if (Utils.checkClassAtribute(child, st)) {
+                reports.add(createReportFromNode(child, "Unable to access the class variable " + child.get("name") + " in the main"));
+            }
+
             Symbol symbol = st.getVariableSymbol(child);
 
             if (symbol == null)
@@ -57,6 +62,9 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         else {
             reports.add(createReportFromNode(node,"Variable isn't an array"));
         }
+
+
+
         return null;
     }
 
@@ -68,7 +76,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         this.visitedVariables.clear();
         return null;
     }
-
 
     private Void dealWithReturn(JmmNode node, List <Report> reports){
 
@@ -160,6 +167,10 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
             JmmNode firstChild = arrayNode.getChildren().get(0);
             if (firstChild.getKind().equals("Ident")) {
 
+                if (Utils.checkClassAtribute(firstChild, st)) {
+                    reports.add(createReportFromNode(firstChild, "Unable to access the class variable " + firstChild.get("name") + " in the main"));
+                }
+
                 Symbol symbolArrayDec = st.getVariableSymbol(firstChild);
                 if (symbolArrayDec == null){
                     reports.add(createReportFromNode(arrayNode, "Undeclared variable: " + firstChild.get("name")));
@@ -177,6 +188,11 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
             // Verify if the index of the access array is an integer
             JmmNode secondChild = arrayNode.getChildren().get(1);
             if (secondChild.getKind().equals("Ident")) {
+
+                if (Utils.checkClassAtribute(secondChild, st)) {
+                    reports.add(createReportFromNode(secondChild, "Unable to access the class variable " + secondChild.get("name") + " in the main"));
+                }
+
                 Symbol symbolArrayInd = st.getVariableSymbol(secondChild);
                 if (symbolArrayInd == null){
                     reports.add(createReportFromNode(secondChild, "Undeclared variable: " + secondChild.get("name")));
@@ -238,6 +254,11 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
                 for (int i = 0; i < parameters.size(); i++) {
 
                     if (args.get(i).getKind().equals("Ident")) {
+
+                        if (Utils.checkClassAtribute(args.get(i), st)) {
+                            reports.add(createReportFromNode(node, "Unable to access the class variable " + args.get(i).get("name") + " in the main"));
+                        }
+
                         if (st.getVariableSymbol(args.get(i)) != null) {
                             if (!st.getVariableSymbol(args.get(i)).getType().getName().equals(parameters.get(i).getType().getName()))
                                 reports.add(createReportFromNode(node, "Arguments type don't match in method " + methodName));
@@ -250,7 +271,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         }
         return null;
     }
-
 
     private Void dealWithIfWhileStatement (JmmNode node, List<Report> reports){
 
@@ -304,7 +324,10 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
             case "Negation":
                 child = opChildren.get(0);
                 switch (child.getKind()){
-                    case "LiteralBool":
+                    case "Literal":
+
+                        if (!child.get("type").equals("boolean"))
+                            reports.add(createReportFromNode(child, "Negation done with Literal Integer"));
                         break;
 
                     case "Ident":
@@ -331,6 +354,11 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
                 for(JmmNode currentChild : opChildren){
 
                     if (currentChild.getKind().equals("Ident")) {
+
+                        if (Utils.checkClassAtribute(currentChild, st)) {
+                            reports.add(createReportFromNode(currentChild, "Unable to access the class variable " + currentChild.get("name") + " in the main"));
+                        }
+
                         Map<String, Symbol> getVariables = st.getVariables(scope);
                         // Check if variable IDENTIFIER is declared
                         if (getVariables.get(currentChild.get("name")) == null)
@@ -369,7 +397,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         return null;
     }
 
-
     private Void dealWithAssignment(JmmNode node, List<Report> reports) {
         JmmNode lhs = node.getChildren().get(0);
         JmmNode rhs = node.getChildren().get(1);
@@ -395,13 +422,17 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         return null;
     }
 
-
     private List<Report> validateAssignExpression(Type lhsType, JmmNode expr) {
         List<Report> reports = new ArrayList<>();
 
         String kind = expr.getKind();
 
         if (kind.equals("Ident")) {
+
+            if (Utils.checkClassAtribute(expr, st)) {
+                reports.add(createReportFromNode(expr, "Unable to access the class variable " + expr.get("name") + " in the main"));
+            }
+
             Symbol rhsSymbol = st.getVariableSymbol(expr);
             if (rhsSymbol == null) // variable wasn't declare
                 reports.add(createReportFromNode(expr,"Undeclared variable " + expr.get("name")));
@@ -437,6 +468,8 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         }
         else if (Utils.isOperator(expr)) {
            Type t = findOperationReturnType(expr);
+
+
 
            if (t == null)
                reports.add(createReportFromNode(expr, "Couldn't determine expression result type "));
@@ -488,6 +521,12 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
                 if (child.getKind().equals("Smaller")) {
                     return new Type("boolean", false);
                 }
+                if (child.getKind().equals("And")) {
+                    return new Type("boolean", false);
+                }
+                if (child.getKind().equals("Negation")) {
+                    return new Type("boolean", false);
+                }
             }
         }
         return null;
@@ -515,7 +554,6 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         return null;
     }
 
-    
     /**
      * Verify whether the arithmetic operation is valid
      * @param node visited node to evaluate
