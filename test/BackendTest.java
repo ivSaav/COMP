@@ -166,4 +166,21 @@ public class BackendTest {
         // final result
         assertTrue(output.contains("000000000000000000\n000000111111000000"));
     }
+
+    //========== PRIVATE TESTS ==========
+
+    @Test
+    public void testConflicts() {
+
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Conflicts.jmm"));
+
+        var result = TestUtils.backend(optm);
+        TestUtils.noErrors(result.getReports());
+
+        var output = result.run();
+
+        output = SpecsStrings.normalizeFileContents(output.trim());
+        // final result
+        assertEquals("125", output);
+    }
 }

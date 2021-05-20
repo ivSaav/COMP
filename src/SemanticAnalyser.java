@@ -484,6 +484,11 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
                 else if (child.getKind().equals("MethodCall"))
                     return this.determineMethodReturnType(child, null);
             }
+            else {
+                if (child.getKind().equals("Smaller")) {
+                    return new Type("boolean", false);
+                }
+            }
         }
         return null;
     }

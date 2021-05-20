@@ -66,19 +66,49 @@ public class Utils {
     public static String getOllirVar(Symbol symbol) {
         Type type = symbol.getType();
 
-        String name = replaceName(symbol);
+        String name = resolveConflicts(symbol);
 
         String t = getOllirType(type);
         return name + "." + (type.isArray() ? "array." : "") + t; 
     }
 
-    public static String replaceName(Symbol symbol) {
+    public static String resolveConflicts(Symbol symbol) {
         String name = symbol.getName();
 
         name = name.replace("$", "_S_"); // replacing every $ with _S_ because of argument variables
 
-        if (name.equals("ret") || name.equals("array") || name.equals("field"))
+        Set<String> conflicts = new HashSet<>() {{
+            add("ret");
+            add("array");
+            add("field");
+            add("putfiled");
+            add("getfield");
+            add("ldc");
+            add("bipush");
+            add("imul");
+            add("iconst");
+            add("load");
+            add("astore");
+            add("return");
+            add("arraylength");
+            add("store");
+            add("dup");
+            add("pop");
+            add("idiv");
+            add("if");
+            add("iadd");
+            add("isub");
+            add("iand");
+        }};
+
+        if (conflicts.contains(name))
             name = "_" + name + "_";
+        else {
+            for (String invalid : conflicts) {
+                if (name.contains(invalid))
+                    name = "_" + name + "_";
+            }
+        }
 
         return name;
     }
@@ -93,7 +123,7 @@ public class Utils {
      */
     public static String getOllirVar(Symbol symbol, boolean arrayAccess) {
         Type type = symbol.getType();
-        String name = replaceName(symbol);
+        String name = resolveConflicts(symbol);
 
         String t = getOllirType(type);
 
