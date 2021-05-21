@@ -96,30 +96,42 @@ public class BackendTest {
     @Test
     public void testMonteCarlo() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/MonteCarloPi100NoInput.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/MonteCarloPi.jmm"));
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
 
-        var output = result.run();
-        List<String> split = Arrays.asList(output.trim().split(": "));
+        var output = result.run("10000");
 
         assertTrue(output.trim().contains("Result:"));
+
+        // fetch result
+        List<String> split = Arrays.asList(output.trim().split("Result: "));
         assertTrue(Integer.parseInt(split.get(1)) > 300);
     }
 
     @Test
     public void testLife() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/LifeRandomInput.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/LifeEndCondition.jmm"));
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
 
-        var output = result.run();
+        // creating test input
+        StringBuilder inputBuilder = new StringBuilder();
+        for (int i = 1; i < 15; i++) {
+            inputBuilder.append(i).append("\n");
+        }
+        inputBuilder.append(0).append("\n"); // end condition
 
-        output= SpecsStrings.normalizeFileContents(output.trim());
+        var output = result.run(inputBuilder.toString());
+
+        output= SpecsStrings.normalizeFileContents(output.trim(), true);
         List<String> out = Arrays.asList(output.split("\n"));
+
+        // number of iterations should be 15
+        assertEquals(15, out.size());
         // each line must have 100 chars
         assertEquals(100, out.get(0).length());
     }
@@ -132,35 +144,38 @@ public class BackendTest {
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
 
+        String expected = SpecsIo.getResource("fixtures/public/WhileAndIf.txt");
         var output = result.run();
         output = SpecsStrings.normalizeFileContents(output.trim());
-        assertEquals("10\n10\n10\n10\n10\n10\n10\n10\n10\n10", output);
+        assertEquals(expected, output);
     }
 
     @Test
     public void testTicTacToe() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/TicTacToeRandomMoves.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/TicTacToe.jmm"));
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
 
-        var output = result.run();
+        String input = SpecsIo.getResource("fixtures/public/TicTacToe.input");
+        String expected = SpecsIo.getResource("fixtures/public/TicTacToe.txt");
 
-        output = output.replace("\n", "");
-        assertTrue(output.trim().contains("Congratulations")
-                || output.trim().contains("Both of you played to a tie."));
+        var output = result.run(input);
+
+        output = SpecsStrings.normalizeFileContents(output.trim(), true);
+        assertEquals(expected, output);
     }
 
     @Test
     public void testTuring() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/TuringNoInput.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Turing.jmm"));
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
 
-        var output = result.run();
+        var output = result.run("11011");
 
         output = SpecsStrings.normalizeFileContents(output.trim());
         // final result
