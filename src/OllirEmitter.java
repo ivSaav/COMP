@@ -13,6 +13,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     private final SymbolsTable st;
     private int idCounter = 1;
     private int labelCounter = 1;
+    private boolean static_context = false;
 
     public OllirEmitter(SymbolsTable st) {
         this.st = st;
@@ -80,7 +81,8 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         // Method declaration
         String methodDec = "\t.method public ";
 
-        if(methodSymbols.getName().equals("main"))
+        this.static_context = methodSymbols.getName().equals("main");
+        if(this.static_context)
             methodDec += "static ";
 
         methodDec += methodSymbols.getName();
@@ -117,6 +119,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
         stringBuilder.append("\t}\n");
 
+        this.static_context = false;
         return stringBuilder.toString();
     }
 
@@ -246,7 +249,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         JmmNode lhs = equalNode.getChildren().get(0);
         JmmNode rhs = equalNode.getChildren().get(1);
 
-        if (st.isGlobalVar(lhs)) {
+        if (st.isGlobalVar(lhs) && !this.static_context) {
             return this.handlePutFieldCall(lhs, rhs, indent);
         }
 
@@ -806,7 +809,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         switch (kind) {
             case "Array":
                 JmmNode identNode = varNode.getChildren().get(0);
-                if (st.isGlobalVar(identNode)) {
+                if (st.isGlobalVar(identNode) && !this.static_context) {
 
                     String auxVarName = "t" + this.idCounter; // t3
                     String[] res = this.handleGetFieldCall(varNode, auxExpr);
@@ -836,7 +839,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             case "Ident":
                 String varIdent = this.resolveVariableIdentifier(varNode, false);
 
-                if (st.isGlobalVar(varNode)) {
+                if (st.isGlobalVar(varNode) && !this.static_context) {
                     String[] res = this.handleGetFieldCall(varNode, auxExpr);
                     auxExpr.add(res[1]);
                     return res[0];

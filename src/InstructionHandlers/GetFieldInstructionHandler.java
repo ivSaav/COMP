@@ -27,6 +27,4 @@ public class GetFieldInstructionHandler implements IntructionHandler{
 
         return string+"\n";
     }
-
-
 }

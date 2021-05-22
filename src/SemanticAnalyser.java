@@ -47,7 +47,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         if (child.getKind().equals("Ident")) {
 
             if (Utils.checkClassAtribute(child, st)) {
-                reports.add(createReportFromNode(child, "Unable to access the class variable " + child.get("name") + " in the main"));
+                reports.add(createReportFromNode(child, "Unable to access the class variable " + child.get("name") + " from static context"));
             }
 
             Symbol symbol = st.getVariableSymbol(child);
@@ -168,7 +168,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
             if (firstChild.getKind().equals("Ident")) {
 
                 if (Utils.checkClassAtribute(firstChild, st)) {
-                    reports.add(createReportFromNode(firstChild, "Unable to access the class variable " + firstChild.get("name") + " in the main"));
+                    reports.add(createReportFromNode(firstChild, "Unable to access the class variable " + firstChild.get("name") + " in static context"));
                 }
 
                 Symbol symbolArrayDec = st.getVariableSymbol(firstChild);
@@ -190,7 +190,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
             if (secondChild.getKind().equals("Ident")) {
 
                 if (Utils.checkClassAtribute(secondChild, st)) {
-                    reports.add(createReportFromNode(secondChild, "Unable to access the class variable " + secondChild.get("name") + " in the main"));
+                    reports.add(createReportFromNode(secondChild, "Unable to access the class variable " + secondChild.get("name") + " in static context"));
                 }
 
                 Symbol symbolArrayInd = st.getVariableSymbol(secondChild);
@@ -256,7 +256,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
                     if (args.get(i).getKind().equals("Ident")) {
 
                         if (Utils.checkClassAtribute(args.get(i), st)) {
-                            reports.add(createReportFromNode(node, "Unable to access the class variable " + args.get(i).get("name") + " in the main"));
+                            reports.add(createReportFromNode(node, "Unable to access the class variable " + args.get(i).get("name") + " in static context"));
                         }
 
                         if (st.getVariableSymbol(args.get(i)) != null) {
@@ -356,7 +356,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
                     if (currentChild.getKind().equals("Ident")) {
 
                         if (Utils.checkClassAtribute(currentChild, st)) {
-                            reports.add(createReportFromNode(currentChild, "Unable to access the class variable " + currentChild.get("name") + " in the main"));
+                            reports.add(createReportFromNode(currentChild, "Unable to access the class variable " + currentChild.get("name") + " in static context"));
                         }
 
                         Map<String, Symbol> getVariables = st.getVariables(scope);
@@ -430,7 +430,7 @@ public class SemanticAnalyser extends AJmmVisitor<List<Report>, Void> {
         if (kind.equals("Ident")) {
 
             if (Utils.checkClassAtribute(expr, st)) {
-                reports.add(createReportFromNode(expr, "Unable to access the class variable " + expr.get("name") + " in the main"));
+                reports.add(createReportFromNode(expr, "Unable to access the class variable " + expr.get("name") + " in static context"));
             }
 
             Symbol rhsSymbol = st.getVariableSymbol(expr);

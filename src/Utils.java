@@ -4,6 +4,7 @@ import pt.up.fe.comp.jmm.analysis.table.Type;
 import pt.up.fe.comp.jmm.report.Report;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -272,6 +273,14 @@ public class Utils {
 
         // Verify if the call is made in the main method
         if (scope.getKind().equals("Method") && scope.get("name").equals("main")) {
+
+            MethodSymbols main = st.getMethod(scope);
+            // checking if local variable with the same name as the field
+            if (main.containsVariable(node.get("name")))
+                return false;
+            else if (main.getParameterMap().containsKey(node.get("name"))) // checking if is a parameter variable
+                return false;
+
             // Verify if it is a class attribute
             if (st.getField().containsKey(node.get("name"))) {
                 return true;

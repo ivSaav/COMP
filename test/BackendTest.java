@@ -145,8 +145,10 @@ public class BackendTest {
         TestUtils.noErrors(result.getReports());
 
         String expected = SpecsIo.getResource("fixtures/public/WhileAndIf.txt");
+        expected = SpecsStrings.normalizeFileContents(expected);
+
         var output = result.run();
-        output = SpecsStrings.normalizeFileContents(output.trim());
+        output = SpecsStrings.normalizeFileContents(output.trim(), true);
         assertEquals(expected, output);
     }
 
@@ -160,6 +162,7 @@ public class BackendTest {
 
         String input = SpecsIo.getResource("fixtures/public/TicTacToe.input");
         String expected = SpecsIo.getResource("fixtures/public/TicTacToe.txt");
+        expected = SpecsStrings.normalizeFileContents(expected);
 
         var output = result.run(input);
 
@@ -212,5 +215,20 @@ public class BackendTest {
         output = SpecsStrings.normalizeFileContents(output.trim());
         // final result
         assertEquals("20", output);
+    }
+
+    @Test
+    public void testScalar() {
+
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Scalar.jmm"));
+
+        var result = TestUtils.backend(optm);
+        TestUtils.noErrors(result.getReports());
+
+        var output = result.run();
+
+        output = SpecsStrings.normalizeFileContents(output.trim(), true);
+        // final result
+        assertEquals("9\n12\n15", output);
     }
 }

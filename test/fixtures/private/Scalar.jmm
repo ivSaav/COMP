@@ -1,0 +1,43 @@
+import io;
+class Scalar {
+
+    int[] a;
+    int sc;
+
+    public boolean init(){
+        a = new int[3];
+        a[0]= 3;
+        a[1]= 4;
+        a[2]= 5;
+        sc = 3;
+        return true;
+	}
+
+    public boolean calculate(int idx){
+        while(idx < a.length){
+            a[idx] = a[idx] * sc;
+            idx = idx + 1;
+       	}
+	    return true;
+    }
+
+    public int[] get_a() {
+        return a;
+    }
+
+    public static void main(String[] args){
+        int index;
+        int[] a;
+        index = 0;
+        Scalar s;
+
+        s = new Scalar();
+        s.init();
+	    s.calculate(index);
+
+        a = s.get_a();
+        io.println(a[0]);
+        io.println(a[1]);
+        io.println(a[2]);
+    }
+}
