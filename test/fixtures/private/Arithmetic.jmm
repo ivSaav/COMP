@@ -37,7 +37,7 @@ class Arithmetic {
                 flag = !true && !true;
             }
             else {
-                flag = false;
+                flag = !(!(!(false)));
             }
         }
 

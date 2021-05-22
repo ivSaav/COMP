@@ -544,7 +544,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
                 // Go to the next level in the tree
                 // when inside an if, complex expressions ara allowed because ! is negated
-                String innerNegation = handleExpression(child, allowComplex || reverse, false, expressions); // TODO fix for negation in while loops (reverse)
+                String innerNegation = handleExpression(child, reverse, false, expressions); // TODO fix for negation in while loops (reverse)
 
                 // negation is cancelled of inside 'if' condition
                 expression += (reverse ? "" : "!.bool ") + innerNegation;

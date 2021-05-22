@@ -76,7 +76,7 @@ public class Utils {
     public static String resolveConflicts(Symbol symbol) {
         String name = symbol.getName();
 
-        name = name.replace("$", "_S_"); // replacing every $ with _S_ because of argument variables
+        name = name.replace("$", "'S'"); // replacing every $ with _S_ because of argument variables
 
         Set<String> conflicts = new HashSet<>() {{
             add("ret");
@@ -100,6 +100,7 @@ public class Utils {
             add("iadd");
             add("isub");
             add("iand");
+            add("bool");
         }};
 
         if (conflicts.contains(name))
