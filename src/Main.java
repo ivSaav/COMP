@@ -10,6 +10,7 @@ import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.specs.util.SpecsIo;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -48,23 +49,38 @@ public class Main implements JmmParser {
 		boolean register_allocation = false;
 		int k = 0;
 		boolean optm = false;
-		String filename = "";
-		if (args.length > 1) {
+		String filename = "test.txt";
 
-			if (args[0].equals("-r")) {
-				register_allocation = true;
-				k = Integer.parseInt(args[1]);
-
-				if (k < 1) {
-					System.out.println("k must be at least 1");
-					exit(1);
-				}
-				filename = args[2];
-			}
+		if (args.length < 1) {
+			System.out.println("Usage: Main <filename>");
+			exit(1);
 		}
 
+		for (int i = 0; i < args.length; i++) {
+			if (args[i].equals("-r")) {
+				register_allocation = true;
+
+				try {
+					k = Integer.parseInt(args[++i]);
+					if (k < 1) {
+						System.out.println("k must be at least 1");
+						exit(1);
+					}
+				}
+				catch (Exception e) {
+					System.out.println("Usage: Main -r <k> <filename>");
+					exit(1);
+				}
+			}
+			else if (args[i].equals("-o"))
+				optm = true;
+			else
+				filename = args[i];
+		}
+
+		System.out.println("Executing with args: " + filename);
 		var fileContents = SpecsIo.read("./" + filename /*"./test.txt"*/);
-//		System.out.println("Executing with args: " + fileContents);
+
 		Main m = new Main();
 		JmmParserResult parseResult = m.parse(fileContents);
 
