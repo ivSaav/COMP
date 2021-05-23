@@ -25,11 +25,12 @@ public class CondBranchInstructionHandler implements IntructionHandler{
         MyJasminUtils.loadElement(method, string, rop);
 
         OperationType opType = condBranchInstruction.getCondOperation().getOpType();
-        this.buildBranchCondition(opType, label, string);
+        this.buildBranchCondition(opType, lop, rop, label, string, method);
         return string.toString();
     }
 
-    private  void buildBranchCondition(OperationType type, String label, StringBuilder builder){
+    private  void buildBranchCondition(OperationType type, Element lop, Element rop, String label,
+                                       StringBuilder builder, Method method){
 
         switch (type) {
             case LTH:
@@ -59,7 +60,15 @@ public class CondBranchInstructionHandler implements IntructionHandler{
             case AND:
             case ANDB:
             case ANDI32:
-                builder.append("\tiand\n");
+                // when branch condition is like:
+                // if ( var && true )
+                if (rop.isLiteral() && ((LiteralElement) rop).getLiteral().equals("1")) {
+                    builder.setLength(0); // remove loaded vars
+                    MyJasminUtils.loadElement(method, builder, lop); // only load lhs
+                }
+                else {
+                    builder.append("\tiand\n");
+                }
                 builder.append("\tifne ").append(label).append("\n");
                 break;
             case OR:
