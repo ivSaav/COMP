@@ -57,7 +57,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         }
 
         String classConstructor = "\n\t.construct " + classNode.get("class") +"().V {\n"
-                +       "\t\tinvokespecial(this, \"<init>\").V;\n" + "\t\tret.V;\n} \n";
+                +       "\t\tinvokespecial(this, \"<init>\").V;\n" + "\t\tret.V;\n\t} \n";
         stringBuilder.append(classConstructor);
 
         return stringBuilder.toString();
@@ -441,7 +441,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         whileBuilder.append(this.handleConditionalExpression(exprNode, true, "EndLoop_" + labelId, indent+ "\t"));
 
         // statement body
-        whileBuilder.append(indent).append(this.handleStatementBody(whileNode.getChildren().get(1), indent + "\t"));
+        whileBuilder.append(this.handleStatementBody(whileNode.getChildren().get(1), indent + "\t"));
         whileBuilder.append(indent).append("\tgoto Loop_"+ labelId + ";\n");
         whileBuilder.append(indent).append("EndLoop_" + labelId + ":\n");
 
