@@ -79,7 +79,7 @@ public class Main implements JmmParser {
 		}
 
 		System.out.println("Executing with args: " + filename);
-		var fileContents = SpecsIo.read("./" + filename /*"./test.txt"*/);
+		var fileContents = SpecsIo.read(filename /*"./test.txt"*/);
 
 		Main m = new Main();
 		JmmParserResult parseResult = m.parse(fileContents);
@@ -131,6 +131,7 @@ public class Main implements JmmParser {
 			e.printStackTrace();
 		}
 
-		jasminResult.run();
+		System.out.println("Successfully compiled.\nAll generated files are in ./generated");
+//		jasminResult.run();
     }
 }
