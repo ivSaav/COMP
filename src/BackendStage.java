@@ -26,23 +26,9 @@ import pt.up.fe.comp.jmm.report.Stage;
 
 public class BackendStage implements JasminBackend {
 
-    private final boolean reg_alloc;
-    private final int k;
-    private final boolean optm;
     private List<Report> reports;
 
-    public BackendStage(boolean reg_alloc, int k, boolean optm) {
-        this.reg_alloc = reg_alloc;
-        this.k = k;
-        this.optm = optm;
-        this.reports = new ArrayList<>();
-    }
-
-
     public BackendStage() {
-        this.reg_alloc = false;
-        this.k = 0;
-        this.optm = false;
         this.reports = new ArrayList<>();
     }
 
@@ -106,7 +92,6 @@ public class BackendStage implements JasminBackend {
 
 
                 //LIMITS
-
                 int localVariables = 1;   // this
                 for(Map.Entry<String, Descriptor> variable : varTable.entrySet()){
                     if (variable.getValue().getScope().equals(VarScope.LOCAL))
@@ -118,13 +103,6 @@ public class BackendStage implements JasminBackend {
                 }
 
                 jasminCode.append("\n\t"+ ".limit locals " + localVariables);
-
-                if (this.reg_alloc && k < localVariables) {
-                    reports.add(
-                            new Report(ReportType.ERROR, Stage.GENERATION, -1,
-                                    "Unnable to limit registers for: " + method.getMethodName())
-                    );
-                }
                 
                 jasminCode.append("\n\t" + ".limit stack " + localVariables);
             }
@@ -173,9 +151,6 @@ public class BackendStage implements JasminBackend {
             jasminCode.append("\n.super " +ollirClass.getSuperClass() + "\n\n");
         else
             jasminCode.append("\n.super java/lang/Object\n\n");
-        /*if (ollirClass.getPackage()==null){
-            jasminCode.append("\n.super java/lang/Object\n\n");
-        }*/
     }
 
     private void handleFields(ClassUnit ollirClass, StringBuilder jasminCode) {
@@ -204,9 +179,6 @@ public class BackendStage implements JasminBackend {
 
         for(int i=0; i < paramListSize; i++){
             jasminCode.append(MyJasminUtils.parseTypeForMethod(paramList.get(i).getType().getTypeOfElement()));
-//            if(i!=paramListSize-1){
-//                jasminCode.append(";");
-//            }
         }
 
     }

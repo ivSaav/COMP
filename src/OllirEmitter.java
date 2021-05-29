@@ -14,9 +14,11 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     private int idCounter = 1;
     private int labelCounter = 1;
     private boolean static_context = false;
+    private boolean optm;
 
-    public OllirEmitter(SymbolsTable st) {
+    public OllirEmitter(SymbolsTable st, boolean optm) {
         this.st = st;
+        this.optm = optm;
 
         setDefaultVisit(this::defaultVisit);
 

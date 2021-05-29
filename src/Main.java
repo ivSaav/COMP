@@ -46,34 +46,21 @@ public class Main implements JmmParser {
 
     public static void main(String[] args) {
 
-		boolean register_allocation = false;
-		int k = 0;
 		boolean optm = false;
 		String filename = "test.txt";
 
 		if (args.length < 1) {
-			System.out.println("Usage: Main <filename>");
+			System.out.println("Usage: Main  <filename>");
 			exit(1);
 		}
 
 		for (int i = 0; i < args.length; i++) {
-			if (args[i].equals("-r")) {
-				register_allocation = true;
-
-				try {
-					k = Integer.parseInt(args[++i]);
-					if (k < 1) {
-						System.out.println("k must be at least 1");
-						exit(1);
-					}
-				}
-				catch (Exception e) {
-					System.out.println("Usage: Main -r <k> <filename>");
-					exit(1);
-				}
-			}
-			else if (args[i].equals("-o"))
+			if (args[i].equals("-o"))
 				optm = true;
+			else if (args[i].equals("-r")) {
+				System.out.println("Register allocation not implemented.");
+				exit(1);
+			}
 			else
 				filename = args[i];
 		}
@@ -99,7 +86,7 @@ public class Main implements JmmParser {
 			exit(1);
 		}
 
-		OptimizationStage optimization = new OptimizationStage();
+		OptimizationStage optimization = new OptimizationStage(optm);
 		OllirResult ollirResult = optimization.toOllir(semanticResult);
 
 		if (ollirResult.getReports().size() > 0) {
@@ -108,7 +95,7 @@ public class Main implements JmmParser {
 			exit(1);
 		}
 
-		BackendStage backendStage = new BackendStage(register_allocation, k, optm);
+		BackendStage backendStage = new BackendStage();
 		JasminResult jasminResult = backendStage.toJasmin(ollirResult);
 
 		if (jasminResult.getReports().size() > 0) {

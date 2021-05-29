@@ -27,8 +27,13 @@ import pt.up.fe.specs.util.SpecsIo;
 public class OptimizationStage implements JmmOptimization {
 
     private String ollirCode;
+    private boolean optm;
 
+    public OptimizationStage(boolean optm) {
+        this.optm = optm;
+    }
     public OptimizationStage() {
+        this.optm = false;
     }
 
     public String getOllirCode() {
@@ -40,7 +45,7 @@ public class OptimizationStage implements JmmOptimization {
 
         JmmNode node = semanticsResult.getRootNode();
 
-        var emitter = new OllirEmitter((SymbolsTable) semanticsResult.getSymbolTable());
+        var emitter = new OllirEmitter((SymbolsTable) semanticsResult.getSymbolTable(), optm);
         // Convert the AST to a String containing the equivalent OLLIR code
         this.ollirCode = emitter.visit(node); // Convert node ..
 
