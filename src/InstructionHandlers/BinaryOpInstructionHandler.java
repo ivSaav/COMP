@@ -21,25 +21,8 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
         Element rop = instruction.getRightOperand();
         Element lop = instruction.getLeftOperand();
 
-        HashMap<String, Descriptor> vars = OllirAccesser.getVarTable(method);
-
-        //load or lcd operands to stack
-//        if (!MyJasminUtils.isLoaded(lop, this.instruction.getPred()))
-            MyJasminUtils.loadElement(method, string, lop);
-
-//        boolean isIncrement = rop.isLiteral() && ((LiteralElement) rop).getLiteral().equals("1");
-//        String name = MyJasminUtils.getElementName(lop);
-//        isIncrement &= vars.get(name) != null && vars.get(name).getScope() == VarScope.LOCAL;
-//        if (isIncrement) {
-//            string.append("\tiinc " + vars.get(name).getVirtualReg() + " 1\n");
-//            return string.toString();
-//        }
-//        else
-
-
-
         if (opType == OperationType.LTH) {
-
+            MyJasminUtils.loadElement(method, string, lop);
             boolean isRhsZero = rop.isLiteral() && ((LiteralElement) rop).getLiteral().equals("0");
             // i < 0
             if (!isRhsZero) {
@@ -57,6 +40,8 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
 
         }
         else {
+            //load or lcd operands to stack
+            MyJasminUtils.loadElement(method, string, lop);
             MyJasminUtils.loadElement(method, string, rop);
             string.append("\t" + MyJasminUtils.parseType(rop.getType().getTypeOfElement()).toLowerCase(Locale.ROOT));
             string.append(MyJasminUtils.parseInstruction(opType) + "\n");
@@ -65,5 +50,30 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
         return string.toString();
     }
 
+
+    public static boolean detectIncrementOperation(AssignInstruction assign, Method method) {
+        Operand variable = (Operand) assign.getDest();
+        String destName = variable.getName();
+
+        Instruction rhsInst = assign.getRhs();
+        if (rhsInst.getInstType() == InstructionType.BINARYOPER) {
+            BinaryOpInstruction rhsBin = (BinaryOpInstruction) rhsInst;
+
+            Element leftOp = rhsBin.getLeftOperand();
+            Element rightOp = rhsBin.getRightOperand();
+
+            if (rhsBin.getUnaryOperation().getOpType() != OperationType.ADD)
+                return false;
+
+            if (leftOp.isLiteral() && ((LiteralElement) leftOp).getLiteral().equals("1"))  {
+                return MyJasminUtils.getElementName(rightOp).equals(destName);
+            }
+
+            if (rightOp.isLiteral() && ((LiteralElement) rightOp).getLiteral().equals("1")) {
+                return MyJasminUtils.getElementName(leftOp).equals(destName);
+            }
+        }
+        return false;
+    }
   
 }

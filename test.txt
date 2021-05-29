@@ -1,72 +1,36 @@
-import MathUtils;
-import io;
+class Simple {
 
-class Conflicts {
+	public int add(int a, int b){
+		int c;
+		c = a + this.constInstr();
+		return c;
+	}
 
-    int[] array;
-    int iconst_0;
-    int iconst_1;
-    int putfield;
-    boolean getfield;
+	public static void main(String[] args){
+		int a;
+		int b;
+		int c;
+		a = 0;
+		b = 0;
+		while (a < 5) {
+			b = 1 + b;
+			a = a + 1;
+		}
+	}
 
-    public int init() {
-        int arraylength;
-        arraylength = 15;
-        array = new int[arraylength];
-        iconst_0 = 0;
-        iconst_1 = 1;
-        getfield = false;
+	public int constInstr(){
+		int c;
+		c = 0;
+		c = 4;
+		c = 8;
+		c = 14;
+		c = 250;
+		c = 400;
+		c = 1000;
+		c = 100474650;
+		c = 10;
+		return c;
+	}
 
-        return iconst_0;
-    }
 
-    public int fac(int iload) {
-        if (iload < 2) {
-            getfield = true;
-        }
-        else {
-            getfield = false;
-        }
-
-        int ret;
-        if (getfield) {
-            ret = iconst_1;
-        }
-        else {
-            ret = iload * this.fac(iload - iconst_1);
-        }
-
-        return ret;
-    }
-
-    public int iadd(int iload_0) {
-        int bipush;
-
-        bipush = 0;
-        while (bipush <5) {
-            iload_0 = iload_0 + 1;
-            bipush = bipush + 1;
-        }
-
-        return iload_0;
-    }
-
-    public static void main(String[] args) {
-
-        int ldc;
-        int imul;
-        int idiv;
-        int istore;
-
-        Conflicts conf;
-        conf = new Conflicts();
-
-        conf.init();
-
-        imul = 2 * 5 * 3;
-        idiv = imul / 2 / 3;
-        ldc = conf.fac(idiv);
-        istore = conf.iadd(ldc);
-        io.println(istore);
-    }
 }

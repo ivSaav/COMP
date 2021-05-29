@@ -45,18 +45,6 @@ public class CondBranchInstructionHandler implements IntructionHandler{
                     builder.append("\tif_icmplt ").append(label).append("\n"); // val1 < val2
                 }
                 break;
-            case GTH:
-            case GTHI32:
-                builder.append("\tif_icmpgt ").append(label).append("\n");
-                break;
-            case EQ:
-            case EQI32:
-                builder.append("\tif_icmpeq ").append(label).append("\n");
-                break;
-            case NEQ:
-            case NEQI32:
-                builder.append("\tif_icmpne ").append(label).append("\n");
-                break;
             case LTE:
             case LTEI32:
                 builder.append("\tif_icmple ").append(label).append("\n");

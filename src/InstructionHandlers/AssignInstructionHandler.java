@@ -1,10 +1,8 @@
 package InstructionHandlers;
 
 import org.specs.comp.ollir.*;
-import pt.up.fe.comp.jmm.JmmNode;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 public class AssignInstructionHandler implements IntructionHandler{
@@ -32,6 +30,12 @@ public class AssignInstructionHandler implements IntructionHandler{
         if (lhsArrayAccess)
             MyJasminUtils.loadElement(method, string, instruction.getDest());
 
+
+        if (BinaryOpInstructionHandler.detectIncrementOperation(instruction, method)) {
+            string.setLength(0);
+            string.append("\tiinc " + destDesc.getVirtualReg() + " 1\n");
+            return string.toString();
+        }
 
         // Call instruction allocator to handle right part of assignment
         String rhss = rhs.allocateAndHandle(instruction.getRhs(), classUnit, method);
