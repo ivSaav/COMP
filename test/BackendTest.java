@@ -130,10 +130,10 @@ public class BackendTest {
         output= SpecsStrings.normalizeFileContents(output.trim(), true);
         List<String> out = Arrays.asList(output.split("\n"));
 
-        // number of iterations should be 15
-        assertEquals(15, out.size());
+        // number of lines should be 15 * 10 (iterations * number of lines per state)
+        assertEquals(150, out.size());
         // each line must have 100 chars
-        assertEquals(100, out.get(0).length());
+        assertEquals(10, out.get(0).length());
     }
 
     @Test

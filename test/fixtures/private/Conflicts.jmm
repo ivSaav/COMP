@@ -21,7 +21,7 @@ class Conflicts {
     }
 
     public int fac(int iload) {
-        if (!(!(iload < iconst_0) && !(0 < iconst_1))) {
+        if (iload < 2) {
             getfield = true;
         }
         else {
@@ -66,9 +66,7 @@ class Conflicts {
         imul = 2 * 5 * 3;
         idiv = imul / 2 / 3;
         ldc = conf.fac(idiv);
-
         istore = conf.iadd(ldc);
         io.println(istore);
-
     }
 }

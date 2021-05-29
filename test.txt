@@ -1,6 +1,5 @@
 import BoardBase;
-
-import MathUtils;
+import io;
 
 class TicTacToe {
 
@@ -97,17 +96,17 @@ class TicTacToe {
   }
 
 
+
   // Returns a character signifying the winner.
   public int winner() {
-
-    int[] array;
+    int[] test_array;
     int winner;
     int i;
     boolean completeArray;
     boolean completeArray1;
     boolean completeArray2;
     winner = 0-1;
-    array = new int[3];
+    test_array = new int[3];
     completeArray = BoardBase.sameArray(row0);
     completeArray1 = BoardBase.sameArray(row1);
     completeArray2 = BoardBase.sameArray(row2);
@@ -124,29 +123,29 @@ class TicTacToe {
     else{
         i = 0;
         while(winner < 1 && i < 3){
-            array[0] = row0[i];
-            array[1] = row1[i];
-            array[2] = row2[i];
-            completeArray = BoardBase.sameArray(array);
-            if (completeArray && 0 < array[0]){
-                winner = array[0];
+            test_array[0] = row0[i];
+            test_array[1] = row1[i];
+            test_array[2] = row2[i];
+            completeArray = BoardBase.sameArray(test_array);
+            if (completeArray && 0 < test_array[0]){
+                winner = test_array[0];
             }else{}
             i=i+1;
         }
         if(winner < 1){
-            array[0] = row0[0];
-            array[1] = row1[1];
-            array[2] = row2[2];
-			completeArray = BoardBase.sameArray(array);
-            if (completeArray && 0 < array[0]){
-                winner = array[0];
+            test_array[0] = row0[0];
+            test_array[1] = row1[1];
+            test_array[2] = row2[2];
+			completeArray = BoardBase.sameArray(test_array);
+            if (completeArray && 0 < test_array[0]){
+                winner = test_array[0];
             }else{
-                array[0] = row0[2];
-                array[1] = row1[1];
-                array[2] = row2[0];
-                completeArray = BoardBase.sameArray(array);
-                if (completeArray && 0 < array[0]){
-                    winner = array[0];
+                test_array[0] = row0[2];
+                test_array[1] = row1[1];
+                test_array[2] = row2[0];
+                completeArray = BoardBase.sameArray(test_array);
+                if (completeArray && 0 < test_array[0]){
+                    winner = test_array[0];
                 }else{}
             }
         }else{}
@@ -164,7 +163,6 @@ class TicTacToe {
     int win;
     boolean done;
     int[] move;
-    move = new int[2];
     int player;
     mygame = new TicTacToe();
     mygame.init();
@@ -179,8 +177,8 @@ class TicTacToe {
           mygame.getRow2());
 
         player = mygame.getCurrentPlayer();
-        move[0] = MathUtils.random(0,2);//BoardBase.playerTurn(player);
-        move[1] = MathUtils.random(0,2);
+        move = BoardBase.playerTurn(player);
+
 
         if (!mygame.inbounds(move[0],move[1]))
           BoardBase.wrongMove();
@@ -194,6 +192,7 @@ class TicTacToe {
 
       // Change who's turn it is.
       mygame.changeturn();
+      io.println(mygame.winner());
     }
 
     // Print out a message with the winner.

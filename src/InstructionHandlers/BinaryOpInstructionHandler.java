@@ -29,6 +29,13 @@ public class BinaryOpInstructionHandler implements IntructionHandler{
 
         if (opType == OperationType.LTH) {
             string.append("\tisub\n");
+
+            String labelID = "less_true_" +  instruction.hashCode();
+            string.append("\tiflt " + labelID+ "\n");
+            string.append("\ticonst_0\n");
+            string.append("\tgoto end_less_" + instruction.hashCode() +"\n");
+            string.append(labelID + ": \n").append("\ticonst_1\n");
+            string.append("end_less_" + instruction.hashCode() + ":\n");
         }
 
         else {

@@ -130,8 +130,5 @@ public class Main implements JmmParser {
 			System.out.println("Couldn't write files.");
 			e.printStackTrace();
 		}
-
-		System.out.println("Successfully compiled.\nAll generated files are in ./generated");
-//		jasminResult.run();
     }
 }

@@ -390,6 +390,19 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         return ifBuilder.toString();
     }
 
+    private boolean detectEqualsConditional(JmmNode andExpr) {
+        JmmNode lhs = andExpr.getChildren().get(0);
+        JmmNode rhs = andExpr.getChildren().get(1);
+
+        if (lhs.getKind().equals("Negation") && rhs.getKind().equals("Negation")) {
+            JmmNode innerLhs = lhs.getChildren().get(0);
+            JmmNode innerRhs = rhs.getChildren().get(1);
+
+            return innerRhs.getKind().equals("Smaller") && innerLhs.getKind().equals("Smaller");
+        }
+        return false;
+    }
+
     private String handleConditionalExpression(JmmNode exprNode, boolean reverse, String exitLabel, String indent) {
 
         StringBuilder builder = new StringBuilder();
@@ -430,20 +443,28 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
     private String handleWhileStatement(JmmNode whileNode, String indent) {
 
+//        if (cond) -> jump to end
+//          label:
+//              body
+//          if (cond) -> jump to label
+//          end:
+
         int labelId = this.labelCounter++;
 
-        StringBuilder whileBuilder = new StringBuilder(indent + "Loop_" + labelId + ":\n");
-
-        List<String> expr = new ArrayList<>();
+        StringBuilder whileBuilder = new StringBuilder();
 
         JmmNode exprNode = whileNode.getChildren().get(0);
+        String negCondExpr = this.handleConditionalExpression(exprNode, true, "EndLoop_" + labelId, indent);
+        whileBuilder.append(negCondExpr);
 
-        whileBuilder.append(this.handleConditionalExpression(exprNode, true, "EndLoop_" + labelId, indent+ "\t"));
+        whileBuilder.append(indent).append("Loop_").append(labelId).append(":\n");
 
         // statement body
         whileBuilder.append(this.handleStatementBody(whileNode.getChildren().get(1), indent + "\t"));
-        whileBuilder.append(indent).append("\tgoto Loop_"+ labelId + ";\n");
-        whileBuilder.append(indent).append("EndLoop_" + labelId + ":\n");
+
+        String condExpr = this.handleConditionalExpression(exprNode, false, "Loop_" + labelId, indent);
+        whileBuilder.append(indent).append(condExpr);
+        whileBuilder.append(indent).append("EndLoop_" + labelId + ":\n\n");
 
         return whileBuilder.toString();
     }
@@ -491,7 +512,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                     stmBuilder.append(this.handleIfStatement(child, indent ));
                     break;
                 case "While":
-                    stmBuilder.append(this.handleWhileStatement(child, indent));
+                    stmBuilder.append("\n" + this.handleWhileStatement(child, indent));
                     break;
                 case "ret":
                     stmBuilder.append(this.handleReturn(child, indent));
