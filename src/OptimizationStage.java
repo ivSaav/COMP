@@ -32,6 +32,7 @@ public class OptimizationStage implements JmmOptimization {
     public OptimizationStage(boolean optm) {
         this.optm = optm;
     }
+
     public OptimizationStage() {
         this.optm = false;
     }

@@ -14,7 +14,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     private int idCounter = 1;
     private int labelCounter = 1;
     private boolean static_context = false;
-    private boolean optm;
+    private final boolean optm;
 
     public OllirEmitter(SymbolsTable st, boolean optm) {
         this.st = st;
@@ -444,12 +444,35 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     }
 
     private String handleWhileStatement(JmmNode whileNode, String indent) {
+        if (optm)
+            return doWhileTemplate(whileNode, indent);
+        return whileTemplate(whileNode, indent);
+    }
 
-//        if (cond) -> jump to end
-//          label:
-//              body
-//          if (cond) -> jump to label
-//          end:
+    private String whileTemplate(JmmNode whileNode, String indent) {
+        int labelId = this.labelCounter++;
+
+        StringBuilder whileBuilder = new StringBuilder(indent + "Loop_" + labelId + ":\n");
+
+        List<String> expr = new ArrayList<>();
+
+        JmmNode exprNode = whileNode.getChildren().get(0);
+
+        whileBuilder.append(this.handleConditionalExpression(exprNode, true, "EndLoop_" + labelId, indent+ "\t"));
+
+        // statement body
+        whileBuilder.append(indent).append("Body_" + labelId + ":\n").append(this.handleStatementBody(whileNode.getChildren().get(1), indent + "\t"));
+        whileBuilder.append(indent).append("\tgoto Loop_"+ labelId + ";\n");
+        whileBuilder.append(indent).append("EndLoop_" + labelId + ":\n");
+        return whileBuilder.toString();
+    }
+
+    private String doWhileTemplate(JmmNode whileNode, String indent) {
+        //        if (cond) -> jump to end
+        //          label:
+        //              body
+        //          if (cond) -> jump to label
+        //          end:
 
         int labelId = this.labelCounter++;
 

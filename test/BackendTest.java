@@ -26,6 +26,8 @@ import static org.junit.Assert.*;
 
 public class BackendTest {
 
+    private static final boolean optm = true;
+
     @Test
     public void testHelloWorld() {
 
@@ -39,7 +41,7 @@ public class BackendTest {
     @Test
     public void testSimple() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/Simple.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/Simple.jmm"), BackendTest.optm);
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
@@ -51,7 +53,7 @@ public class BackendTest {
     @Test
     public void testFindMaximum() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/FindMaximum.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/FindMaximum.jmm"), BackendTest.optm);
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
@@ -63,7 +65,7 @@ public class BackendTest {
     @Test
     public void testLazySort() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/Lazysort.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/Lazysort.jmm"), BackendTest.optm);
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
@@ -81,7 +83,7 @@ public class BackendTest {
     @Test
     public void testQuickSort() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/QuickSort.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/QuickSort.jmm"), BackendTest.optm);
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
@@ -96,7 +98,7 @@ public class BackendTest {
     @Test
     public void testMonteCarlo() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/MonteCarloPi.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/MonteCarloPi.jmm"), BackendTest.optm);
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
@@ -113,7 +115,7 @@ public class BackendTest {
     @Test
     public void testLife() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/LifeEndCondition.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/LifeEndCondition.jmm"), BackendTest.optm);
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
@@ -139,7 +141,7 @@ public class BackendTest {
     @Test
     public void testWhilesAndIfs() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/WhileAndIf.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/WhileAndIf.jmm"), BackendTest.optm);
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
@@ -155,7 +157,7 @@ public class BackendTest {
     @Test
     public void testTicTacToe() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/TicTacToe.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/public/TicTacToe.jmm"), BackendTest.optm);
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
@@ -173,7 +175,7 @@ public class BackendTest {
     @Test
     public void testTuring() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Turing.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Turing.jmm"), BackendTest.optm);
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
@@ -190,7 +192,7 @@ public class BackendTest {
     @Test
     public void testConflicts() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Conflicts.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Conflicts.jmm"), BackendTest.optm);
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
@@ -205,7 +207,7 @@ public class BackendTest {
     @Test
     public void testArithmetic() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Arithmetic.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Arithmetic.jmm"),BackendTest.optm);
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
@@ -220,7 +222,7 @@ public class BackendTest {
     @Test
     public void testScalar() {
 
-        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Scalar.jmm"));
+        OllirResult optm = TestUtils.optimize(SpecsIo.getResource("fixtures/private/Scalar.jmm"), BackendTest.optm);
 
         var result = TestUtils.backend(optm);
         TestUtils.noErrors(result.getReports());
