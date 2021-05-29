@@ -35,7 +35,15 @@ public class CondBranchInstructionHandler implements IntructionHandler{
         switch (type) {
             case LTH:
             case LTHI32:
-                builder.append("\tif_icmplt ").append(label).append("\n"); // val1 < val2
+
+                // val < 0
+                if (rop.isLiteral() && ((LiteralElement) rop).getLiteral().equals("0")){
+                    builder.setLength(0);
+                    MyJasminUtils.loadElement(method, builder, lop);
+                    builder.append("\tiflt ").append(label).append("\n"); // val1 < 0
+                } else {
+                    builder.append("\tif_icmplt ").append(label).append("\n"); // val1 < val2
+                }
                 break;
             case GTH:
             case GTHI32:
@@ -55,7 +63,14 @@ public class CondBranchInstructionHandler implements IntructionHandler{
                 break;
             case GTE:
             case GTEI32:
-                builder.append("\tif_icmpge ").append(label).append("\n");
+                // val >= 0
+                if (rop.isLiteral() && ((LiteralElement) rop).getLiteral().equals("0")){
+                    builder.setLength(0);
+                    MyJasminUtils.loadElement(method, builder, lop);
+                    builder.append("\tifge ").append(label).append("\n"); // val1 < 0
+                } else {
+                    builder.append("\tif_icmpge ").append(label).append("\n");
+                }
                 break;
             case AND:
             case ANDB:

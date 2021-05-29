@@ -17,8 +17,6 @@ public class AssignInstructionHandler implements IntructionHandler{
 
     @Override
     public String handleInstruction(ClassUnit classUnit, Method method) {
-        String className = classUnit.getClassName();
-
         StringBuilder string = new StringBuilder();
         InstructionAllocator rhs = new InstructionAllocator();
         HashMap<String, Descriptor> vars = OllirAccesser.getVarTable(method);
@@ -77,7 +75,6 @@ public class AssignInstructionHandler implements IntructionHandler{
                 if (rhsDesc.getVarType().getTypeOfElement() == ElementType.ARRAYREF
                     && destDesc.getVarType().getTypeOfElement() == ElementType.INT32) // rhs array access
                     string.append("\tiaload\n"); // load array access
-                // TODO improvement (return on iaload if auxiliary variable)
             }
 
             string.append("\tistore" + (destDesc.getVirtualReg() < 4 ? "_" : " ") + destDesc.getVirtualReg() + "\n");

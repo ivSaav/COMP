@@ -117,5 +117,7 @@ public class Main implements JmmParser {
 			System.out.println("Couldn't write files.");
 			e.printStackTrace();
 		}
+
+		jasminResult.run();
     }
 }
