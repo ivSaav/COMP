@@ -3,7 +3,7 @@
 **NAME1:** Isla Cassamo, **NR1:** 201808549, **GRADE1:** 14, **CONTRIBUTION1:** 25%  
 **NAME2:** Ivo Saavedra, **NR2:** 201707093, **GRADE2:** 17, **CONTRIBUTION2:** 30%  
 **NAME3:** Maria Baía,   **NR3:** 201704951, **GRADE3:** 16, **CONTRIBUTION3:** 30%  
-**NAME4:** Rodrigo Reis, **NR4:** 201806534, **GRADE4:** 12 , **CONTRIBUTION4:** 15%    
+**NAME4:** Rodrigo Reis, **NR4:** 201806534, **GRADE4:** 15, **CONTRIBUTION4:** 15%    
 
 ### **GLOBAL Grade of the project:** 17
 
