@@ -20,7 +20,6 @@ public class MyJasminUtils {
                 string.append("\t" + (lit > -129 && lit < 128 ? "bipush " : "ldc ") +literal.getLiteral()+" \n");
 
         }else{
-//            System.out.println("= \nDESC " + ((Operand) op).getName() + " " + ((Operand) op).getType());
 
             HashMap<String, Descriptor> vars= OllirAccesser.getVarTable(method);
 
@@ -54,7 +53,6 @@ public class MyJasminUtils {
                     string.append("\tiload" + (desc.getVirtualReg() < 4 ? "_" : " ") + desc.getVirtualReg() + "\n");
                 }
                 else {
-//                    System.out.println("SCOPE " + d.getScope());
                     if (d.getScope() != VarScope.FIELD)
                         string.append("\taload" + (d.getVirtualReg() < 4 ? "_" : " ") + d.getVirtualReg() + "\n");
                 }
@@ -72,17 +70,6 @@ public class MyJasminUtils {
         }
     }
 
-
-
-    public static boolean findInstruction(Instruction instruction, List<Instruction> instructions) {
-        for (Instruction inst : instructions) {
-            if (inst.equals(instruction)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     static String getElementName(Element element){
         String name;
         if(element.isLiteral()){
@@ -96,104 +83,45 @@ public class MyJasminUtils {
     }
 
     public static String parseType(ElementType type){
-        switch (type){
-            case INT32:
-                return "I";
-            case BOOLEAN:
-                return "I";
-            case ARRAYREF:
-                return "[I";
-            case OBJECTREF:
-                return "Ljava/lang/Object";
-            case CLASS:
-                return "C";
-            case THIS:
-                return "T";
-            case STRING:
-                return "Ljava/lang/String";
-            case VOID:
-                return "V";
-            default:
-                return null;
-        }
+        return switch (type) {
+            case INT32 -> "I";
+            case BOOLEAN -> "I";
+            case ARRAYREF -> "[I";
+            case OBJECTREF -> "Ljava/lang/Object";
+            case CLASS -> "C";
+            case THIS -> "T";
+            case STRING -> "Ljava/lang/String";
+            case VOID -> "V";
+        };
     }
 
     public static String parseTypeForMethod(ElementType type){
-        switch (type) {
-            case INT32:
-                return "I";
-            case BOOLEAN:
-                return "Z";
-            case ARRAYREF:
-                return "[I";
-            case OBJECTREF:
-                return "Ljava/lang/Object";
-            case CLASS:
-                return "C";
-            case THIS:
-                return "T";
-            case STRING:
-                return "Ljava/lang/String";
-            case VOID:
-                return "V";
-            default:
-                return null;
-        }
+        return switch (type) {
+            case INT32 -> "I";
+            case BOOLEAN -> "Z";
+            case ARRAYREF -> "[I";
+            case OBJECTREF -> "Ljava/lang/Object";
+            case CLASS -> "C";
+            case THIS -> "T";
+            case STRING -> "Ljava/lang/String";
+            case VOID -> "V";
+        };
     }
 
     public static String parseInstruction(OperationType type){
-        switch (type) {
-            case LTH:
-            case LTHI32:
-                return "lt";
-            case NEQ:
-            case NEQI32:
-                return "neg";
-            case MUL:
-            case MULI32:
-                return "mul";
-            case DIV:
-            case DIVI32:
-                return "div";
-            case ADD:
-            case ADDI32:
-                return "add";
-            case SUB:
-            case SUBI32:
-                return "sub";
-            case AND:
-            case ANDB:
-            case ANDI32:
-                return "and";
-            case OR:
-            case ORB:
-                return "or";
-            case NOT:
-            case NOTB:
-                return "xor";
-            case XOR:
-            case XORI32:
-                return "xor";
-            case SHL:
-            case SHR:
-            case SHRR:
-            case ORI32:
-            case SHLI32:
-            case SHRI32:
-            case SHRRI32:
-            default:
-                return "another";
-        }
-    }
-
-    public static Type getVarType(int regID, Map<String, Descriptor> varTable) {
-
-        for (Map.Entry<String, Descriptor> entry : varTable.entrySet()) {
-            if (entry.getValue().getVirtualReg() == regID)
-                return entry.getValue().getVarType();
-        }
-
-        return null;
+        return switch (type) {
+            case LTH, LTHI32 -> "lt";
+            case NEQ, NEQI32 -> "neg";
+            case MUL, MULI32 -> "mul";
+            case DIV, DIVI32 -> "div";
+            case ADD, ADDI32 -> "add";
+            case SUB, SUBI32 -> "sub";
+            case AND, ANDB, ANDI32 -> "and";
+            case OR, ORB -> "or";
+            case NOT, NOTB -> "xor";
+            case XOR, XORI32 -> "xor";
+            default -> "another";
+        };
     }
 
 
@@ -201,34 +129,5 @@ public class MyJasminUtils {
         for (Map.Entry<String, Descriptor> entry : vars.entrySet()) {
             System.out.println(entry.getKey() + " : " + entry.getValue().getVirtualReg() + " " + entry.getValue().getVarType());
         }
-    }
-
-//    public static boolean isAuxVar(Element desc) {
-//        String name = getElementName(desc);
-//        return name
-//    }
-
-
-    /**
-     * Looks up in the predecessor instructions if variavle 'var' has already been loaded into
-     * the stack
-     * @param var
-     * @param pred
-     * @return
-     */
-    public static boolean isLoaded(Element var, List<Node> pred) {
-        for (Node n : pred) {
-            InstructionType predInstrType = ((Instruction) n).getInstType();
-            // checking if param variable has already been involved in an assignment
-            if (predInstrType == InstructionType.ASSIGN) {
-                Element predAssign = ((AssignInstruction) n).getDest();
-                String name = MyJasminUtils.getElementName(predAssign);
-
-                String paramVarName = MyJasminUtils.getElementName(var);
-                if (paramVarName.equals(name)) // found var initialization in pred assigns (stop)
-                    return true;
-            }
-        }
-        return false;
     }
 }

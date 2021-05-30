@@ -6,7 +6,7 @@ import java.util.Locale;
 import java.util.concurrent.atomic.LongAccumulator;
 
 public class CondBranchInstructionHandler implements IntructionHandler{
-    private CondBranchInstruction condBranchInstruction;
+    private final CondBranchInstruction condBranchInstruction;
 
     public CondBranchInstructionHandler(Instruction branchInstruction) {
 

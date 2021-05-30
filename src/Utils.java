@@ -147,21 +147,12 @@ public class Utils {
      * @return
      */
     public static String getOllirType(Type type) {
-        String t = "";
-        switch (type.getName()) {
-            case "int":
-                t = "i32";
-                break;
-            case "boolean":
-                t = "bool";
-                break;
-            case "void":
-                t = "V";
-                break;
-            default:
-                t = type.getName();
-                break;
-        }
+        String t = switch (type.getName()) {
+            case "int" -> "i32";
+            case "boolean" -> "bool";
+            case "void" -> "V";
+            default -> type.getName();
+        };
         return t;
     }
 
@@ -174,17 +165,14 @@ public class Utils {
         String t = "";
         String value = literalNode.get("value");
         switch (literalNode.get("type")) {
-            case "int":
-                t = "i32";
-                break;
-            case "boolean":
+            case "int" -> t = "i32";
+            case "boolean" -> {
                 t = "bool";
                 if (value.equals("true"))
                     value = "1";
                 else
                     value = "0";
-
-                break;
+            }
         }
         return value + "." + t;
     }
@@ -195,33 +183,16 @@ public class Utils {
      * @return
      */
     public static String getOllirOp(String operator) {
-        String op = "";
-        switch (operator) {
-            case "Smaller":
-                op = "<.i32";
-                break;
-            case "And":
-                op = "&&.bool";
-                break;
-            case "Negation":
-                op = "!.bool";
-                break;
-            case "Plus":
-                op = "+.i32";
-                break;
-            case "Minus":
-                op = "-.i32";
-                break;
-            case "Mult":
-                op = "*.i32";
-                break;
-            case "Div":
-                op = "/.i32";
-                break;
-            default:
-                op = operator;
-                break;
-        }
+        String op = switch (operator) {
+            case "Smaller" -> "<.i32";
+            case "And" -> "&&.bool";
+            case "Negation" -> "!.bool";
+            case "Plus" -> "+.i32";
+            case "Minus" -> "-.i32";
+            case "Mult" -> "*.i32";
+            case "Div" -> "/.i32";
+            default -> operator;
+        };
         return op;
     }
 
@@ -234,14 +205,11 @@ public class Utils {
     }
 
     public static String reverseOperatorOllit(String op) {
-        switch (op) {
-            case "Smaller":
-                return ">=.i32";
-            case "And":
-                return "||.bool";
-            default:
-                return getOllirOp(op);
-        }
+        return switch (op) {
+            case "Smaller" -> ">=.i32";
+            case "And" -> "||.bool";
+            default -> getOllirOp(op);
+        };
     }
 
     public static void saveContents(String contents, String filename) {
@@ -283,9 +251,7 @@ public class Utils {
                 return false;
 
             // Verify if it is a class attribute
-            if (st.getField().containsKey(node.get("name"))) {
-                return true;
-            }
+            return st.getField().containsKey(node.get("name"));
         }
         return false;
     }

@@ -52,7 +52,6 @@ public class AssignInstructionHandler implements IntructionHandler{
 
         // store LHS
         ElementType destType = destDesc.getVarType().getTypeOfElement();
-//        System.out.println("DEST " + destType + " " + MyJasminUtils.getElementName(this.instruction.getDest()));
         if (destType == ElementType.OBJECTREF){
             string.append("\tastore" + (destDesc.getVirtualReg() < 4 ? "_" : " ") + destDesc.getVirtualReg() + "\n");
         }
@@ -93,7 +92,6 @@ public class AssignInstructionHandler implements IntructionHandler{
      * @return
      */
     private boolean precedesPutFieldCall(String varName) {
-//        System.out.println(instruction.getSucc1().getNodeType());
 
         if (instruction.getSucc1().getNodeType() == NodeType.END)
             return false;

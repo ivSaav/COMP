@@ -14,11 +14,7 @@ public class PutFieldInstructionHandler implements IntructionHandler{
         String className = classUnit.getClassName();
         StringBuilder string = new StringBuilder();
 
-        String first = MyJasminUtils.getElementName(put.getFirstOperand());
-        String second = MyJasminUtils.getElementName(put.getSecondOperand());
-        String third = MyJasminUtils.getElementName(put.getThirdOperand());
-
-//        System.out.println("PUTFIELD ===\n " + first + " " + second + " " + third + " " +this.put.getPred());
+        String first, second;
 
         if (!this.wasLoaded()) {
             string.append("\taload_0\n");
@@ -35,14 +31,13 @@ public class PutFieldInstructionHandler implements IntructionHandler{
 
         string.append(first +"/"+second +" "+ MyJasminUtils.parseType(put.getSecondOperand().getType().getTypeOfElement()));
 
-        return string.toString()+"\n";
+        return string + "\n";
     }
 
     private boolean wasLoaded() {
         if (put.getThirdOperand().isLiteral()) // putfield(this, var, 0)
             return false;
 
-        // TODO: assumes the expression before putfield puts 'this' into stack (review)
         for (Node pred : this.put.getPred()) {
             // ignore method definition
             if (pred.getNodeType() == NodeType.BEGIN)

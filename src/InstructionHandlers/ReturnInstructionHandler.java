@@ -6,7 +6,7 @@ import java.util.Locale;
 
 public class ReturnInstructionHandler implements IntructionHandler {
 
-    private ReturnInstruction returnInstruction;
+    private final ReturnInstruction returnInstruction;
 
     public ReturnInstructionHandler(Instruction returnInstruction) {
         this.returnInstruction = (ReturnInstruction) returnInstruction;
@@ -21,7 +21,6 @@ public class ReturnInstructionHandler implements IntructionHandler {
 
         if (returnInstruction.hasReturnValue()) {
             Element rop = returnInstruction.getOperand();
-//            if (!MyJasminUtils.isLoaded(rop, this.returnInstruction.getPred()))
                 MyJasminUtils.loadElement(method, string, rop);
         }
 
