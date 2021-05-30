@@ -215,6 +215,7 @@ public class Utils {
     public static void saveContents(String contents, String filename) {
 
         File file = new File("output" + File.separator + filename);
+        file.getParentFile().mkdirs();
         FileWriter fileWriter = null;
         try {
             fileWriter = new FileWriter(file);

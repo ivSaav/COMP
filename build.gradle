@@ -60,9 +60,13 @@ sourceSets {
 
 // Create JAR with main class
 jar {
-   manifest {
-      attributes 'Main-Class': 'Main'
-   }
+    manifest {
+        attributes 'Main-Class': 'Main'
+    }
+
+    from {
+        configurations.runtimeClasspath.collect() {it.isDirectory() ? it : zipTree(it) }
+    }
 }
 
 
