@@ -145,7 +145,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         String lastExpr = this.handleExpression(retNode.getChildren().get(0), false, false, expressions);
         String ret = String.format(indent + "ret.%s %s;\n", Utils.getOllirType(type), lastExpr);
         retBuilder.append(ret);
-        this.insertAuxiliarExpressions(retBuilder, expressions, false, indent);
+        this.insertAuxiliaryExpressions(retBuilder, expressions, indent);
 
         return retBuilder.toString();
     }
@@ -195,7 +195,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         if (destArrayAccess) {
             List<String> auxExpr = new ArrayList<>();
             varName = this.handleVariable(destNode, auxExpr, true);
-            this.insertAuxiliarExpressions(builder, auxExpr, false, indent);
+            this.insertAuxiliaryExpressions(builder, auxExpr, indent);
 
             builder.append(String.format(indent + "%s :=.i32 %s;\n", varName, rhsVarName));
             return builder.toString();
@@ -213,7 +213,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     /**
      * Receives a length node for .length expressions ands creates an auxiliary expression
      * @param lengthNode - lenght node
-     * @pararm allowComplex
+     * @param allowComplex
      * @param auxExpr - list of intermediate expressions
      * @return length expression identifier
      */
@@ -258,7 +258,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         // For the variable that stores the value
         assign.append(indent).append(this.handleVariable(lhs, expressions, true));
 
-        this.insertAuxiliarExpressions(assign, expressions, false, indent);
+        this.insertAuxiliaryExpressions(assign, expressions, indent);
 
         String assignmentType = ".i32 "; // special case where destination is array access
         if (!lhs.getKind().equals("Array")) {
@@ -298,12 +298,12 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
             case "Ident":
             case "Array":
                 rhsBuilder.append(this.handleVariable(rhs, auxExpressions, true));
-                this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
+                this.insertAuxiliaryExpressions(builder, auxExpressions, indent);
                 break;
             case "MethodCall": // In the case of a call to a method
                 String methodCall = this.handleMethodCall(rhs, allowComplexExpr, auxExpressions, "");
                 rhsBuilder.append(methodCall);
-                this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
+                this.insertAuxiliaryExpressions(builder, auxExpressions, indent);
                 break;
             case "New":
                 String ident = "new(" + rhs.get("name") + ")." + rhs.get("name") + ";\n";
@@ -318,7 +318,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
 
             case "Length":
                 String lengthIdent = this.createLengthExpression(rhs, allowComplexExpr, auxExpressions);
-                this.insertAuxiliarExpressions(builder, auxExpressions, false, indent);
+                this.insertAuxiliaryExpressions(builder, auxExpressions, indent);
                 rhsBuilder.append(lengthIdent);
                 break;
 
@@ -355,10 +355,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
                     // level > 0 ---> t1 = a + b
                     String rhsExpr =  this.handleExpression(rhs, allowComplexExpr, false, expr);
 
-                    if (allowComplexExpr)
-                        this.insertAuxiliarExpressions(builder, expr, false, indent);
-                    else
-                        this.insertAuxiliarExpressions(builder, expr, false, indent);
+                    this.insertAuxiliaryExpressions(builder, expr, indent);
 
                     rhsBuilder.append(rhsExpr);
                 }
@@ -392,19 +389,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         return ifBuilder.toString();
     }
 
-    private boolean detectEqualsConditional(JmmNode andExpr) {
-        JmmNode lhs = andExpr.getChildren().get(0);
-        JmmNode rhs = andExpr.getChildren().get(1);
-
-        if (lhs.getKind().equals("Negation") && rhs.getKind().equals("Negation")) {
-            JmmNode innerLhs = lhs.getChildren().get(0);
-            JmmNode innerRhs = rhs.getChildren().get(1);
-
-            return innerRhs.getKind().equals("Smaller") && innerLhs.getKind().equals("Smaller");
-        }
-        return false;
-    }
-
     private String handleConditionalExpression(JmmNode exprNode, boolean reverse, String exitLabel, String indent) {
 
         StringBuilder builder = new StringBuilder();
@@ -436,7 +420,7 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         auxExp = this.forceBinaryExpression(exprNode, auxExp, reverse, expr);
 
         if (!expr.isEmpty())
-            this.insertAuxiliarExpressions(ifBuilder, expr, false, indent);
+            this.insertAuxiliaryExpressions(ifBuilder, expr, indent);
 
         ifBuilder.append(auxExp).append(") goto " + exitLabel  + ";\n");
 
@@ -664,7 +648,6 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         else {
             String varName =  this.handleVariable(expr, expressions, false);  // TODO reverse
 
-            // TODO move this to another place
             if (reverse && !expr.getKind().equals("Array")) {
                 Symbol identSymbol = this.st.getVariableSymbol(expr);
 
@@ -804,23 +787,20 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         if (methodSymb == null) {// not a defined method in this class
             JmmNode parent = methodNode.getParent();
 
-            switch (parent.getKind()) {
-                case "Equal":
-                    JmmNode lhs = parent.getChildren().get(0);
+            if ("Equal".equals(parent.getKind())) {
+                JmmNode lhs = parent.getChildren().get(0);
 
-                    boolean arrayAccess = lhs.getKind().equals("Array");
-                    // get array identifier
-                    if (arrayAccess)
-                        lhs = lhs.getChildren().get(0);
+                boolean arrayAccess = lhs.getKind().equals("Array");
+                // get array identifier
+                if (arrayAccess)
+                    lhs = lhs.getChildren().get(0);
 
-                    // determine type of lhs variable
-                    Symbol varSymb = this.st.getVariableSymbol(lhs);
-                    Type t = varSymb.getType();
-                    return (t.isArray() && !arrayAccess ? "array." : "" ) + Utils.getOllirType(varSymb.getType());
-
-                    // TODO more cases (Parameters ,Arguments ...)
+                // determine type of lhs variable
+                Symbol varSymb = this.st.getVariableSymbol(lhs);
+                Type t = varSymb.getType();
+                return (t.isArray() && !arrayAccess ? "array." : "") + Utils.getOllirType(varSymb.getType());
             }
-           return "V"; // TODO recursively determine parent's type
+           return "V";
         }
         else {
             String ret = (methodSymb.getReturnType().isArray() ? "array." : "");
@@ -912,50 +892,51 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
     private String handleInnerAcess(JmmNode accessNode, List<String> auxExpressions) {
         String innerAccess = "[";
 
-        if (accessNode.getKind().equals("Literal")) {// A[0]
-            String auxVar = "t" + this.idCounter++ + ".i32";
-            String auxExpr = String.format("%s :=.i32 %s.i32", auxVar, accessNode.get("value"));
-            auxExpressions.add(auxExpr);
-            innerAccess += auxVar;
-        }
-        else if (accessNode.getKind().equals("Array")) {
+        switch (accessNode.getKind()) {
+            case "Literal": {// A[0]
+                String auxVar = "t" + this.idCounter++ + ".i32";
+                String auxExpr = String.format("%s :=.i32 %s.i32", auxVar, accessNode.get("value"));
+                auxExpressions.add(auxExpr);
+                innerAccess += auxVar;
+                break;
+            }
+            case "Array": {
 
-            String arrayExpr = this.handleArrayAccess(accessNode, auxExpressions);
-
-            String auxVar = "t" + this.idCounter + ".i32";
-
-            String auxExpr = String.format("t%d.i32 :=.i32 %s", this.idCounter, arrayExpr);
-            auxExpressions.add(auxExpr);
-
-            return "[" + auxVar + "].i32";
-        }
-        else if (accessNode.getKind().equals("MethodCall")) {
-            String arrayExpr = this.handleMethodCall(accessNode, true, auxExpressions, "");
-
-            String auxVar = "t" + this.idCounter + ".i32";
-
-            String auxExpr = String.format("t%d.i32 :=.i32 %s", this.idCounter++, arrayExpr);
-            auxExpressions.add(auxExpr);
-
-            return "[" + auxVar + "].i32";
-        }
-
-        else if (accessNode.getKind().equals("Ident")) {// array access is an identifier A[b]
-            innerAccess += handleVariable(accessNode, auxExpressions, false);
-        }
-
-        else { // array access is an expression A[b-1]
-            if (Utils.isOperator(accessNode)) {
-
-                String rhsExpr =  this.handleExpression(accessNode, true, false, auxExpressions);
+                String arrayExpr = this.handleArrayAccess(accessNode, auxExpressions);
 
                 String auxVar = "t" + this.idCounter + ".i32";
 
-                String auxExpr = String.format("t%d.i32 :=.i32 %s", this.idCounter++, rhsExpr);
+                String auxExpr = String.format("t%d.i32 :=.i32 %s", this.idCounter, arrayExpr);
                 auxExpressions.add(auxExpr);
 
                 return "[" + auxVar + "].i32";
             }
+            case "MethodCall": {
+                String arrayExpr = this.handleMethodCall(accessNode, true, auxExpressions, "");
+
+                String auxVar = "t" + this.idCounter + ".i32";
+
+                String auxExpr = String.format("t%d.i32 :=.i32 %s", this.idCounter++, arrayExpr);
+                auxExpressions.add(auxExpr);
+
+                return "[" + auxVar + "].i32";
+            }
+            case "Ident": // array access is an identifier A[b]
+                innerAccess += handleVariable(accessNode, auxExpressions, false);
+                break;
+            default:  // array access is an expression A[b-1]
+                if (Utils.isOperator(accessNode)) {
+
+                    String rhsExpr = this.handleExpression(accessNode, true, false, auxExpressions);
+
+                    String auxVar = "t" + this.idCounter + ".i32";
+
+                    String auxExpr = String.format("t%d.i32 :=.i32 %s", this.idCounter++, rhsExpr);
+                    auxExpressions.add(auxExpr);
+
+                    return "[" + auxVar + "].i32";
+                }
+                break;
         }
         innerAccess += "].i32";
         return innerAccess;
@@ -999,28 +980,17 @@ public class OllirEmitter extends AJmmVisitor<String, String> {
         return -1;
     }
 
-    private String insertAuxiliarExpressions(StringBuilder builder, List<String> auxExpressions, boolean returnLast, String indent) {
-        String lastExpr = "";
+    private void insertAuxiliaryExpressions(StringBuilder builder, List<String> auxExpressions, String indent) {
         if (!auxExpressions.isEmpty()) {
 
             StringBuilder auxiliary = new StringBuilder();
 
-            int j = returnLast ? auxExpressions.size()-1 : auxExpressions.size();
-
-            for (int i = 0; i < j ; i++) {
+            for (int i = 0; i < auxExpressions.size() ; i++) {
                 auxiliary.append(indent).append(auxExpressions.get(i)).append(";\n");
             }
 
             builder.insert(0, auxiliary);
-
-            if (returnLast) {
-                lastExpr = auxExpressions.get(auxExpressions.size()-1);
-
-                if (lastExpr.contains("="))
-                    lastExpr = lastExpr.split("=")[1];
-            }
         }
-        return lastExpr;
     }
 
     private static String reduce(JmmNode node, String nodeResult, List<String> childrenResults) {

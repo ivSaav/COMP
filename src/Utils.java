@@ -246,7 +246,7 @@ public class Utils {
 
     public static void saveContents(String contents, String filename) {
 
-        File file = new File("generated" + File.separator + filename);
+        File file = new File("output" + File.separator + filename);
         FileWriter fileWriter = null;
         try {
             fileWriter = new FileWriter(file);

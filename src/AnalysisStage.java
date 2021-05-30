@@ -37,8 +37,6 @@ public class AnalysisStage implements JmmAnalysis {
 
         generator.visit(node);
         SymbolsTable st = generator.getSt();
-//        System.out.println("GENERATED ============================");
-//        System.out.println(st);
 
         SemanticAnalyser semanticAnalyser = new SemanticAnalyser(st);
         List<Report> reports = new ArrayList<>();
@@ -46,7 +44,6 @@ public class AnalysisStage implements JmmAnalysis {
         for (Report r : reports)
             System.out.println(r);
 
-        // No Symbol Table being calculated yet
         return new JmmSemanticsResult(parserResult, st, reports);
 
     }

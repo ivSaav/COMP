@@ -35,6 +35,9 @@ public class Main implements JmmParser {
 						-1, e.toString()));
 			}
 
+			// output ast into file
+			Utils.saveContents(root.toJson(), "ast.txt");
+
 			return new JmmParserResult(root, parser.getReports());
 
 		} catch(Exception j) {
@@ -104,20 +107,6 @@ public class Main implements JmmParser {
 			exit(1);
 		}
 
-		try {
-			// AST ===============
-			File astOutput = new File("generated" + File.separator + "ast.txt");
-			FileWriter astWriter = new FileWriter(astOutput);
-			astWriter.write(m.root.toJson());
-			astWriter.flush();
-			astWriter.close();
-
-		}
-		catch (IOException e) {
-			System.out.println("Couldn't write files.");
-			e.printStackTrace();
-		}
-
-		jasminResult.run();
+		System.out.println("All generated files placed under output/");
     }
 }

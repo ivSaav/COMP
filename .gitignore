@@ -7,3 +7,5 @@ gradlew.bat
 gradlew
 comp2021-*.jar
 *.dot
+
+output/

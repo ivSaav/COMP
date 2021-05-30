@@ -27,7 +27,7 @@ import pt.up.fe.specs.util.SpecsIo;
 public class OptimizationStage implements JmmOptimization {
 
     private String ollirCode;
-    private boolean optm;
+    private final boolean optm;
 
     public OptimizationStage(boolean optm) {
         this.optm = optm;
@@ -50,7 +50,7 @@ public class OptimizationStage implements JmmOptimization {
         // Convert the AST to a String containing the equivalent OLLIR code
         this.ollirCode = emitter.visit(node); // Convert node ..
 
-       Utils.saveContents(this.ollirCode, "ollir.txt");
+        Utils.saveContents(this.ollirCode, "ollir.txt");
 
         // More reports from this stage
         List<Report> reports = new ArrayList<>();
