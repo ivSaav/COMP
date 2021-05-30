@@ -10,6 +10,9 @@ import pt.up.fe.comp.jmm.report.Stage;
 import pt.up.fe.specs.util.SpecsIo;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
@@ -53,7 +56,7 @@ public class Main implements JmmParser {
 		String filename = "test.txt";
 
 		if (args.length < 1) {
-			System.out.println("Usage: Main  <filename>");
+			System.out.println("Usage: Main -o <filename>");
 			exit(1);
 		}
 
@@ -61,15 +64,18 @@ public class Main implements JmmParser {
 			if (args[i].equals("-o"))
 				optm = true;
 			else if (args[i].equals("-r")) {
-				System.out.println("Register allocation not implemented.");
-				exit(1);
+				System.out.println("Register allocation not implemented. (ignoring)");
 			}
-			else
+			else {
 				filename = args[i];
+				Path filePath = Paths.get(filename);
+				if (!Files.exists(filePath))
+					throw new IllegalArgumentException("File not found: " + filename);
+			}
 		}
 
-		System.out.println("Executing with args: " + filename);
-		var fileContents = SpecsIo.read(filename /*"./test.txt"*/);
+		System.out.println("Executing with args: " + (optm ? "-o " : "" ) + filename);
+		var fileContents = SpecsIo.read(filename);
 
 		Main m = new Main();
 		JmmParserResult parseResult = m.parse(fileContents);
