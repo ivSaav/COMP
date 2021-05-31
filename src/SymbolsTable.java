@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class SymbolsTable implements SymbolTable {
 
@@ -170,6 +171,27 @@ public class SymbolsTable implements SymbolTable {
 
     public boolean isClassMethod(String methodName, int numArgs) {
         return this.methods.containsKey(methodName + numArgs);
+    }
+
+    @Override
+    public String print() {
+        StringBuilder start = new StringBuilder(SymbolTable.super.print());
+
+        for (MethodSymbols methodSymbols : this.methods.values()) {
+            start.append("\n==== ");
+            start.append(methodSymbols.getName());
+            start.append(" ====");
+
+            start.append("\nLocals: \n");
+
+            for (Symbol symb : methodSymbols.getLocalVars()) {
+                String repr = symb.getType().print() + " " + symb.getName();
+                start.append(" - ").append(repr).append("\n");
+            }
+
+        }
+
+        return start.toString();
     }
 
     @Override
