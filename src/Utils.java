@@ -212,19 +212,11 @@ public class Utils {
         };
     }
 
-    public static void saveContents(String contents, String filename) {
+    public static String getOutputFileName(JmmNode root, String outDir) {
+        JmmNode classNode = Utils.getChildOfKind(root, "Class");
+        String className = classNode != null ? classNode.get("class") : "DefaultName";
 
-        File file = new File("output" + File.separator + filename);
-        file.getParentFile().mkdirs();
-        FileWriter fileWriter = null;
-        try {
-            fileWriter = new FileWriter(file);
-            fileWriter.write(contents);
-            fileWriter.flush();
-            fileWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        return outDir + File.separator + className;
     }
 
     public static void printReports(List<Report> reports) {

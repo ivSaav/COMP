@@ -1,4 +1,5 @@
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +14,7 @@ import pt.up.fe.comp.jmm.ast.examples.ExampleVisitor;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.ReportType;
 import pt.up.fe.comp.jmm.report.Stage;
+import pt.up.fe.specs.util.SpecsIo;
 
 public class AnalysisStage implements JmmAnalysis {
 
@@ -37,6 +39,8 @@ public class AnalysisStage implements JmmAnalysis {
 
         generator.visit(node);
         SymbolsTable st = generator.getSt();
+
+
 
         SemanticAnalyser semanticAnalyser = new SemanticAnalyser(st);
         List<Report> reports = new ArrayList<>();

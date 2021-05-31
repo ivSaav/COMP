@@ -1,3 +1,4 @@
+import java.io.File;
 import java.util.*;
 
 import org.specs.comp.ollir.*;
@@ -9,6 +10,7 @@ import pt.up.fe.comp.jmm.jasmin.JasminResult;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.Stage;
+import pt.up.fe.specs.util.SpecsIo;
 
 /**
  * Copyright 2021 SPeCS.
@@ -53,8 +55,6 @@ public class BackendStage implements JasminBackend {
             handleMethods(ollirClass, jasminCode);
 
 //            System.out.println("JASMIN CODE\n" + jasminCode.toString());
-
-            Utils.saveContents(jasminCode.toString(), "jasmin.j");
 
             return new JasminResult(ollirResult, jasminCode.toString(), reports);
 

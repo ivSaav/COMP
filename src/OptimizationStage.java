@@ -1,3 +1,4 @@
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -6,6 +7,7 @@ import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.ollir.JmmOptimization;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
+import pt.up.fe.specs.util.SpecsIo;
 
 /**
  * Copyright 2021 SPeCS.
@@ -45,8 +47,6 @@ public class OptimizationStage implements JmmOptimization {
         var emitter = new OllirEmitter((SymbolsTable) semanticsResult.getSymbolTable(), optm);
         // Convert the AST to a String containing the equivalent OLLIR code
         this.ollirCode = emitter.visit(node); // Convert node ..
-
-        Utils.saveContents(this.ollirCode, "ollir.txt");
 
         // More reports from this stage
         List<Report> reports = new ArrayList<>();

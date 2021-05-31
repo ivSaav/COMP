@@ -3,6 +3,7 @@ import pt.up.fe.comp.jmm.JmmParser;
 import pt.up.fe.comp.jmm.JmmParserResult;
 import pt.up.fe.comp.jmm.analysis.JmmSemanticsResult;
 import pt.up.fe.comp.jmm.jasmin.JasminResult;
+import pt.up.fe.comp.jmm.jasmin.JasminUtils;
 import pt.up.fe.comp.jmm.ollir.OllirResult;
 import pt.up.fe.comp.jmm.report.Report;
 import pt.up.fe.comp.jmm.report.ReportType;
@@ -36,9 +37,6 @@ public class Main implements JmmParser {
 		    	parser.getReports().add(new Report(ReportType.ERROR, Stage.LEXICAL,
 						-1, e.toString()));
 			}
-
-			// output ast into file
-			Utils.saveContents(root.toJson(), "ast.txt");
 
 			return new JmmParserResult(root, parser.getReports());
 
@@ -85,6 +83,11 @@ public class Main implements JmmParser {
 			exit(1);
 		}
 
+		String pathStart = Utils.getOutputFileName(parseResult.getRootNode(), "output");
+		// output ast
+		File astFile = new File(pathStart + ".json");
+		SpecsIo.write(astFile, parseResult.getRootNode().toJson());
+
 		AnalysisStage analysisStage = new AnalysisStage();
 		JmmSemanticsResult semanticResult = analysisStage.semanticAnalysis(parseResult);
 
@@ -93,6 +96,10 @@ public class Main implements JmmParser {
 			Utils.printReports(semanticResult.getReports());
 			exit(1);
 		}
+
+		// output ast
+		File stFile = new File(pathStart + ".symbols.txt");
+		SpecsIo.write(stFile, semanticResult.getSymbolTable().print());
 
 		OptimizationStage optimization = new OptimizationStage(optm);
 		OllirResult ollirResult = optimization.toOllir(semanticResult);
@@ -103,6 +110,10 @@ public class Main implements JmmParser {
 			exit(1);
 		}
 
+		// output ast
+		File ollirFile = new File(pathStart + ".ollir");
+		SpecsIo.write(ollirFile, ollirResult.getOllirCode());
+
 		BackendStage backendStage = new BackendStage();
 		JasminResult jasminResult = backendStage.toJasmin(ollirResult);
 
@@ -111,6 +122,12 @@ public class Main implements JmmParser {
 			Utils.printReports(jasminResult.getReports());
 			exit(1);
 		}
+
+		// output ast
+		File jasminFile = new File(pathStart + ".j");
+		SpecsIo.write(jasminFile, jasminResult.getJasminCode());
+
+		JasminUtils.assemble(jasminFile, new File("output"));
 
 		System.out.println("All generated files placed under output/");
     }
