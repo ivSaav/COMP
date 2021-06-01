@@ -139,8 +139,6 @@ void WhileStatement() #While : {}
         }
         while (t.kind != RPAR && t.kind != LBRACE);
 
-
-
         this.errorCnt++;
     }
         Statement() #Body

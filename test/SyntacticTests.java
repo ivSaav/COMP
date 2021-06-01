@@ -108,4 +108,9 @@ public class SyntacticTests {
         testFile("public/fail/syntactical/NestedLoop.jmm", true);
     }
 
+    @Test
+    public void testCompleteWhile() {
+        testFile("public/fail/syntactical/CompleteWhileTest.jmm", true);
+    }
+
 }

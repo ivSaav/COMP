@@ -22,11 +22,12 @@ import static java.lang.System.exit;
 public class Main implements JmmParser {
 
 	private SimpleNode root;
+	private Parser parser;
 
 	public JmmParserResult parse(String jmmCode) {
 
 		try {
-		    Parser parser = new Parser(new StringReader(jmmCode));
+		    parser = new Parser(new StringReader(jmmCode));
 
 		    try {
 		    	root = parser.Start(); // returns reference to root node
@@ -42,7 +43,8 @@ public class Main implements JmmParser {
 
 		} catch(Exception j) {
 			List<Report> reports = new ArrayList<>();
-			reports.add(new Report(ReportType.ERROR, Stage.OTHER, 0, "Error while parsing: " + j.getMessage()));
+			reports.add(new Report(ReportType.ERROR, Stage.SYNTATIC, 0, "Error while parsing: " + j.getMessage()));
+			reports.addAll(parser.getReports());
 			return new JmmParserResult(null, reports);
 		}
 	}
@@ -78,7 +80,7 @@ public class Main implements JmmParser {
 		JmmParserResult parseResult = m.parse(fileContents);
 
 		if (parseResult.getReports().size() > 0) {
-			System.out.println("*** Found errors in syntactical stage (aborting). ***");
+			System.out.println("\n*** Found errors in syntactical stage (aborting). ***");
 			Utils.printReports(parseResult.getReports());
 			exit(1);
 		}
@@ -92,7 +94,7 @@ public class Main implements JmmParser {
 		JmmSemanticsResult semanticResult = analysisStage.semanticAnalysis(parseResult);
 
 		if (semanticResult.getReports().size() > 0) {
-			System.out.println("*** Found errors in semantics stage (aborting). ***");
+			System.out.println("\n*** Found errors in semantics stage (aborting). ***");
 			Utils.printReports(semanticResult.getReports());
 			exit(1);
 		}
@@ -105,7 +107,7 @@ public class Main implements JmmParser {
 		OllirResult ollirResult = optimization.toOllir(semanticResult);
 
 		if (ollirResult.getReports().size() > 0) {
-			System.out.println("*** Found errors in optimization stage (aborting). ***");
+			System.out.println("\n*** Found errors in optimization stage (aborting). ***");
 			Utils.printReports(ollirResult.getReports());
 			exit(1);
 		}
@@ -118,7 +120,7 @@ public class Main implements JmmParser {
 		JasminResult jasminResult = backendStage.toJasmin(ollirResult);
 
 		if (jasminResult.getReports().size() > 0) {
-			System.out.println("*** Found errors in backend stage (aborting). ***");
+			System.out.println("\n*** Found errors in backend stage (aborting). ***");
 			Utils.printReports(jasminResult.getReports());
 			exit(1);
 		}
@@ -129,6 +131,6 @@ public class Main implements JmmParser {
 
 		JasminUtils.assemble(jasminFile, new File("output"));
 
-		System.out.println("All generated files placed under output/");
+		System.out.println("\nAll generated files placed under output/");
     }
 }

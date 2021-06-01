@@ -134,4 +134,9 @@ public class SemanticTest {
         testFile("public/fail/semantic/var_undef.jmm", true);
     }
 
+    @Test
+    public void testMissType() {
+        testFile("public/fail/semantic/extra/miss_type.jmm", true);
+    }
+
 }
